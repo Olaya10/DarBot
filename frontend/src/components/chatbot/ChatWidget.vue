@@ -1,10 +1,10 @@
 <template>
-  <div class="fixed bottom-6 right-6 z-50">
+  <div ref="chatWidget" class="fixed bottom-6 right-6 z-50">
     <!-- Botón flotante -->
     <button
       v-if="!abierto"
       @click="abrirChat"
-      class="w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all hover:scale-105 flex items-center justify-center text-2xl"
+      class="chat-fab w-14 h-14 text-white rounded-full shadow-lg transition-all hover:scale-105 flex items-center justify-center text-2xl"
     >
       💬
     </button>
@@ -12,13 +12,13 @@
     <!-- Ventana del chat -->
     <div
       v-else
-      class="bg-white rounded-2xl shadow-2xl w-96 h-[600px] flex flex-col overflow-hidden border border-gray-200"
+      class="chat-window bg-white rounded-2xl shadow-2xl w-[calc(100vw-2rem)] max-w-96 h-[min(600px,calc(100vh-2rem))] min-h-96 flex flex-col overflow-hidden border border-gray-200"
     >
       <!-- Header -->
-      <div class="bg-blue-600 text-white p-4 flex justify-between items-center">
+      <div class="chat-header text-white p-4 flex justify-between items-center">
         <div>
           <h3 class="font-bold">🤖 DarBot</h3>
-          <p class="text-xs text-blue-200">Asistente virtual</p>
+          <p class="text-xs text-red-100">Asistente virtual</p>
         </div>
         <div class="flex gap-2">
           <button @click="limpiarChat" class="text-white/70 hover:text-white text-sm" title="Limpiar chat">
@@ -42,7 +42,7 @@
           <div 
             class="max-w-[85%] rounded-lg px-4 py-2 text-sm"
             :class="msg.tipo === 'USER' 
-              ? 'bg-blue-600 text-white rounded-br-none' 
+              ? 'bg-red-600 text-white rounded-br-none' 
               : 'bg-white text-gray-800 rounded-bl-none shadow-sm'"
           >
             <div class="whitespace-pre-wrap">{{ msg.contenido }}</div>
@@ -55,7 +55,7 @@
                 class="text-xs px-2 py-1 rounded-full transition-colors"
                 :class="msg.tipo === 'USER' 
                   ? 'bg-white/20 hover:bg-white/30 text-white' 
-                  : 'bg-blue-50 hover:bg-blue-100 text-blue-600'"
+                  : 'bg-red-50 hover:bg-red-100 text-red-700'"
               >
                 {{ opcion }}
               </button>
@@ -81,16 +81,17 @@
       <!-- Input -->
       <div class="border-t p-3 bg-white">
         <form @submit.prevent="enviarMensaje" class="flex gap-2">
-          <input
+            <input
+              ref="mensajeInputEl"
             v-model="mensajeInput"
             type="text"
             placeholder="Escribe un mensaje..."
-            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
             :disabled="chatStore.loading"
           />
           <button
             type="submit"
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+            class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors disabled:opacity-50"
             :disabled="!mensajeInput.trim() || chatStore.loading"
           >
             ➤
@@ -102,13 +103,15 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted, watch } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { useChatbotStore } from '../../stores/chatbot'
 
 const chatStore = useChatbotStore()
 const abierto = ref(false)
 const mensajeInput = ref('')
 const chatContainer = ref(null)
+const mensajeInputEl = ref(null)
+const chatWidget = ref(null)
 
 function formatFecha(fecha) {
   if (!fecha) return ''
@@ -118,11 +121,19 @@ function formatFecha(fecha) {
 
 function abrirChat() {
   abierto.value = true
-  nextTick(() => scrollToBottom())
+  nextTick(() => { scrollToBottom(); mensajeInputEl.value?.focus() })
 }
 
 function cerrarChat() {
   abierto.value = false
+}
+
+function cerrarConEscape(evento) {
+  if (evento.key === 'Escape' && abierto.value) cerrarChat()
+}
+
+function cerrarAlHacerClickFuera(evento) {
+  if (abierto.value && chatWidget.value && !chatWidget.value.contains(evento.target)) cerrarChat()
 }
 
 function limpiarChat() {
@@ -136,7 +147,7 @@ async function enviarMensaje() {
   mensajeInput.value = ''
   
   await chatStore.enviarMensaje(texto)
-  nextTick(() => scrollToBottom())
+  nextTick(() => { scrollToBottom(); mensajeInputEl.value?.focus() })
 }
 
 function handleOpcion(opcion) {
@@ -151,14 +162,33 @@ function scrollToBottom() {
 }
 
 // Scroll cuando hay nuevos mensajes
-watch(() => chatStore.mensajes.length, () => {
+watch(() => chatStore.mensajes.map((mensaje) => mensaje.contenido).join(''), () => {
   nextTick(() => scrollToBottom())
+})
+
+onMounted(() => {
+  document.addEventListener('keydown', cerrarConEscape)
+  document.addEventListener('pointerdown', cerrarAlHacerClickFuera)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', cerrarConEscape)
+  document.removeEventListener('pointerdown', cerrarAlHacerClickFuera)
 })
 </script>
 
 <style scoped>
 .animate-bounce {
   animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.chat-fab, .chat-header { background: #d9363e; }
+.chat-fab:hover { background: #b92530; }
+.chat-window { animation: chat-in .2s ease-out; }
+
+@keyframes chat-in {
+  from { opacity: 0; transform: translateY(8px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes bounce {

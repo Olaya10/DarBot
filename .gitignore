@@ -5,3 +5,7 @@
 /.idea/
 *.iml
 *.log
+# Variables de entorno
+.env
+.env.*
+!.env.example

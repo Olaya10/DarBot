@@ -84,7 +84,7 @@ public class AuthService {
     }
 
     public Usuario findByUsername(String username) {
-        return usuarioRepository.findByUsername(username)
+        return usuarioRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
 }

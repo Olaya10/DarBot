@@ -4,9 +4,7 @@ import com.darbot.chatbot.entity.Conversacion;
 import com.darbot.chatbot.entity.ContextoConversacion;
 import com.darbot.chatbot.entity.Mensaje;
 import com.darbot.chatbot.repository.ContextoConversacionRepository;
-import com.darbot.chatbot.repository.IndicadorContextoRepository;
 import com.darbot.chatbot.repository.MensajeRepository;
-import com.darbot.chatbot.entity.IndicadorContexto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +20,27 @@ public class ContextoService {
 
     private final ContextoConversacionRepository contextoRepository;
     private final MensajeRepository mensajeRepository;
-    private final IndicadorContextoRepository indicadorRepository;
+
+    // Indicadores de contexto (preguntas de seguimiento)
+    private static final String[] INDICADORES_CONTEXTO = {
+        // Preguntas de seguimiento
+        "y eso", "y esa", "y el", "y la", 
+        "ese", "esa", "eso", "eso que", 
+        "a qué hora", "cuándo", "dónde", 
+        "y cómo", "y por qué",
+        "y para", "para mañana", "para hoy", "para ayer",
+        "y mañana", "y hoy", "y ayer",
+        "qué hay", "qué tal", "cómo está",
+        "y entonces", "y después", "y luego",
+        "qué más", "algo más", "otra cosa",
+        "y los", "y las", "y ese", "y esa",
+        "y el de", "y la de", "y los de", "y las de",
+        // Preguntas cortas
+        "mañana", "hoy", "ayer", "ese", "esa",
+        "ello", "eso", "aquello", "lo mismo",
+        // Preguntas con "y"
+        " y ", "y el", "y la", "y los", "y las"
+    };
 
     public Optional<ContextoConversacion> obtenerContexto(Conversacion conversacion) {
         return contextoRepository.findByConversacion(conversacion);
@@ -66,18 +84,22 @@ public class ContextoService {
         if (texto == null) return false;
         String textoLower = texto.toLowerCase().trim();
         
-        // Obtener indicadores desde la BD
-        List<IndicadorContexto> indicadores = 
-            indicadorRepository.findByActivaTrueOrderByPrioridadDesc();
-        
-        if (indicadores.isEmpty()) {
-            log.warn("No hay indicadores de contexto en la BD");
-            return false;
+        // Si la pregunta es muy corta (1-3 palabras), probablemente es contexto
+        String[] palabras = textoLower.split("\\s+");
+        if (palabras.length <= 3) {
+            String[] contextoPalabras = {"mañana", "hoy", "ayer", "eso", "ese", "esa", "ello", "aquello"};
+            for (String palabra : contextoPalabras) {
+                if (textoLower.contains(palabra)) {
+                    log.info("🔍 Contexto detectado por palabra corta: '{}' (palabra: '{}')", texto, palabra);
+                    return true;
+                }
+            }
         }
         
-        for (IndicadorContexto ind : indicadores) {
-            if (textoLower.contains(ind.getIndicador().toLowerCase())) {
-                log.info("Contexto detectado (BD): '{}' -> indicador: '{}'", texto, ind.getIndicador());
+        // Verificar indicadores
+        for (String ind : INDICADORES_CONTEXTO) {
+            if (textoLower.contains(ind)) {
+                log.info("🔍 Contexto detectado por indicador: '{}' (indicador: '{}')", texto, ind);
                 return true;
             }
         }

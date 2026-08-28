@@ -7,6 +7,8 @@ import com.darbot.chatbot.util.LenguajeUtil;
 import com.darbot.chatbot.entity.Conversacion;
 import com.darbot.chatbot.entity.Faq;
 import com.darbot.chatbot.entity.Intencion;
+import com.darbot.chatbot.entity.PreguntaSinRespuesta;
+import com.darbot.chatbot.repository.PreguntaSinRespuestaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ public class IntentRouterService {
     private final LenguajeUtil lenguajeUtil;
     private final ExtractorDatos extractorDatos;
     private final ContextoService contextoService;
+    private final PreguntaSinRespuestaRepository preguntaRepository;
     
     private final List<IntencionHandler> handlers;
 
@@ -72,6 +75,7 @@ public class IntentRouterService {
         }
 
         // Sin resultado
+        guardarPreguntaSinRespuesta(texto, null);
         return new ResultadoChatbot("DESCONOCIDA", 
             "🔍 No encontré información sobre tu consulta. La he registrado para que los administradores puedan mejorar mi base de conocimiento.");
     }
@@ -102,10 +106,19 @@ public class IntentRouterService {
                 ResultadoChatbot resultado = procesarHandler(intencionOpt.get().getNombre(), parteNormalizada, entidades, null);
                 mensaje.append("• ").append(resultado.getMensaje()).append("\n\n");
             } else {
+                guardarPreguntaSinRespuesta(parte, null);
                 mensaje.append("• ❌ No pude entender: \"").append(parte).append("\"\n\n");
             }
         }
         
         return new ResultadoChatbot("COMPUESTA", mensaje.toString());
+    }
+
+    private void guardarPreguntaSinRespuesta(String pregunta, String intentoIntencion) {
+        PreguntaSinRespuesta registro = new PreguntaSinRespuesta();
+        registro.setPregunta(pregunta);
+        registro.setIntentoIntencion(intentoIntencion);
+        registro.setResuelta(false);
+        preguntaRepository.save(registro);
     }
 }

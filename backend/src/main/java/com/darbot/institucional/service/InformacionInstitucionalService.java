@@ -71,5 +71,9 @@ public class InformacionInstitucionalService {
         if (request.filosofia() != null) entity.setFilosofia(request.filosofia());
         if (request.descripcion() != null) entity.setDescripcion(request.descripcion());
         if (request.logoUrl() != null) entity.setLogoUrl(request.logoUrl());
+        if (request.nombreInstitucion() != null) entity.setNombreInstitucion(request.nombreInstitucion());
+        if (request.telefonoGeneral() != null) entity.setTelefonoGeneral(request.telefonoGeneral());
+        if (request.correoGeneral() != null) entity.setCorreoGeneral(request.correoGeneral());
+        if (request.sitioWeb() != null) entity.setSitioWeb(request.sitioWeb());
     }
 }

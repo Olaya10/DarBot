@@ -1,15 +1,17 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
+  <div class="admin-view with-shared-sidebar">
     <!-- Header -->
     <header class="bg-white shadow">
       <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
         <div class="flex items-center gap-4">
+          <router-link to="/" aria-label="Ir al inicio"><img src="../img/logo_dario.png" alt="Logo institucional" class="h-12 w-12 object-contain drop-shadow-md" /></router-link>
           <router-link to="/dashboard" class="text-gray-600 hover:text-gray-800">
             ← Volver
           </router-link>
-          <h1 class="text-xl font-bold text-blue-600">📊 Analítica</h1>
+          <h1 class="text-xl font-bold text-red-700">📊 Analítica</h1>
         </div>
         <div class="flex items-center gap-4">
+          <router-link to="/" class="text-red-700 text-sm">Ver sitio</router-link>
           <span class="text-gray-600 text-sm">{{ authStore.user?.username }}</span>
           <button @click="authStore.logout" class="text-red-500 hover:text-red-700 text-sm">
             Cerrar sesión

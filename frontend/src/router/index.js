@@ -5,6 +5,11 @@ import ChatView from '../views/ChatView.vue'
 import AdminFaqView from '../views/AdminFaqView.vue'
 import AdminContenidoView from '../views/AdminContenidoView.vue'
 import AdminAnaliticaView from '../views/AdminAnaliticaView.vue'
+import AdminIntencionesView from '../views/AdminIntencionesView.vue'
+import AdminSinonimosView from '../views/AdminSinonimosView.vue'
+import AdminPreguntasView from '../views/AdminPreguntasView.vue'
+import HomeView from '../views/HomeView.vue'
+import AdminInstitucionalView from '../views/AdminInstitucionalView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -18,7 +23,9 @@ const router = createRouter({
     },
     {
       path: '/',
-      redirect: '/dashboard'
+      name: 'home',
+      component: HomeView,
+      meta: { requiresAuth: false }
     },
     {
       path: '/dashboard',
@@ -48,6 +55,30 @@ const router = createRouter({
       path: '/admin/analitica',
       name: 'admin-analitica',
       component: AdminAnaliticaView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/admin/intenciones',
+      name: 'admin-intenciones',
+      component: AdminIntencionesView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/admin/sinonimos',
+      name: 'admin-sinonimos',
+      component: AdminSinonimosView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/admin/preguntas',
+      name: 'admin-preguntas',
+      component: AdminPreguntasView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/admin/institucional',
+      name: 'admin-institucional',
+      component: AdminInstitucionalView,
       meta: { requiresAuth: true }
     }
   ]

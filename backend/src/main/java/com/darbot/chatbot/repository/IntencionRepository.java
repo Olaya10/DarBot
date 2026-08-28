@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface IntencionRepository extends JpaRepository<Intencion, Long> {
+    List<Intencion> findAllByOrderByPrioridadDesc();
     List<Intencion> findByActivaTrueOrderByPrioridadDesc();
     Optional<Intencion> findByNombre(String nombre);
 }

@@ -26,7 +26,7 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('user', JSON.stringify(user.value))
       return data
     } catch (err) {
-      error.value = err.response?.data?.message || 'Error al iniciar sesión'
+      error.value = err.response?.data?.error || err.response?.data?.message || 'Error al iniciar sesión'
       throw error.value
     } finally {
       loading.value = false
@@ -37,6 +37,7 @@ export const useAuthStore = defineStore('auth', () => {
     authService.logout()
     token.value = ''
     user.value = null
+    window.location.assign('/login')
   }
 
   return {

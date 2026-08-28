@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
+  <div class="admin-view with-shared-sidebar chat-admin-view">
     <!-- Header -->
     <header class="bg-white shadow">
       <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
@@ -7,10 +7,11 @@
           <router-link to="/dashboard" class="text-gray-600 hover:text-gray-800">
             ← Volver
           </router-link>
-          <h1 class="text-xl font-bold text-blue-600">💬 Chat con DarBot</h1>
+          <h1 class="text-xl font-bold text-red-700">💬 Chat con DarBot</h1>
         </div>
         <div class="flex items-center gap-4">
           <span class="text-gray-600 text-sm">{{ authStore.user?.username }}</span>
+          <router-link to="/" class="text-red-700 text-sm font-medium">Ver sitio</router-link>
           <button 
             @click="authStore.logout" 
             class="text-red-500 hover:text-red-700 text-sm"
@@ -38,7 +39,7 @@
             <div 
               class="max-w-[80%] rounded-lg px-4 py-2"
               :class="msg.tipo === 'USER' 
-                ? 'bg-blue-600 text-white rounded-br-none' 
+                ? 'bg-red-600 text-white rounded-br-none' 
                 : 'bg-gray-200 text-gray-800 rounded-bl-none'"
             >
               <div class="whitespace-pre-wrap">{{ msg.contenido }}</div>
@@ -50,7 +51,7 @@
                   :key="idx"
                   @click="handleOpcion(opcion)"
                   class="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full transition-colors"
-                  :class="msg.tipo === 'USER' ? 'text-white' : 'text-blue-600 bg-blue-50 hover:bg-blue-100'"
+                  :class="msg.tipo === 'USER' ? 'text-white' : 'text-red-700 bg-red-50 hover:bg-red-100'"
                 >
                   {{ opcion }}
                 </button>
@@ -97,15 +98,16 @@
         <div class="border-t p-4">
           <form @submit.prevent="enviarMensaje" class="flex gap-2">
             <input
+              ref="mensajeInputEl"
               v-model="mensajeInput"
               type="text"
               placeholder="Escribe tu mensaje..."
-              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               :disabled="chatStore.loading"
             />
             <button
               type="submit"
-              class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
               :disabled="!mensajeInput.trim() || chatStore.loading"
             >
               Enviar
@@ -134,6 +136,7 @@ const chatStore = useChatbotStore()
 
 const mensajeInput = ref('')
 const chatContainer = ref(null)
+const mensajeInputEl = ref(null)
 
 function formatFecha(fecha) {
   if (!fecha) return ''
@@ -151,6 +154,7 @@ async function enviarMensaje() {
   
   await nextTick()
   scrollToBottom()
+  mensajeInputEl.value?.focus()
 }
 
 function handleOpcion(opcion) {
@@ -177,6 +181,7 @@ function scrollToBottom() {
 
 onMounted(() => {
   scrollToBottom()
+  mensajeInputEl.value?.focus()
 })
 </script>
 

@@ -36,3 +36,22 @@ npm run dev
 ```sh
 npm run build
 ```
+
+### Probar producción con Docker
+
+Desde la raíz del repositorio, define las variables obligatorias y levanta el stack:
+
+```powershell
+$env:POSTGRES_PASSWORD="cambia-esta-clave"
+$env:JWT_SECRET="genera-un-secreto-largo-y-aleatorio"
+docker compose -f docker-compose.prod.yml up --build -d
+```
+
+La aplicación queda disponible en `http://localhost` o en el puerto indicado por `APP_PORT`.
+Nginx sirve el frontend y reenvía `/api` al backend. Para detenerlo:
+
+```powershell
+docker compose -f docker-compose.prod.yml down
+```
+
+En un servidor real, configura las mismas variables en el proveedor de despliegue y coloca HTTPS delante de Nginx. No guardes secretos en el repositorio.
