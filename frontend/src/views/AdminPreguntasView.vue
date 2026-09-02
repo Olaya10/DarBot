@@ -40,6 +40,7 @@
               <td class="cell text-gray-500 whitespace-nowrap">{{ formatearFecha(pregunta.fecha) }}</td>
               <td class="cell"><span :class="pregunta.resuelta ? 'text-green-600' : 'text-orange-600'">{{ pregunta.resuelta ? 'Resuelta' : 'Pendiente' }}</span></td>
               <td class="cell whitespace-nowrap">
+                <button v-if="!pregunta.resuelta" @click="convertirEnFaq(pregunta)" class="button bg-blue-600 mr-2">Convertir en FAQ</button>
                 <button v-if="!pregunta.resuelta" @click="resolver(pregunta.id)" class="button bg-green-600 mr-2">Marcar resuelta</button>
                 <button v-else @click="reabrir(pregunta.id)" class="button bg-yellow-600 mr-2">Reabrir</button>
                 <button @click="eliminar(pregunta.id)" class="button bg-red-600">Eliminar</button>
@@ -72,7 +73,12 @@ async function cargar() {
     error.value = e.response?.data?.error || 'No se pudieron cargar las preguntas'
   }
 }
-async function resolver(id) { await api.put(`/api/admin/chatbot/preguntas/${id}/resolver`); await cargar() }
+async function resolver(id) { try { await api.put(`/api/admin/chatbot/preguntas/${id}/resolver`); await cargar() } catch (e) { error.value = e.response?.data?.error || 'No se pudo resolver la pregunta' } }
+async function convertirEnFaq(pregunta) {
+  const respuesta = window.prompt('Escribe la respuesta que aprenderá DarBot:')
+  if (!respuesta?.trim()) return
+  try { await api.post(`/api/admin/chatbot/preguntas/${pregunta.id}/convertir-faq`, null, { params: { respuesta } }); await cargar() } catch (e) { error.value = e.response?.data?.error || 'No se pudo crear la FAQ' }
+}
 async function reabrir(id) { await api.put(`/api/admin/chatbot/preguntas/${id}/reabrir`); await cargar() }
 async function eliminar(id) { if (confirm('¿Eliminar esta pregunta?')) { await api.delete(`/api/admin/chatbot/preguntas/${id}`); await cargar() } }
 function formatearFecha(fecha) { return fecha ? new Date(fecha).toLocaleString('es-CO') : '-' }

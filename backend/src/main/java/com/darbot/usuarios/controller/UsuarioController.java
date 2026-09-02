@@ -52,6 +52,11 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{id}/activar")
+    public ResponseEntity<UsuarioResponse> activarUsuario(@PathVariable Long id) {
+        return ResponseEntity.ok(UsuarioResponse.from(usuarioService.activarUsuario(id)));
+    }
+
     @DeleteMapping("/{id}/permanente")
     public ResponseEntity<Void> eliminarUsuarioPermanentemente(@PathVariable Long id) {
         usuarioService.eliminarUsuarioPermanentemente(id);

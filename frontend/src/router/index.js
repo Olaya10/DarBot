@@ -10,6 +10,7 @@ import AdminSinonimosView from '../views/AdminSinonimosView.vue'
 import AdminPreguntasView from '../views/AdminPreguntasView.vue'
 import HomeView from '../views/HomeView.vue'
 import AdminInstitucionalView from '../views/AdminInstitucionalView.vue'
+import AdminUsuariosView from '../views/AdminUsuariosView.vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
@@ -79,6 +80,12 @@ const router = createRouter({
       path: '/admin/institucional',
       name: 'admin-institucional',
       component: AdminInstitucionalView,
+      meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+      path: '/admin/usuarios',
+      name: 'admin-usuarios',
+      component: AdminUsuariosView,
       meta: { requiresAuth: true, requiresAdmin: true }
     }
   ]

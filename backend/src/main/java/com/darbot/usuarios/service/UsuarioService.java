@@ -65,13 +65,12 @@ public class UsuarioService {
         usuario.setFechaCreacion(LocalDateTime.now());
         usuario.setFechaActualizacion(LocalDateTime.now());
 
-        String nombreRol = request.rol() != null ? request.rol() : "EDITOR";
+        String nombreRol = request.rol() != null ? request.rol().toUpperCase() : "USER";
+        if (!nombreRol.equals("USER") && !nombreRol.equals("ADMIN")) {
+            throw new BadRequestException("El rol debe ser USER o ADMIN");
+        }
         Rol rol = rolRepository.findByNombre(nombreRol)
-                .orElseGet(() -> {
-                    Rol nuevoRol = new Rol();
-                    nuevoRol.setNombre(nombreRol);
-                    return rolRepository.save(nuevoRol);
-                });
+                .orElseThrow(() -> new ResourceNotFoundException("Rol no configurado: " + nombreRol));
 
         usuario.getRoles().add(rol);
         return usuarioRepository.save(usuario);
@@ -118,6 +117,14 @@ public class UsuarioService {
         usuario.setActivo(false);
         usuario.setFechaActualizacion(LocalDateTime.now());
         usuarioRepository.save(usuario);
+    }
+
+    @Transactional
+    public Usuario activarUsuario(Long id) {
+        Usuario usuario = obtenerPorId(id);
+        usuario.setActivo(true);
+        usuario.setFechaActualizacion(LocalDateTime.now());
+        return usuarioRepository.save(usuario);
     }
 
     @Transactional

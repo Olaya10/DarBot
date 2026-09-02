@@ -12,7 +12,10 @@
       <router-link to="/admin/faq"><span>▣</span> FAQ</router-link>
       <router-link to="/chat"><span>◌</span> Chat</router-link>
       <router-link to="/admin/preguntas"><span>▱</span> Preguntas</router-link>
+      <router-link to="/admin/intenciones"><span>✦</span> Intenciones</router-link>
+      <router-link to="/admin/sinonimos"><span>≈</span> Sinónimos</router-link>
       <router-link to="/admin/analitica"><span>▥</span> Analítica</router-link>
+      <router-link to="/admin/usuarios"><span>♙</span> Usuarios</router-link>
     </nav>
     <button class="shared-admin-logout" @click="authStore.logout">⇥ &nbsp; Cerrar sesión</button>
   </aside>

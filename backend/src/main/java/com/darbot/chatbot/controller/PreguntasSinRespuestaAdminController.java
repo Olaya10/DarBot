@@ -3,12 +3,15 @@ package com.darbot.chatbot.controller;
 import com.darbot.chatbot.dto.PreguntaSinRespuestaResponse;
 import com.darbot.chatbot.entity.PreguntaSinRespuesta;
 import com.darbot.chatbot.repository.PreguntaSinRespuestaRepository;
+import com.darbot.chatbot.entity.Faq;
+import com.darbot.chatbot.repository.FaqRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import jakarta.transaction.Transactional;
 
 @RestController
 @RequestMapping("/api/admin/chatbot/preguntas")
@@ -17,6 +20,7 @@ import java.util.List;
 public class PreguntasSinRespuestaAdminController {
 
     private final PreguntaSinRespuestaRepository repository;
+    private final FaqRepository faqRepository;
 
     @GetMapping
     public List<PreguntaSinRespuestaResponse> listar(@RequestParam(required = false) Boolean resuelta) {
@@ -37,6 +41,21 @@ public class PreguntasSinRespuestaAdminController {
     public PreguntaSinRespuestaResponse reabrir(@PathVariable Long id) {
         PreguntaSinRespuesta pregunta = repository.findById(id).orElseThrow();
         pregunta.setResuelta(false);
+        return PreguntaSinRespuestaResponse.from(repository.save(pregunta));
+    }
+
+    @PostMapping("/{id}/convertir-faq")
+    @Transactional
+    public PreguntaSinRespuestaResponse convertirEnFaq(@PathVariable Long id, @RequestParam String respuesta) {
+        PreguntaSinRespuesta pregunta = repository.findById(id).orElseThrow();
+        if (respuesta.isBlank()) throw new IllegalArgumentException("La respuesta es obligatoria");
+        Faq faq = new Faq();
+        faq.setPregunta(pregunta.getPregunta());
+        faq.setRespuesta(respuesta.trim());
+        faq.setCategoria("Generada desde preguntas pendientes");
+        faq.setActiva(true);
+        faqRepository.save(faq);
+        pregunta.setResuelta(true);
         return PreguntaSinRespuestaResponse.from(repository.save(pregunta));
     }
 
