@@ -11,7 +11,6 @@ import com.darbot.common.exception.BadRequestException;
 import com.darbot.common.exception.ChatbotException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -29,7 +28,6 @@ public class ChatbotService {
     private final CacheService cacheService;
 
     // Cache de respuestas para preguntas frecuentes
-    @Cacheable(value = "chatbot_respuestas", key = "#sessionId + '_' + #textoUsuario", unless = "#resultado == null")
     public ChatbotRespuesta procesarMensajeConCache(String sessionId, String textoUsuario) {
         return procesarMensaje(sessionId, textoUsuario);
     }
@@ -76,7 +74,6 @@ public class ChatbotService {
             ChatbotRespuesta respuesta = construirRespuestaEstructurada(resultado, mensajeBot.getId());
 
             // Guardar en cache para futuras consultas
-            cacheService.guardarRespuestaCache(sessionId, textoUsuario, respuesta);
 
             return respuesta;
 

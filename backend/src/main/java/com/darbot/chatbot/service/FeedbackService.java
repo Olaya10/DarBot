@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.darbot.common.exception.BadRequestException;
+import com.darbot.common.exception.ResourceNotFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -30,19 +32,22 @@ public class FeedbackService {
                                    String comentario, String ip, String userAgent) {
         
         // Verificar calificación válida
-        if (!calificacion.equals(1) && !calificacion.equals(-1)) {
-            throw new IllegalArgumentException("La calificación debe ser 1 (útil) o -1 (no útil)");
+        if (calificacion == null || (!calificacion.equals(1) && !calificacion.equals(-1))) {
+            throw new BadRequestException("La calificación debe ser 1 (útil) o -1 (no útil)");
         }
 
         // Buscar conversación
         Conversacion conversacion = conversacionRepository.findBySessionId(sessionId)
-            .orElseThrow(() -> new RuntimeException("Conversación no encontrada"));
+            .orElseThrow(() -> new ResourceNotFoundException("Conversación no encontrada"));
 
         // Buscar mensaje (opcional)
         Mensaje mensaje = null;
         if (mensajeId != null) {
             mensaje = mensajeRepository.findById(mensajeId)
-                .orElse(null);
+                .orElseThrow(() -> new ResourceNotFoundException("Mensaje no encontrado"));
+            if (!mensaje.getConversacion().getId().equals(conversacion.getId())) {
+                throw new BadRequestException("El mensaje no pertenece a la conversación indicada");
+            }
         }
 
         // Crear feedback

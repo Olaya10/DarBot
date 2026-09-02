@@ -3,12 +3,22 @@ import { ref, computed } from 'vue'
 import { authService } from '../services/auth'
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
+  function readStoredUser() {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null')
+    } catch {
+      localStorage.removeItem('user')
+      return null
+    }
+  }
+
+  const user = ref(readStoredUser())
   const token = ref(localStorage.getItem('token') || '')
   const loading = ref(false)
   const error = ref(null)
 
   const isAuthenticated = computed(() => !!token.value)
+  const isAdmin = computed(() => user.value?.rol?.toUpperCase() === 'ADMIN')
 
   async function login(username, password) {
     loading.value = true
@@ -37,7 +47,7 @@ export const useAuthStore = defineStore('auth', () => {
     authService.logout()
     token.value = ''
     user.value = null
-    window.location.assign('/login')
+    window.location.assign(`${import.meta.env.BASE_URL}login`)
   }
 
   return {
@@ -46,6 +56,7 @@ export const useAuthStore = defineStore('auth', () => {
     loading,
     error,
     isAuthenticated,
+    isAdmin,
     login,
     logout
   }

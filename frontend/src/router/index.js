@@ -43,43 +43,43 @@ const router = createRouter({
       path: '/admin/faq',
       name: 'admin-faq',
       component: AdminFaqView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/admin/contenido',
       name: 'admin-contenido',
       component: AdminContenidoView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/admin/analitica',
       name: 'admin-analitica',
       component: AdminAnaliticaView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/admin/intenciones',
       name: 'admin-intenciones',
       component: AdminIntencionesView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/admin/sinonimos',
       name: 'admin-sinonimos',
       component: AdminSinonimosView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/admin/preguntas',
       name: 'admin-preguntas',
       component: AdminPreguntasView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/admin/institucional',
       name: 'admin-institucional',
       component: AdminInstitucionalView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     }
   ]
 })
@@ -88,7 +88,11 @@ router.beforeEach((to, from) => {
   const authStore = useAuthStore()
   
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return '/login'
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+  if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    return { name: 'dashboard' }
   }
   
   if (to.path === '/login' && authStore.isAuthenticated) {

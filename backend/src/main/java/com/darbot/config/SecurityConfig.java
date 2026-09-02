@@ -43,9 +43,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/institucional/**").permitAll()
                 .requestMatchers("/api/contenidos/**").permitAll()
                 .requestMatchers("/api/chatbot/pregunta").permitAll()
-                .requestMatchers("/api/chatbot/feedback/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/chatbot/feedback").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/chatbot/feedback/estadisticas").hasRole("ADMIN")
                 .requestMatchers("/actuator/**").permitAll()
-                .requestMatchers("/api/admin/**").authenticated()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

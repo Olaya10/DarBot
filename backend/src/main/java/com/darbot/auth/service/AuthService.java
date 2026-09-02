@@ -69,14 +69,9 @@ public class AuthService {
         usuario.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         usuario.setActivo(true);
 
-        // asignar rol
-        String nombreRol = registerRequest.getRol() != null ? registerRequest.getRol() : "USER";
-        Rol rol = rolRepository.findByNombre(nombreRol)
-                .orElseGet(() -> {
-                    Rol nuevo = new Rol();
-                    nuevo.setNombre(nombreRol);
-                    return rolRepository.save(nuevo);
-                });
+        // El registro público nunca puede elegir privilegios.
+        Rol rol = rolRepository.findByNombre("USER")
+            .orElseThrow(() -> new IllegalStateException("El rol USER no está configurado"));
 
         usuario.getRoles().add(rol);
 

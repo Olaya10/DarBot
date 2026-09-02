@@ -6,20 +6,22 @@ export const useChatbotStore = defineStore('chatbot', () => {
   const mensajes = ref([])
   const loading = ref(false)
   const sessionId = ref('session-' + Date.now())
+  let chatVersion = 0
 
   function esperar(milisegundos) {
     return new Promise((resolve) => window.setTimeout(resolve, milisegundos))
   }
 
-  async function escribirRespuesta(mensaje, respuesta) {
+  async function escribirRespuesta(mensaje, respuesta, version) {
     for (let indice = 0; indice < respuesta.length; indice += 1) {
+      if (version !== chatVersion) return
       mensaje.contenido += respuesta[indice]
       await esperar(respuesta[indice] === ' ' ? 18 : 24)
     }
   }
 
   async function enviarMensaje(texto) {
-    if (!texto || !texto.trim()) return
+    if (!texto || !texto.trim() || loading.value) return
     
     mensajes.value.push({
       id: Date.now(),
@@ -43,7 +45,7 @@ export const useChatbotStore = defineStore('chatbot', () => {
       }
       mensajes.value.push(mensajeBot)
       loading.value = false
-      void escribirRespuesta(mensajeBot, response.respuesta || '')
+      void escribirRespuesta(mensajeBot, response.respuesta || '', chatVersion)
       
       return response
     } catch (error) {
@@ -70,6 +72,7 @@ export const useChatbotStore = defineStore('chatbot', () => {
   }
 
   function limpiarChat() {
+    chatVersion += 1
     mensajes.value = []
     sessionId.value = 'session-' + Date.now()
   }

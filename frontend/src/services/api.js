@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
+// En desarrollo, Vite reenvía /api al backend y evita depender de un host fijo.
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -28,7 +29,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+      window.location.assign(`${import.meta.env.BASE_URL}login`)
     }
     return Promise.reject(error)
   }

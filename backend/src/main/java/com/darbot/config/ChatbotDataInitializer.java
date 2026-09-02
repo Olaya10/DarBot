@@ -4,6 +4,8 @@ import com.darbot.chatbot.entity.Intencion;
 import com.darbot.chatbot.entity.PalabraClaveIntencion;
 import com.darbot.chatbot.repository.IntencionRepository;
 import com.darbot.chatbot.repository.PalabraClaveIntencionRepository;
+import com.darbot.usuarios.entity.Rol;
+import com.darbot.usuarios.repository.RolRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -17,10 +19,25 @@ public class ChatbotDataInitializer implements CommandLineRunner {
 
     private final IntencionRepository intencionRepository;
     private final PalabraClaveIntencionRepository palabraClaveRepository;
+    private final RolRepository rolRepository;
 
     @Override
     public void run(String... args) throws Exception {
+        crearRolesSiNoExisten();
         crearIntencionesSiNoExisten();
+    }
+
+    private void crearRolesSiNoExisten() {
+        crearRolSiNoExiste("USER");
+        crearRolSiNoExiste("ADMIN");
+    }
+
+    private void crearRolSiNoExiste(String nombre) {
+        if (rolRepository.findByNombre(nombre).isEmpty()) {
+            Rol rol = new Rol();
+            rol.setNombre(nombre);
+            rolRepository.save(rol);
+        }
     }
 
     private void crearIntencionesSiNoExisten() {

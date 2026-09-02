@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +47,7 @@ public class JwtTokenProvider {
     public String getUsernameFromToken(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
+            .requireIssuer(jwtConfig.getIssuer())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -56,6 +58,7 @@ public class JwtTokenProvider {
     public Long getUserIdFromToken(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
+            .requireIssuer(jwtConfig.getIssuer())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
@@ -68,6 +71,7 @@ public class JwtTokenProvider {
         try {
             Jwts.parserBuilder()
                     .setSigningKey(getSigningKey())
+                .requireIssuer(jwtConfig.getIssuer())
                     .build()
                     .parseClaimsJws(token);
             return true;
@@ -78,6 +82,6 @@ public class JwtTokenProvider {
     }
 
     private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes());
+        return Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 }
