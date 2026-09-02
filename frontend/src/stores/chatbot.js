@@ -8,16 +8,9 @@ export const useChatbotStore = defineStore('chatbot', () => {
   const sessionId = ref('session-' + Date.now())
   let chatVersion = 0
 
-  function esperar(milisegundos) {
-    return new Promise((resolve) => window.setTimeout(resolve, milisegundos))
-  }
-
-  async function escribirRespuesta(mensaje, respuesta, version) {
-    for (let indice = 0; indice < respuesta.length; indice += 1) {
-      if (version !== chatVersion) return
-      mensaje.contenido += respuesta[indice]
-      await esperar(respuesta[indice] === ' ' ? 18 : 24)
-    }
+  function escribirRespuesta(mensaje, respuesta, version) {
+    if (version !== chatVersion) return
+    mensaje.contenido = respuesta
   }
 
   async function enviarMensaje(texto) {
@@ -40,12 +33,14 @@ export const useChatbotStore = defineStore('chatbot', () => {
         tipo: 'BOT',
         contenido: '',
         intencion: response.intencion,
+        entidades: response.entidades || {},
+        resultados: response.resultados || [],
         opciones: response.opciones,
         fecha: new Date()
       }
       mensajes.value.push(mensajeBot)
       loading.value = false
-      void escribirRespuesta(mensajeBot, response.respuesta || '', chatVersion)
+      escribirRespuesta(mensajeBot, response.respuesta || '', chatVersion)
       
       return response
     } catch (error) {

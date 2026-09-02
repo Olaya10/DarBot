@@ -46,6 +46,14 @@
               : 'bg-white text-gray-800 rounded-bl-none shadow-sm'"
           >
             <div class="whitespace-pre-wrap">{{ msg.contenido }}</div>
+
+            <div v-if="msg.resultados?.length" class="mt-3 space-y-2">
+              <article v-for="(resultado, resultadoIdx) in msg.resultados" :key="resultadoIdx" class="rounded-md border border-gray-200 p-2 text-xs">
+                <p v-for="([clave, valor], campoIdx) in Object.entries(resultado)" :key="campoIdx" class="break-words">
+                  <strong class="text-gray-600">{{ clave }}:</strong> {{ valor }}
+                </p>
+              </article>
+            </div>
             
             <div v-if="msg.opciones && msg.opciones.length > 0" class="mt-2 flex flex-wrap gap-1">
               <button
@@ -146,7 +154,11 @@ async function enviarMensaje() {
   const texto = mensajeInput.value
   mensajeInput.value = ''
   
-  await chatStore.enviarMensaje(texto)
+  try {
+    await chatStore.enviarMensaje(texto)
+  } catch {
+    // El store ya muestra el mensaje de error en la conversación.
+  }
   nextTick(() => { scrollToBottom(); mensajeInputEl.value?.focus() })
 }
 

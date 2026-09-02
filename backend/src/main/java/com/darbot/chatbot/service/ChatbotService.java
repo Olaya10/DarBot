@@ -12,6 +12,7 @@ import com.darbot.common.exception.ChatbotException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 
@@ -25,24 +26,14 @@ public class ChatbotService {
     private final IntentRouterService intentRouterService;
     private final LenguajeUtil lenguajeUtil;
     private final ContextoService contextoService;
-    private final CacheService cacheService;
 
-    // Cache de respuestas para preguntas frecuentes
-    public ChatbotRespuesta procesarMensajeConCache(String sessionId, String textoUsuario) {
-        return procesarMensaje(sessionId, textoUsuario);
-    }
-
+    @Transactional
     public ChatbotRespuesta procesarMensaje(String sessionId, String textoUsuario) {
         validarEntrada(sessionId, textoUsuario);
+        sessionId = sessionId.trim();
+        textoUsuario = textoUsuario.trim();
 
         try {
-            // Verificar si la respuesta está en cache
-            ChatbotRespuesta cached = cacheService.obtenerRespuestaCache(sessionId, textoUsuario);
-            if (cached != null) {
-                log.info("Respuesta obtenida de cache: sessionId={}", sessionId);
-                return cached;
-            }
-
             Conversacion conversacion = obtenerOCrearConversacion(sessionId);
             guardarMensaje(conversacion, "USER", textoUsuario);
 
@@ -56,6 +47,10 @@ public class ChatbotService {
                 resultado = intentRouterService.procesarPreguntaCompuesta(textoNormalizado);
             } else {
                 resultado = intentRouterService.procesar(textoNormalizado, conversacion);
+            }
+
+            if (resultado == null || resultado.getMensaje() == null || resultado.getMensaje().isBlank()) {
+                throw new ChatbotException("El chatbot no generó una respuesta válida");
             }
 
             // Guardar respuesta BOT
@@ -73,8 +68,6 @@ public class ChatbotService {
             // Construir respuesta
             ChatbotRespuesta respuesta = construirRespuestaEstructurada(resultado, mensajeBot.getId());
 
-            // Guardar en cache para futuras consultas
-
             return respuesta;
 
         } catch (BadRequestException ex) {
@@ -89,7 +82,8 @@ public class ChatbotService {
         ChatbotRespuesta respuestaDTO = new ChatbotRespuesta();
         respuestaDTO.setRespuesta(resultado.getMensaje());
         respuestaDTO.setIntencion(resultado.getIntencion());
-        respuestaDTO.setEntidades(new HashMap<>());
+        respuestaDTO.setEntidades(resultado.getEntidades() != null ? resultado.getEntidades() : new HashMap<>());
+        respuestaDTO.setResultados(resultado.getResultados() != null ? resultado.getResultados() : java.util.Collections.emptyList());
         respuestaDTO.setMensajeId(mensajeId); // Agregar mensajeId
         
         // Opciones según intención
@@ -119,6 +113,12 @@ public class ChatbotService {
         }
         if (textoUsuario == null || textoUsuario.isBlank()) {
             throw new BadRequestException("El texto del usuario no puede estar vacío");
+        }
+        if (sessionId.length() > 100) {
+            throw new BadRequestException("sessionId no puede superar 100 caracteres");
+        }
+        if (textoUsuario.length() > 2000) {
+            throw new BadRequestException("El mensaje no puede superar 2000 caracteres");
         }
     }
 

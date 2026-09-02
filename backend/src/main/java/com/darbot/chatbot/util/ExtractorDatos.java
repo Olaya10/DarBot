@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.DateTimeException;
+import java.text.Normalizer;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,12 +22,12 @@ public class ExtractorDatos {
         "(\\d{1,2}\\s+de\\s+[a-z]+\\s+del?\\s+\\d{4})|" +
         "(\\d{1,2}/\\d{1,2}/\\d{4})|" +
         "(\\d{4}-\\d{1,2}-\\d{1,2})|" +
-        "(hoy|mañana|pasado mañana|ayer)"
+        "(hoy|manana|pasado manana|ayer)"
     );
 
     private static final Pattern PATRON_GRADO = Pattern.compile(
-        "(preescolar|primero|segundo|tercero|cuarto|quinto|sexto|séptimo|octavo|noveno|décimo|undécimo|once?|" +
-        "transición|párvulos|maternal|jardín|prekínder|kínder|" +
+        "(preescolar|primero|segundo|tercero|cuarto|quinto|sexto|septimo|octavo|noveno|decimo|undecimo|once?|" +
+        "transicion|parvulos|maternal|jardin|prekinder|kinder|" +
         "\\d+\\s*(?:°|º|grado|grados|mo|° grado))"
     );
 
@@ -38,7 +40,7 @@ public class ExtractorDatos {
 
     public Map<String, Object> extraerEntidades(String texto) {
         Map<String, Object> entidades = new HashMap<>();
-        String textoLower = texto.toLowerCase();
+        String textoLower = texto.toLowerCase(Locale.ROOT);
 
         // Extraer rango de fechas (del X al Y de mes)
         Map<String, Object> rango = extraerRangoFechas(textoLower);
@@ -110,8 +112,15 @@ public class ExtractorDatos {
             int mesNum = obtenerMesNumero(mes);
             int año = LocalDate.now().getYear();
             
-            resultado.put("fecha_desde", LocalDate.of(año, mesNum, diaInicio));
-            resultado.put("fecha_hasta", LocalDate.of(año, mesNum, diaFin));
+            try {
+                LocalDate fechaDesde = LocalDate.of(año, mesNum, diaInicio);
+                LocalDate fechaHasta = LocalDate.of(año, mesNum, diaFin);
+                if (fechaDesde.isAfter(fechaHasta)) return Collections.emptyMap();
+                resultado.put("fecha_desde", fechaDesde);
+                resultado.put("fecha_hasta", fechaHasta);
+            } catch (DateTimeException ex) {
+                return Collections.emptyMap();
+            }
             resultado.put("rango_tipo", "ESPECIFICO");
             return resultado;
         }
@@ -125,8 +134,15 @@ public class ExtractorDatos {
             int mesNum = obtenerMesNumero(mes);
             int año = LocalDate.now().getYear();
             
-            resultado.put("fecha_desde", LocalDate.of(año, mesNum, diaInicio));
-            resultado.put("fecha_hasta", LocalDate.of(año, mesNum, diaFin));
+            try {
+                LocalDate fechaDesde = LocalDate.of(año, mesNum, diaInicio);
+                LocalDate fechaHasta = LocalDate.of(año, mesNum, diaFin);
+                if (fechaDesde.isAfter(fechaHasta)) return Collections.emptyMap();
+                resultado.put("fecha_desde", fechaDesde);
+                resultado.put("fecha_hasta", fechaHasta);
+            } catch (DateTimeException ex) {
+                return Collections.emptyMap();
+            }
             resultado.put("rango_tipo", "ESPECIFICO");
             return resultado;
         }
@@ -138,8 +154,9 @@ public class ExtractorDatos {
         List<RangoFecha> rangos = rangoFechaRepository.findByActivoTrue();
         
         for (RangoFecha rango : rangos) {
-            if (texto.contains(rango.getNombre())) {
-                return rango.getNombre();
+            String nombreNormalizado = normalizarSinTildes(rango.getNombre());
+            if (texto.contains(nombreNormalizado)) {
+                return nombreNormalizado;
             }
         }
         return null;
@@ -149,11 +166,11 @@ public class ExtractorDatos {
         LocalDate hoy = LocalDate.now();
         switch (rangoNombre) {
             case "hoy": return hoy;
-            case "mañana": return hoy.plusDays(1);
+            case "manana": return hoy.plusDays(1);
             case "esta semana": return hoy;
-            case "próxima semana": return hoy.plusDays(7);
+            case "proxima semana": return hoy.plusDays(7);
             case "este mes": return hoy.withDayOfMonth(1);
-            case "próximo mes": return hoy.plusMonths(1).withDayOfMonth(1);
+            case "proximo mes": return hoy.plusMonths(1).withDayOfMonth(1);
             default: return hoy;
         }
     }
@@ -162,11 +179,11 @@ public class ExtractorDatos {
         LocalDate hoy = LocalDate.now();
         switch (rangoNombre) {
             case "hoy": return hoy;
-            case "mañana": return hoy.plusDays(1);
+            case "manana": return hoy.plusDays(1);
             case "esta semana": return hoy.plusDays(7);
-            case "próxima semana": return hoy.plusDays(14);
+            case "proxima semana": return hoy.plusDays(14);
             case "este mes": return hoy.withDayOfMonth(hoy.lengthOfMonth());
-            case "próximo mes": return hoy.plusMonths(1).withDayOfMonth(hoy.plusMonths(1).lengthOfMonth());
+            case "proximo mes": return hoy.plusMonths(1).withDayOfMonth(hoy.plusMonths(1).lengthOfMonth());
             default: return hoy.plusDays(7);
         }
     }
@@ -177,27 +194,27 @@ public class ExtractorDatos {
         meses.put("abril", 4); meses.put("mayo", 5); meses.put("junio", 6);
         meses.put("julio", 7); meses.put("agosto", 8); meses.put("septiembre", 9);
         meses.put("octubre", 10); meses.put("noviembre", 11); meses.put("diciembre", 12);
-        return meses.getOrDefault(mes, 1);
+        return meses.getOrDefault(mes, -1);
     }
 
     private Integer normalizarGrado(String grado) {
         Map<String, Integer> grados = new HashMap<>();
         grados.put("preescolar", 0);
-        grados.put("transición", 0);
+        grados.put("transicion", 0);
         grados.put("primero", 1);
         grados.put("segundo", 2);
         grados.put("tercero", 3);
         grados.put("cuarto", 4);
         grados.put("quinto", 5);
         grados.put("sexto", 6);
-        grados.put("séptimo", 7);
+        grados.put("septimo", 7);
         grados.put("octavo", 8);
         grados.put("noveno", 9);
-        grados.put("décimo", 10);
-        grados.put("undécimo", 11);
+        grados.put("decimo", 10);
+        grados.put("undecimo", 11);
         grados.put("once", 11);
 
-        String gradoLower = grado.toLowerCase().trim();
+        String gradoLower = normalizarSinTildes(grado);
         for (Map.Entry<String, Integer> entry : grados.entrySet()) {
             if (gradoLower.contains(entry.getKey())) {
                 return entry.getValue();
@@ -208,5 +225,11 @@ public class ExtractorDatos {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    private String normalizarSinTildes(String texto) {
+        if (texto == null) return "";
+        String normalizado = Normalizer.normalize(texto, Normalizer.Form.NFD);
+        return normalizado.replaceAll("\\p{M}", "").toLowerCase(Locale.ROOT).trim();
     }
 }
