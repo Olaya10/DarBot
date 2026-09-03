@@ -157,21 +157,50 @@ const mesEvento = (fecha) => fecha ? new Date(`${fecha}T00:00:00`).toLocaleDateS
 const tiempoRelativo = (fecha) => fecha ? new Date(fecha).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' }) : 'Reciente'
 
 async function cargarPreguntasPendientes() {
+  if (!authStore.isAdmin) {
+    preguntasPendientes.value = []
+    return
+  }
+
   const respuesta = await api.get('/api/admin/chatbot/preguntas?resuelta=false')
   preguntasPendientes.value = respuesta.data || []
 }
 
 onMounted(async () => {
   try {
-    const [estadisticasData, preguntasData, eventosData, faqData, intencionesData, sinonimosData, contenidoData] = await Promise.allSettled([
+    const promises = [
       chatbotService.obtenerEstadisticas(),
-      api.get('/api/admin/chatbot/preguntas?resuelta=false'),
-      api.get('/api/contenidos/eventos'),
-      api.get('/api/admin/chatbot/faqs'),
-      api.get('/api/admin/chatbot/intenciones'),
-      api.get('/api/admin/chatbot/sinonimos'),
-      api.get('/api/admin/contenidos/noticias')
-    ])
+      api.get('/api/contenidos/eventos')
+    ]
+
+    // Solo cargar datos admin si el usuario tiene rol administrador
+    if (authStore.isAdmin) {
+      promises.push(
+        api.get('/api/admin/chatbot/preguntas?resuelta=false'),
+        api.get('/api/admin/chatbot/faqs'),
+        api.get('/api/admin/chatbot/intenciones'),
+        api.get('/api/admin/chatbot/sinonimos'),
+        api.get('/api/admin/contenidos/noticias')
+      )
+    }
+
+    const results = await Promise.allSettled(promises)
+    const estadisticasData = results[0]
+    const eventosData = results[1]
+    // si hay datos admin, vendrán después en el mismo orden
+    let preguntasData = { status: 'rejected' }
+    let faqData = { status: 'rejected' }
+    let intencionesData = { status: 'rejected' }
+    let sinonimosData = { status: 'rejected' }
+    let contenidoData = { status: 'rejected' }
+
+    if (authStore.isAdmin) {
+      preguntasData = results[2]
+      faqData = results[3]
+      intencionesData = results[4]
+      sinonimosData = results[5]
+      contenidoData = results[6]
+    }
     const data = estadisticasData.status === 'fulfilled' ? estadisticasData.value : {}
     estadisticas.value = {
       total: data.total_feedback || 0,
