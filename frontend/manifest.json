@@ -1,0 +1,21 @@
+{
+  "name": "Institución Educativa Darío Torregroza Pérez",
+  "short_name": "Darío Torregroza",
+  "description": "Sitio institucional de la I.E. Darío Torregroza Pérez",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#f7f3ee",
+  "theme_color": "#c8102e",
+  "icons": [
+    {
+      "src": "imagenes/Logo IEDTP.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "imagenes/Logo IEDTP.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/me").authenticated()
                 .requestMatchers("/api/institucional/**").permitAll()
                 .requestMatchers("/api/contenidos/**").permitAll()
+                .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api/chatbot/pregunta").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/chatbot/feedback").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/chatbot/feedback/estadisticas").hasRole("ADMIN")
@@ -58,10 +59,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
+            "null",
+            "http://localhost",
+            "http://localhost:8000",
+            "http://127.0.0.1:8000",
             "http://localhost:5173",
             "http://localhost:5174",
             "http://127.0.0.1:5173",
-            "http://localhost:3000"
+            "http://localhost:3000",
+            "http://localhost:5500",
+            "http://127.0.0.1:5500"
         ));
         configuration.setAllowedMethods(Arrays.asList(
             "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"
