@@ -1,7 +1,7 @@
-const API_BASE = '/api';
+const API_BASE = (location.port && location.port !== '8080') ? (location.protocol + '//' + location.hostname + ':8080/api') : '/api';
 
-function getToken() { return localStorage.getItem('darbot_admin_token'); }
-function setToken(t){ if(t) localStorage.setItem('darbot_admin_token', t); else localStorage.removeItem('darbot_admin_token'); }
+function getToken() { return localStorage.getItem('darbot_token'); }
+function setToken(t){ if(t) localStorage.setItem('darbot_token', t); else localStorage.removeItem('darbot_token'); }
 
 async function apiFetch(endpoint, options = {}){
   const headers = { 'Accept':'application/json', ...(options.body?{'Content-Type':'application/json'}:{}), ...(options.headers||{}) };

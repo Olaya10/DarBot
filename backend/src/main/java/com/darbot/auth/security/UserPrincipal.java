@@ -24,7 +24,7 @@ public class UserPrincipal implements UserDetails {
     private String email;
     private String password;
     private List<String> roles;
-    private Boolean activo;
+    private boolean activo;
 
     public static UserPrincipal from(Usuario usuario) {
         List<String> roleNames = usuario.getRoles().stream().map(Rol::getNombre).collect(Collectors.toList());
@@ -34,12 +34,13 @@ public class UserPrincipal implements UserDetails {
                 .email(usuario.getCorreo())
                 .password(usuario.getPassword())
                 .roles(roleNames)
-                .activo(usuario.getActivo())
+                .activo(Boolean.TRUE.equals(usuario.getActivo()))
                 .build();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (roles == null) return List.of();
         return roles.stream().map(r -> new SimpleGrantedAuthority("ROLE_" + r)).collect(Collectors.toList());
     }
 
