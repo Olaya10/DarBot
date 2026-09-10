@@ -1,0 +1,42 @@
+<div class="admin-section">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="section-title mb-1">
+                <i class="fa-solid fa-image me-2 text-danger"></i>Gestión de Galería
+            </h3>
+            <p class="text-muted small mb-0">
+                Administra las imágenes que se muestran en el sitio público.
+            </p>
+        </div>
+        <button class="btn btn-admin-primary" onclick="openGaleriaModal()">
+            <i class="fa-solid fa-plus me-1"></i> Añadir Imagen
+        </button>
+    </div>
+
+    <div class="card-admin">
+        <div class="card-admin-body p-0">
+            <div class="table-admin-wrap">
+                <table class="table-admin">
+                    <thead>
+                        <tr>
+                            <th style="width:60px;">#</th>
+                            <th style="width:120px;">Vista</th>
+                            <th>Título</th>
+                            <th>Descripción</th>
+                            <th style="width:130px;">Fecha</th>
+                            <th class="text-end" style="width:140px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="galeriaBody">
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div>
+                                Cargando imágenes...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

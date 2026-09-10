@@ -1,3 +1,15 @@
+// =====================================================================
+//  DARBOT — ADMIN SPA  (versión final unificada)
+//  ---------------------------------------------------------------------
+//  Incluye:
+//   - Login page handler
+//   - Router SPA (dashboard, usuarios, contenidos, institucional,
+//                 chatbot, cache, galeria)
+//   - CRUD completo de usuarios, contenidos, chatbot y galería
+//   - Modales accesibles (showModal / closeModal)
+//   - Funciones globales (window.*) para onclick inline del partial
+// =====================================================================
+
 const API_BASE_HOST = (location.port && location.port !== '8080')
   ? `${location.protocol}//${location.hostname}:8080`
   : '';
@@ -121,8 +133,8 @@ if (location.pathname.endsWith('/login.html') || location.pathname.endsWith('/ad
 
 // ==================== ADMIN SPA ====================
 const isAdminSPA = location.pathname.endsWith('/admin/') ||
-                   location.pathname.endsWith('/admin/index.html') ||
-                   location.pathname.endsWith('/admin');
+  location.pathname.endsWith('/admin/index.html') ||
+  location.pathname.endsWith('/admin');
 
 if (isAdminSPA) {
   const routes = document.querySelectorAll('[data-route]');
@@ -181,6 +193,7 @@ if (isAdminSPA) {
       case 'institucional': renderInstitucional(); break;
       case 'chatbot': renderChatbot(); break;
       case 'cache': renderCache(); break;
+      case 'galeria': renderGaleria(); break;   // <-- NUEVO
       default: renderDashboard(); break;
     }
   }
@@ -273,11 +286,11 @@ if (isAdminSPA) {
                   </button>
                 </div>
                 <div class="col-sm-6">
-                  <button class="btn btn-admin-outline w-100 p-3 text-start d-flex align-items-center gap-3" onclick="document.querySelector('[data-route=institucional]').click()">
-                    <i class="fa-solid fa-landmark text-danger fs-4"></i>
+                  <button class="btn btn-admin-outline w-100 p-3 text-start d-flex align-items-center gap-3" onclick="document.querySelector('[data-route=galeria]').click()">
+                    <i class="fa-solid fa-image text-danger fs-4"></i>
                     <div>
-                      <strong class="d-block">Información Institucional</strong>
-                      <small class="text-muted">Sedes, áreas y contactos</small>
+                      <strong class="d-block">Galería Institucional</strong>
+                      <small class="text-muted">Subir y organizar imágenes</small>
                     </div>
                   </button>
                 </div>
@@ -403,7 +416,6 @@ if (isAdminSPA) {
         </table>
       `;
 
-      // Event Handlers
       container.querySelectorAll('.btn-edit-user').forEach(b => {
         b.addEventListener('click', () => editUserModal(b.dataset.id));
       });
@@ -443,7 +455,6 @@ if (isAdminSPA) {
       });
     }
 
-    // Modal Crear
     document.getElementById('crearUsuarioBtn').addEventListener('click', () => {
       const html = `
         <h3><i class="fa-solid fa-user-plus me-2 text-danger"></i>Crear Nuevo Usuario</h3>
@@ -666,9 +677,215 @@ if (isAdminSPA) {
       } catch (err) { inner.innerHTML = `<div class="alert alert-danger">${err.message}</div>`; }
     };
 
+    const loadEventos = async () => {
+      setTab(tabEventos);
+      inner.innerHTML = '<div class="text-center py-4 text-muted">Cargando eventos...</div>';
+      try {
+        const eventos = await apiFetch('/admin/contenidos/eventos');
+        inner.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="h6 mb-0 fw-bold">Gestión de Eventos</h3>
+            <button id="crearEventoBtn" class="btn btn-admin-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Crear Evento</button>
+          </div>
+          <div class="table-admin-wrap">
+            <table class="table-admin">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Título</th>
+                  <th>Fecha</th>
+                  <th class="text-end">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${eventos.map(e => `
+                  <tr>
+                    <td>#${e.id}</td>
+                    <td><strong>${e.titulo}</strong></td>
+                    <td>${e.fecha || ''}</td>
+                    <td class="text-end">
+                      <button data-id="${e.id}" class="btn btn-admin-outline btn-sm me-1 btn-edit-ev">Editar</button>
+                      <button data-id="${e.id}" class="btn btn-admin-danger-outline btn-sm btn-delete-ev">Eliminar</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        document.getElementById('crearEventoBtn').addEventListener('click', () => {
+          const html = `
+            <h3>Crear Evento</h3>
+            <div class="form-row"><label>Título</label><input id="m_titulo" class="form-control"/></div>
+            <div class="form-row"><label>Fecha</label><input id="m_fecha" type="date" class="form-control"/></div>
+            <div class="form-row"><label>Descripción</label><textarea id="m_desc" class="form-control" rows="4"></textarea></div>
+            <div class="modal-actions">
+              <button id="m_cancel" class="btn btn-admin-outline">Cancelar</button>
+              <button id="m_submit" class="btn btn-admin-primary">Crear</button>
+            </div>
+          `;
+          const overlay = showModal(html);
+          overlay.querySelector('#m_cancel').addEventListener('click', () => closeModal(overlay));
+          overlay.querySelector('#m_submit').addEventListener('click', async () => {
+            const titulo = overlay.querySelector('#m_titulo').value.trim();
+            const fecha = overlay.querySelector('#m_fecha').value;
+            const descripcion = overlay.querySelector('#m_desc').value.trim();
+            if (!titulo) return alert('Título requerido');
+            try {
+              await apiFetch('/admin/contenidos/eventos', { method: 'POST', body: JSON.stringify({ titulo, fecha, descripcion }) });
+              closeModal(overlay);
+              showToast('Evento creado');
+              loadEventos();
+            } catch (err) { alert(err.message); }
+          });
+        });
+        inner.querySelectorAll('.btn-edit-ev').forEach(b => {
+          b.addEventListener('click', () => {
+            const ev = eventos.find(x => x.id == b.dataset.id);
+            const html = `
+              <h3>Editar Evento #${ev.id}</h3>
+              <div class="form-row"><label>Título</label><input id="m_titulo" class="form-control" value="${ev.titulo || ''}"/></div>
+              <div class="form-row"><label>Fecha</label><input id="m_fecha" type="date" class="form-control" value="${ev.fecha || ''}"/></div>
+              <div class="form-row"><label>Descripción</label><textarea id="m_desc" class="form-control" rows="4">${ev.descripcion || ''}</textarea></div>
+              <div class="modal-actions">
+                <button id="m_cancel" class="btn btn-admin-outline">Cancelar</button>
+                <button id="m_submit" class="btn btn-admin-primary">Guardar</button>
+              </div>
+            `;
+            const overlay = showModal(html);
+            overlay.querySelector('#m_cancel').addEventListener('click', () => closeModal(overlay));
+            overlay.querySelector('#m_submit').addEventListener('click', async () => {
+              const titulo = overlay.querySelector('#m_titulo').value.trim();
+              const fecha = overlay.querySelector('#m_fecha').value;
+              const descripcion = overlay.querySelector('#m_desc').value.trim();
+              if (!titulo) return alert('Título requerido');
+              try {
+                await apiFetch(`/admin/contenidos/eventos/${ev.id}`, { method: 'PUT', body: JSON.stringify({ titulo, fecha, descripcion }) });
+                closeModal(overlay);
+                showToast('Evento actualizado');
+                loadEventos();
+              } catch (err) { alert(err.message); }
+            });
+          });
+        });
+        inner.querySelectorAll('.btn-delete-ev').forEach(b => {
+          b.addEventListener('click', async () => {
+            if (confirm('¿Eliminar este evento?')) {
+              await apiFetch(`/admin/contenidos/eventos/${b.dataset.id}`, { method: 'DELETE' });
+              showToast('Evento eliminado');
+              loadEventos();
+            }
+          });
+        });
+      } catch (err) {
+        inner.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+      }
+    };
+
+    const loadDocumentos = async () => {
+      setTab(tabDocumentos);
+      inner.innerHTML = '<div class="text-center py-4 text-muted">Cargando documentos...</div>';
+      try {
+        const docs = await apiFetch('/admin/contenidos/documentos');
+        inner.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="h6 mb-0 fw-bold">Gestión de Documentos</h3>
+            <button id="crearDocBtn" class="btn btn-admin-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Crear Documento</button>
+          </div>
+          <div class="table-admin-wrap">
+            <table class="table-admin">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Título</th>
+                  <th>URL</th>
+                  <th class="text-end">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${docs.map(d => `
+                  <tr>
+                    <td>#${d.id}</td>
+                    <td><strong>${d.titulo}</strong></td>
+                    <td>${d.url || ''}</td>
+                    <td class="text-end">
+                      <button data-id="${d.id}" class="btn btn-admin-outline btn-sm me-1 btn-edit-doc">Editar</button>
+                      <button data-id="${d.id}" class="btn btn-admin-danger-outline btn-sm btn-delete-doc">Eliminar</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        document.getElementById('crearDocBtn').addEventListener('click', () => {
+          const html = `
+            <h3>Crear Documento</h3>
+            <div class="form-row"><label>Título</label><input id="m_titulo" class="form-control"/></div>
+            <div class="form-row"><label>URL</label><input id="m_url" class="form-control"/></div>
+            <div class="modal-actions">
+              <button id="m_cancel" class="btn btn-admin-outline">Cancelar</button>
+              <button id="m_submit" class="btn btn-admin-primary">Crear</button>
+            </div>
+          `;
+          const overlay = showModal(html);
+          overlay.querySelector('#m_cancel').addEventListener('click', () => closeModal(overlay));
+          overlay.querySelector('#m_submit').addEventListener('click', async () => {
+            const titulo = overlay.querySelector('#m_titulo').value.trim();
+            const url = overlay.querySelector('#m_url').value.trim();
+            if (!titulo || !url) return alert('Título y URL son obligatorios');
+            try {
+              await apiFetch('/admin/contenidos/documentos', { method: 'POST', body: JSON.stringify({ titulo, url }) });
+              closeModal(overlay);
+              showToast('Documento creado');
+              loadDocumentos();
+            } catch (err) { alert(err.message); }
+          });
+        });
+        inner.querySelectorAll('.btn-edit-doc').forEach(b => {
+          b.addEventListener('click', () => {
+            const doc = docs.find(x => x.id == b.dataset.id);
+            const html = `
+              <h3>Editar Documento #${doc.id}</h3>
+              <div class="form-row"><label>Título</label><input id="m_titulo" class="form-control" value="${doc.titulo || ''}"/></div>
+              <div class="form-row"><label>URL</label><input id="m_url" class="form-control" value="${doc.url || ''}"/></div>
+              <div class="modal-actions">
+                <button id="m_cancel" class="btn btn-admin-outline">Cancelar</button>
+                <button id="m_submit" class="btn btn-admin-primary">Guardar</button>
+              </div>
+            `;
+            const overlay = showModal(html);
+            overlay.querySelector('#m_cancel').addEventListener('click', () => closeModal(overlay));
+            overlay.querySelector('#m_submit').addEventListener('click', async () => {
+              const titulo = overlay.querySelector('#m_titulo').value.trim();
+              const url = overlay.querySelector('#m_url').value.trim();
+              if (!titulo || !url) return alert('Título y URL son obligatorios');
+              try {
+                await apiFetch(`/admin/contenidos/documentos/${doc.id}`, { method: 'PUT', body: JSON.stringify({ titulo, url }) });
+                closeModal(overlay);
+                showToast('Documento actualizado');
+                loadDocumentos();
+              } catch (err) { alert(err.message); }
+            });
+          });
+        });
+        inner.querySelectorAll('.btn-delete-doc').forEach(b => {
+          b.addEventListener('click', async () => {
+            if (confirm('¿Eliminar este documento?')) {
+              await apiFetch(`/admin/contenidos/documentos/${b.dataset.id}`, { method: 'DELETE' });
+              showToast('Documento eliminado');
+              loadDocumentos();
+            }
+          });
+        });
+      } catch (err) {
+        inner.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+      }
+    };
+
     tabNoticias.addEventListener('click', loadNoticias);
-    tabEventos.addEventListener('click', () => { setTab(tabEventos); inner.innerHTML = 'Eventos cargando...'; });
-    tabDocumentos.addEventListener('click', () => { setTab(tabDocumentos); inner.innerHTML = 'Documentos cargando...'; });
+    tabEventos.addEventListener('click', loadEventos);
+    tabDocumentos.addEventListener('click', loadDocumentos);
 
     loadNoticias();
   }
@@ -687,6 +904,143 @@ if (isAdminSPA) {
       </div>
     `;
   }
+
+  // ---------- GALERÍA ----------
+  async function renderGaleria() {
+    pageTitle.textContent = 'Galería';
+    try {
+      const html = await fetch('partials/galeria.html').then(r => r.text());
+      viewContainer.innerHTML = html;
+      await loadGaleria();
+    } catch (err) {
+      viewContainer.innerHTML = `<div class="alert alert-danger">No se pudo cargar la vista de galería: ${err.message}</div>`;
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function loadGaleria() {
+    try {
+      const items = await apiFetch('/admin/galeria');
+      const tbody = document.getElementById('galeriaBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (!items || !items.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No hay imágenes registradas.</td></tr>`;
+        return;
+      }
+
+      items.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.id}</td>
+          <td><img src="${item.urlImagen}" alt="${item.titulo || ''}" class="gallery-thumb"></td>
+          <td>${item.titulo || ''}</td>
+          <td>${item.descripcion || ''}</td>
+          <td>${item.fecha ? new Date(item.fecha).toLocaleDateString() : ''}</td>
+          <td>
+            <button class="btn btn-sm btn-primary me-2"
+                    onclick="editGaleria(${item.id})"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-sm btn-danger"
+                    onclick="deleteGaleria(${item.id})"><i class="fa-solid fa-trash"></i></button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  // --- Funciones globales de la galería (llamadas vía onclick inline) ---
+  window.openGaleriaModal = function () {
+    const html = `
+      <h3><i class="fa-solid fa-image me-2 text-danger"></i>Añadir Imagen</h3>
+      <div class="form-row"><label class="fw-semibold">Título</label>
+        <input id="g_titulo" class="form-control" placeholder="Título de la imagen"/></div>
+      <div class="form-row"><label class="fw-semibold">Descripción</label>
+        <textarea id="g_descripcion" class="form-control" rows="3" placeholder="Descripción breve"></textarea></div>
+      <div class="form-row"><label class="fw-semibold">URL de la imagen</label>
+        <input id="g_url" class="form-control" placeholder="https://... o imagenes/foto.jpg"/></div>
+      <div class="modal-actions">
+        <button id="g_cancel" class="btn btn-admin-outline">Cancelar</button>
+        <button id="g_submit" class="btn btn-admin-primary">Guardar</button>
+      </div>
+    `;
+    const overlay = showModal(html);
+    overlay.querySelector('#g_cancel').addEventListener('click', () => closeModal(overlay));
+    overlay.querySelector('#g_submit').addEventListener('click', async () => {
+      const titulo = overlay.querySelector('#g_titulo').value.trim();
+      const descripcion = overlay.querySelector('#g_descripcion').value.trim();
+      const urlImagen = overlay.querySelector('#g_url').value.trim();
+
+      if (!titulo || !urlImagen) return alert('Título y URL son obligatorios');
+
+      try {
+        await apiFetch('/admin/galeria', {
+          method: 'POST',
+          body: JSON.stringify({ titulo, descripcion, urlImagen })
+        });
+        closeModal(overlay);
+        showToast('Imagen añadida con éxito');
+        loadGaleria();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    });
+  };
+
+  window.editGaleria = async function (id) {
+    try {
+      const item = await apiFetch(`/admin/galeria/${id}`);
+      const html = `
+        <h3><i class="fa-solid fa-pen me-2 text-danger"></i>Editar Imagen #${item.id}</h3>
+        <div class="form-row"><label class="fw-semibold">Título</label>
+          <input id="g_titulo" class="form-control" value="${item.titulo || ''}"/></div>
+        <div class="form-row"><label class="fw-semibold">Descripción</label>
+          <textarea id="g_descripcion" class="form-control" rows="3">${item.descripcion || ''}</textarea></div>
+        <div class="form-row"><label class="fw-semibold">URL de la imagen</label>
+          <input id="g_url" class="form-control" value="${item.urlImagen || ''}"/></div>
+        <div class="modal-actions">
+          <button id="g_cancel" class="btn btn-admin-outline">Cancelar</button>
+          <button id="g_submit" class="btn btn-admin-primary">Guardar Cambios</button>
+        </div>
+      `;
+      const overlay = showModal(html);
+      overlay.querySelector('#g_cancel').addEventListener('click', () => closeModal(overlay));
+      overlay.querySelector('#g_submit').addEventListener('click', async () => {
+        const titulo = overlay.querySelector('#g_titulo').value.trim();
+        const descripcion = overlay.querySelector('#g_descripcion').value.trim();
+        const urlImagen = overlay.querySelector('#g_url').value.trim();
+
+        if (!titulo || !urlImagen) return alert('Título y URL son obligatorios');
+
+        try {
+          await apiFetch(`/admin/galeria/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ titulo, descripcion, urlImagen })
+          });
+          closeModal(overlay);
+          showToast('Imagen actualizada');
+          loadGaleria();
+        } catch (err) {
+          alert('Error: ' + err.message);
+        }
+      });
+    } catch (err) {
+      alert('Error cargando imagen: ' + err.message);
+    }
+  };
+
+  window.deleteGaleria = async function (id) {
+    if (!confirm('¿Eliminar esta imagen de la galería?')) return;
+    try {
+      await apiFetch(`/admin/galeria/${id}`, { method: 'DELETE' });
+      showToast('Imagen eliminada');
+      loadGaleria();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  };
 
   // ---------- CHATBOT ----------
   async function renderChatbot() {
