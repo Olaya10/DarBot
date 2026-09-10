@@ -1,0 +1,80 @@
+/* Admin minimal styles, reusing site colors */
+.admin-app { display:flex; min-height:100vh; font-family: inherit; }
+.admin-sidebar { width:220px; background: #111827; color: #fff; }
+.admin-sidebar .brand { font-weight:700; color:#f8f9fa; }
+.admin-sidebar .nav-link { color: #d1d5db; padding:10px 16px; display:block; text-decoration:none; }
+.admin-sidebar .nav-link.active, .admin-sidebar .nav-link:hover { background:#111; color:#fff; }
+.admin-main { flex:1; background: #f8fafc; }
+.admin-login { background:#fff; border-radius:8px; }
+.table { width:100%; border-collapse:collapse; }
+.table th, .table td { padding:8px 10px; border-bottom:1px solid #e6edf3; }
+.btn { display:inline-block; padding:6px 12px; border-radius:6px; text-decoration:none; }
+.btn-danger { background:#c53030; color:#fff; border:none; }
+.btn-outline { background:transparent; border:1px solid #e2e8f0; color:#111827; }
+.btn:focus{ outline:3px solid rgba(99,102,241,0.18); outline-offset:2px; }
+.btn:hover{ filter:brightness(0.98); transform:translateY(-1px); }
+.btn:active{ transform:translateY(0); }
+.form-control { padding:8px 10px; border-radius:6px; border:1px solid #e2e8f0; width:100%; }
+.card { background:#fff; border-radius:8px; box-shadow:0 1px 2px rgba(16,24,40,0.04); }
+
+/* Modal */
+.admin-modal { position:fixed; inset:0; background:rgba(2,6,23,0.6); display:flex; align-items:center; justify-content:center; z-index:9999; }
+.admin-modal .modal-box { background:#fff; padding:16px; border-radius:8px; width:480px; max-width:95%; box-shadow:0 8px 24px rgba(2,6,23,0.4); }
+.admin-modal .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
+.admin-modal label { display:block; font-size:13px; margin-bottom:6px; }
+.admin-modal .form-row { margin-bottom:8px; }
+.admin-modal .modal-box { max-height:80vh; overflow:auto; }
+
+/* Sidebar responsive: collapse into overlay on small screens */
+.admin-sidebar { transition: transform 220ms ease, width 220ms ease; }
+.admin-sidebar.collapsed { width:56px; }
+@media (max-width: 900px){
+	.admin-sidebar { position:fixed; left:0; top:0; bottom:0; transform:translateX(-100%); z-index:9998; width:260px; }
+	.admin-sidebar.open { transform:translateX(0); }
+	.admin-main { margin-left:0; }
+	.admin-sidebar .brand { padding:12px; }
+}
+
+/* Header toggle button for mobile */
+.sidebar-toggle { display:none; border:none; background:transparent; font-size:18px; padding:8px; }
+@media (max-width: 900px){ .sidebar-toggle { display:inline-block; } }
+
+/* Make tables and buttons touch-friendly */
+.table th, .table td { padding:12px 10px; }
+.btn { padding:10px 14px; }
+
+/* Additional polish: colors, spacing, responsive tweaks */
+:root{
+	--accent: #6366f1;
+	--danger: #e11d48;
+	--bg: #f8fafc;
+	--card-bg: #ffffff;
+}
+
+.admin-main { background: var(--bg); }
+.admin-sidebar .nav-link { font-weight:600; border-radius:6px; margin:6px 8px; }
+.admin-sidebar .nav-link .icon { opacity:0.85; margin-right:8px; }
+.admin-sidebar .nav-link.active { background: linear-gradient(90deg, rgba(99,102,241,0.06), transparent); }
+
+.card.small { padding:12px; }
+
+.form-control:focus{ border-color: var(--accent); box-shadow: 0 4px 14px rgba(99,102,241,0.12); outline: none; }
+
+/* subtle animations */
+.card, .admin-sidebar .nav-link, .btn { transition: all .16s ease; }
+
+/* reduce modal width on very small screens */
+@media (max-width: 420px){
+	.admin-modal .modal-box { width: 94%; padding:12px; }
+}
+
+/* Ensure header toggle reflects state visually */
+.sidebar-toggle[aria-expanded="true"]{ color:var(--accent); transform:scale(1.05); }
+
+/* make links and actions more distinct */
+.btn-outline { border-color: rgba(15,23,42,0.06); color:#0f1724; }
+
+/* Footer spacing for mobile */
+@media (max-width: 900px){
+	.admin-main { padding-bottom: 28px; }
+}

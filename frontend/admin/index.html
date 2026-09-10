@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin - DarBot</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/admin/admin.css">
+ </head>
+<body>
+  <div id="adminApp" class="admin-app">
+    <aside class="admin-sidebar">
+      <div class="brand p-3">DarBot <small class="d-block">Admin</small></div>
+      <nav class="nav flex-column p-2">
+        <a href="#" data-route="dashboard" class="nav-link active">Dashboard</a>
+        <a href="#" data-route="usuarios" class="nav-link">Usuarios</a>
+        <a href="#" data-route="contenidos" class="nav-link">Contenidos</a>
+        <a href="#" data-route="institucional" class="nav-link">Institucional</a>
+        <a href="#" data-route="chatbot" class="nav-link">Chatbot</a>
+        <a href="#" data-route="cache" class="nav-link">Cache</a>
+        <a href="#" id="logoutBtn" class="nav-link text-danger">Cerrar sesión</a>
+      </nav>
+    </aside>
+
+    <main class="admin-main p-4">
+      <header class="d-flex justify-content-between align-items-center mb-3">
+        <h1 id="pageTitle" class="h5 mb-0">Dashboard</h1>
+      </header>
+      <section id="viewContainer"></section>
+    </main>
+  </div>
+
+  <script src="/admin/admin.js" type="module"></script>
+</body>
+</html>
