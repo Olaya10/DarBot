@@ -1,5 +1,6 @@
 package com.darbot.chatbot.service;
 
+import com.darbot.common.exception.ResourceNotFoundException;
 import com.darbot.chatbot.entity.FraseEspecifica;
 import com.darbot.chatbot.entity.Intencion;
 import com.darbot.chatbot.entity.PalabraClaveIntencion;
@@ -197,7 +198,7 @@ public class IntencionService {
     public void agregarFraseEspecifica(String frase, String nombreIntencion, Integer peso) {
         Optional<Intencion> intencionOpt = intencionRepository.findByNombre(nombreIntencion);
         if (intencionOpt.isEmpty()) {
-            throw new RuntimeException("Intención no encontrada: " + nombreIntencion);
+            throw new ResourceNotFoundException("Intención no encontrada: " + nombreIntencion);
         }
 
         FraseEspecifica fraseEspecifica = new FraseEspecifica();

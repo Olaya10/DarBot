@@ -263,6 +263,45 @@ select:focus-visible {
 .navbar-ie .nav-cta::after { display: none; }
 .navbar-ie .nav-cta:hover { background: var(--rojo-ie-oscuro); }
 
+.navbar-ie .nav-acceso-inst {
+  border: 1px solid rgba(200, 16, 46, 0.4);
+  background: rgba(200, 16, 46, 0.08);
+  border-radius: 999px;
+  padding: 6px 16px !important;
+  color: var(--rojo-ie) !important;
+  font-size: 0.88rem;
+  transition: all 0.25s ease;
+}
+.navbar-ie:not(.scrolled) .nav-acceso-inst {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff !important;
+}
+.navbar-ie .nav-acceso-inst::after { display: none; }
+.navbar-ie .nav-acceso-inst:hover {
+  background: var(--rojo-ie);
+  color: #fff !important;
+  border-color: var(--rojo-ie);
+  transform: translateY(-1px);
+}
+
+.btn-acceso-hero {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  color: #fff;
+  font-weight: 600;
+  padding: 12px 28px;
+  border-radius: 999px;
+  transition: all 0.25s ease;
+}
+.btn-acceso-hero:hover {
+  background: #fff;
+  color: var(--rojo-ie);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
 .navbar-toggler { border: none; }
 .navbar-ie:not(.scrolled) .navbar-toggler-icon {
   filter: invert(1) brightness(2);

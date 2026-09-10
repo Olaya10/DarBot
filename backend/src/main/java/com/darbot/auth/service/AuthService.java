@@ -3,6 +3,8 @@ package com.darbot.auth.service;
 import com.darbot.auth.dto.LoginRequest;
 import com.darbot.auth.dto.RegisterRequest;
 import com.darbot.auth.security.JwtTokenProvider;
+import com.darbot.common.exception.BadRequestException;
+import com.darbot.common.exception.ResourceNotFoundException;
 import com.darbot.usuarios.entity.Rol;
 import com.darbot.usuarios.entity.Usuario;
 import com.darbot.usuarios.repository.RolRepository;
@@ -15,8 +17,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-
 
 @Service
 @RequiredArgsConstructor
@@ -43,11 +43,11 @@ public class AuthService {
     @Transactional
     public Usuario register(RegisterRequest registerRequest) {
         if (usuarioRepository.existsByUsername(registerRequest.getUsername())) {
-            throw new RuntimeException("El username ya está en uso");
+            throw new BadRequestException("El username ya está en uso");
         }
 
         if (usuarioRepository.existsByCorreo(registerRequest.getEmail())) {
-            throw new RuntimeException("El email ya está registrado");
+            throw new BadRequestException("El email ya está registrado");
         }
 
         Usuario usuario = new Usuario();
@@ -80,6 +80,6 @@ public class AuthService {
 
     public Usuario findByUsername(String username) {
         return usuarioRepository.findByUsernameIgnoreCase(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con username: " + username));
     }
 }

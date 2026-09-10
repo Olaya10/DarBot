@@ -3,62 +3,297 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Acceso institucional - I.E. Dario Torregroza Pérez</title>
+  <title>Acceso Institucional | I.E. Darío Torregroza Pérez</title>
+  
+  <link rel="icon" href="imagenes/Logo IEDTP.jpeg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="admin/admin.css">
+
+  <style>
+    .login-body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(135deg, rgba(32, 10, 14, 0.92), rgba(140, 11, 32, 0.95)), url('imagenes/imagen estudiantes.jpg') center/cover no-repeat fixed;
+      color: #fff;
+    }
+
+    .login-navbar {
+      padding: 16px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+    }
+
+    .login-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 15px;
+    }
+
+    .login-card {
+      background: rgba(255, 255, 255, 0.98);
+      color: var(--carbon);
+      border-radius: 20px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 40px 36px;
+      max-width: 440px;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .login-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, var(--rojo-ie), var(--rojo-ie-oscuro));
+    }
+
+    .login-brand-logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 3px solid var(--rojo-ie);
+      padding: 3px;
+      background: #fff;
+      margin: 0 auto 16px;
+      box-shadow: 0 8px 20px rgba(200, 16, 46, 0.2);
+    }
+
+    .input-icon-group {
+      position: relative;
+    }
+
+    .input-icon-group .form-control {
+      padding-left: 44px;
+      padding-right: 44px;
+      height: 50px;
+      border-radius: 12px;
+      border: 1px solid rgba(32, 26, 26, 0.15);
+      font-size: 0.95rem;
+      transition: all 0.25s ease;
+    }
+
+    .input-icon-group .form-control:focus {
+      border-color: var(--rojo-ie);
+      box-shadow: 0 0 0 4px rgba(200, 16, 46, 0.12);
+    }
+
+    .input-icon-group .input-icon-left {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--rojo-ie);
+      font-size: 1.1rem;
+      pointer-events: none;
+    }
+
+    .toggle-password-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      color: var(--gris-texto);
+      padding: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: color 0.2s ease;
+    }
+    .toggle-password-btn:hover {
+      color: var(--rojo-ie);
+    }
+
+    .btn-login-submit {
+      height: 50px;
+      border-radius: 999px;
+      background: var(--rojo-ie);
+      border: none;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.02em;
+      transition: all 0.25s ease;
+      box-shadow: 0 8px 20px rgba(200, 16, 46, 0.3);
+    }
+
+    .btn-login-submit:hover {
+      background: var(--rojo-ie-oscuro);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 25px rgba(140, 11, 32, 0.4);
+    }
+
+    .login-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 20px 0;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .back-to-home {
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: color 0.25s ease;
+    }
+    .back-to-home:hover {
+      color: #ffd9de;
+    }
+  </style>
 </head>
-<body>
-  <header class="py-3 mb-4 border-bottom">
+
+<body class="login-body">
+
+  <!-- Header -->
+  <header class="login-navbar">
     <div class="container d-flex justify-content-between align-items-center">
-      <a href="index.html" class="d-flex align-items-center text-dark text-decoration-none"><img src="imagenes/Logo IEDTP.jpeg" alt="logo" style="height:44px;margin-right:10px;"><strong>I.E. Dario Torregroza Pérez</strong></a>
-      <nav><a href="/">Volver al sitio</a></nav>
+      <a href="index.html" class="d-flex align-items-center text-white text-decoration-none gap-2">
+        <img src="imagenes/Logo IEDTP.jpeg" alt="Logo IEDTP" class="logo-img" style="width:42px;height:42px;border-radius:50%;border:2px solid #fff;">
+        <span class="fw-bold tracking-tight">I.E. Darío Torregroza Pérez</span>
+      </a>
+      <a href="index.html" class="back-to-home">
+        <i class="fa-solid fa-arrow-left me-1"></i> Volver al sitio web
+      </a>
     </div>
   </header>
 
-  <main class="container py-5">
-    <div class="mx-auto" style="max-width:460px;">
-      <div class="card p-4">
-        <h2 class="h4 mb-3">Acceso institucional</h2>
-        <p class="text-muted">Accede al panel administrativo con tus credenciales institucionales.</p>
-        <form id="instLoginForm">
-          <div class="mb-3">
-            <label for="username" class="form-label">Usuario</label>
-            <input id="username" name="username" class="form-control" required autocomplete="username">
-          </div>
-          <div class="mb-3">
-            <label for="password" class="form-label">Contraseña</label>
-            <input id="password" name="password" type="password" class="form-control" required autocomplete="current-password">
-          </div>
-          <div id="loginError" class="text-danger mb-2" role="status" aria-live="polite"></div>
-          <button class="btn btn-danger w-100" type="submit">Entrar</button>
-        </form>
+  <!-- Login Container -->
+  <main class="login-container">
+    <div class="login-card">
+      <div class="text-center mb-4">
+        <img src="imagenes/Logo IEDTP.jpeg" alt="Escudo Institucional" class="login-brand-logo">
+        <h1 class="h4 fw-bold mb-1">Acceso Institucional</h1>
+        <p class="text-secondary small mb-0">Ingresa tus credenciales para administrar la plataforma</p>
       </div>
+
+      <form id="instLoginForm" novalidate>
+        <div class="mb-3">
+          <label for="username" class="form-label fw-semibold small text-dark">Usuario o Email</label>
+          <div class="input-icon-group">
+            <i class="fa-solid fa-user input-icon-left"></i>
+            <input id="username" name="username" class="form-control" placeholder="Ej: admin" required autocomplete="username">
+          </div>
+        </div>
+
+        <div class="mb-4">
+          <label for="password" class="form-label fw-semibold small text-dark">Contraseña</label>
+          <div class="input-icon-group">
+            <i class="fa-solid fa-lock input-icon-left"></i>
+            <input id="password" name="password" type="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" class="toggle-password-btn" id="togglePasswordBtn" aria-label="Mostrar u ocultar contraseña">
+              <i class="fa-solid fa-eye" id="toggleIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="loginError" class="alert alert-danger d-none py-2 px-3 small text-center mb-3" role="alert"></div>
+
+        <button class="btn btn-login-submit w-100 d-flex align-items-center justify-content-center" type="submit" id="btnSubmit">
+          <i class="fa-solid fa-spinner fa-spin me-2 d-none" id="loginSpinner"></i>
+          <span>Ingresar al Sistema</span>
+        </button>
+      </form>
     </div>
   </main>
 
-  <footer class="footer-ie mt-5 py-4">
-    <div class="container text-center">
-      &copy; <span id="anioActualFooter"></span> I.E. Dario Torregroza Pérez
+  <!-- Footer -->
+  <footer class="login-footer text-center">
+    <div class="container">
+      &copy; <span id="anioActual"></span> Institución Educativa Darío Torregroza Pérez. Todos los derechos reservados.
     </div>
   </footer>
 
   <script>
-  (function(){
-    const form = document.getElementById('instLoginForm');
-    const err = document.getElementById('loginError');
-    function setToken(t){ if(t) localStorage.setItem('darbot_token', t); else localStorage.removeItem('darbot_token'); }
-    form.addEventListener('submit', async (e)=>{
-      e.preventDefault(); err.textContent='';
-      const username = form.username.value.trim(); const password = form.password.value;
-      if(!username || !password){ err.textContent = 'Usuario y contraseña son requeridos'; return; }
-      try{
-        const API_BASE = (location.port && location.port !== '8080') ? (location.protocol + '//' + location.hostname + ':8080') : '';
-        const res = await fetch(API_BASE + '/api/auth/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ username, password }) });
-        if(!res.ok){ const tx = await res.text().catch(()=>null); err.textContent = 'Credenciales inválidas'; return; }
-        const data = await res.json(); if(data.token){ setToken(data.token); window.location.href = '/admin/index.html'; } else { err.textContent = 'Respuesta inválida del servidor'; }
-      }catch(errx){ console.error(errx); err.textContent = 'Error de conexión'; }
+    document.addEventListener('DOMContentLoaded', () => {
+      const anioSpan = document.getElementById('anioActual');
+      if (anioSpan) anioSpan.textContent = new Date().getFullYear();
+
+      const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+      const passwordInput = document.getElementById('password');
+      const toggleIcon = document.getElementById('toggleIcon');
+
+      if (togglePasswordBtn && passwordInput && toggleIcon) {
+        togglePasswordBtn.addEventListener('click', () => {
+          const isPassword = passwordInput.type === 'password';
+          passwordInput.type = isPassword ? 'text' : 'password';
+          toggleIcon.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        });
+      }
+
+      const form = document.getElementById('instLoginForm');
+      const err = document.getElementById('loginError');
+      const btnSubmit = document.getElementById('btnSubmit');
+      const loginSpinner = document.getElementById('loginSpinner');
+
+      function setToken(t) {
+        if (t) localStorage.setItem('darbot_token', t);
+        else localStorage.removeItem('darbot_token');
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        err.classList.add('d-none');
+        err.textContent = '';
+
+        const username = form.username.value.trim();
+        const password = form.password.value;
+
+        if (!username || !password) {
+          err.textContent = 'Por favor ingresa usuario y contraseña.';
+          err.classList.remove('d-none');
+          return;
+        }
+
+        btnSubmit.disabled = true;
+        loginSpinner.classList.remove('d-none');
+
+        try {
+          const API_BASE = (location.port && location.port !== '8080')
+            ? (location.protocol + '//' + location.hostname + ':8080')
+            : '';
+
+          const res = await fetch(API_BASE + '/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+
+          if (!res.ok) {
+            err.textContent = 'Credenciales inválidas. Verifica tu usuario y contraseña.';
+            err.classList.remove('d-none');
+            return;
+          }
+
+          const data = await res.json();
+          if (data.token) {
+            setToken(data.token);
+            window.location.href = 'admin/index.html';
+          } else {
+            err.textContent = 'Respuesta no válida del servidor de autenticación.';
+            err.classList.remove('d-none');
+          }
+        } catch (errx) {
+          console.error(errx);
+          err.textContent = 'Error de conexión con el servidor. Intenta de nuevo.';
+          err.classList.remove('d-none');
+        } finally {
+          btnSubmit.disabled = false;
+          loginSpinner.classList.add('d-none');
+        }
+      });
     });
-  })();
   </script>
 </body>
 </html>

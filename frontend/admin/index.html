@@ -1,35 +1,104 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Admin - DarBot</title>
-  <link rel="stylesheet" href="/style.css">
-  <link rel="stylesheet" href="/admin/admin.css">
- </head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Administrativo - DarBot</title>
+
+  <link rel="icon" href="../imagenes/Logo IEDTP.jpeg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+
 <body>
   <div id="adminApp" class="admin-app">
-    <aside class="admin-sidebar">
-      <div class="brand p-3">DarBot <small class="d-block">Admin</small></div>
-      <nav class="nav flex-column p-2">
-        <a href="#" data-route="dashboard" class="nav-link active">Dashboard</a>
-        <a href="#" data-route="usuarios" class="nav-link">Usuarios</a>
-        <a href="#" data-route="contenidos" class="nav-link">Contenidos</a>
-        <a href="#" data-route="institucional" class="nav-link">Institucional</a>
-        <a href="#" data-route="chatbot" class="nav-link">Chatbot</a>
-        <a href="#" data-route="cache" class="nav-link">Cache</a>
-        <a href="#" id="logoutBtn" class="nav-link text-danger">Cerrar sesión</a>
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="sidebar-brand">
+        <img src="../imagenes/Logo IEDTP.jpeg" alt="Logo IEDTP" class="sidebar-logo">
+        <div class="sidebar-brand-text">
+          <strong>DarBot</strong>
+          <small>Gestión Escolar</small>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Menú Principal</div>
+        <a href="#" data-route="dashboard" class="nav-link active">
+          <i class="fa-solid fa-gauge-high icon"></i> <span>Dashboard</span>
+        </a>
+        <a href="#" data-route="usuarios" class="nav-link">
+          <i class="fa-solid fa-users-gear icon"></i> <span>Usuarios</span>
+        </a>
+        <a href="#" data-route="contenidos" class="nav-link">
+          <i class="fa-solid fa-newspaper icon"></i> <span>Contenidos</span>
+        </a>
+        <a href="#" data-route="institucional" class="nav-link">
+          <i class="fa-solid fa-building-columns icon"></i> <span>Institucional</span>
+        </a>
+
+        <div class="nav-section-label mt-3">IA & Sistema</div>
+        <a href="#" data-route="chatbot" class="nav-link">
+          <i class="fa-solid fa-robot icon"></i> <span>Chatbot</span>
+        </a>
+        <a href="#" data-route="cache" class="nav-link">
+          <i class="fa-solid fa-memory icon"></i> <span>Gestión Caché</span>
+        </a>
+
+        <div class="sidebar-footer">
+          <a href="#" id="logoutBtn" class="nav-link logout-link">
+            <i class="fa-solid fa-right-from-bracket icon"></i> <span>Cerrar Sesión</span>
+          </a>
+        </div>
       </nav>
     </aside>
 
-    <main class="admin-main p-4">
-      <header class="d-flex justify-content-between align-items-center mb-3">
-        <h1 id="pageTitle" class="h5 mb-0">Dashboard</h1>
+    <!-- Content Area -->
+    <div class="admin-content-wrapper">
+      <!-- Top Header -->
+      <header class="admin-topbar">
+        <div class="d-flex align-items-center gap-3">
+          <button id="sidebarToggleBtn" class="btn-sidebar-toggle" aria-label="Abrir o cerrar menú lateral">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div>
+            <h1 id="pageTitle" class="admin-page-title mb-0">Dashboard</h1>
+            <span class="admin-breadcrumb">Plataforma Administrativa &bull; I.E. Darío Torregroza Pérez</span>
+          </div>
+        </div>
+
+        <div class="admin-user-profile">
+          <div class="user-avatar">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <div class="user-info d-none d-sm-block">
+            <span class="user-name" id="currentUsername">Admin</span>
+            <span class="badge badge-admin-role">Administrador</span>
+          </div>
+          <a href="../index.html" class="btn-public-site-link ms-2" title="Ir al sitio público" target="_blank">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </a>
+        </div>
       </header>
-      <section id="viewContainer"></section>
-    </main>
+
+      <!-- Main View Container -->
+      <main class="admin-main-view">
+        <div id="viewContainer">
+          <div class="text-center py-5">
+            <div class="spinner-border text-danger" role="status">
+              <span class="visually-hidden">Cargando módulo...</span>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
   </div>
 
-  <script src="/admin/admin.js" type="module"></script>
+  <script src="admin.js" type="module"></script>
 </body>
 </html>

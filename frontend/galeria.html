@@ -56,7 +56,6 @@
 
   <!-- ============ NAVBAR ============ -->
   <header>
-    <nav class="navbar navbar-ie navbar-expand-lg" id="navbarPrincipal" aria-label="Navegación principal">        
     <nav class="navbar navbar-ie navbar-expand-lg navbar-paginas" id="navbarPrincipal">
       <div class="container">
         <a class="navbar-brand" href="#inicio">
@@ -110,7 +109,16 @@
     </div>
 
     <!-- GRILLA DE IMÁGENES -->
-<div class="row g-3" id="galeria-grid"></div>
+    <div class="row g-3" id="galeria-grid">
+      <!-- Imagen 1 -->
+      <div class="col-6 col-md-4 galeria-col" data-category="academico" data-aos="fade-up">
+        <div class="galeria-item rounded-4 overflow-hidden shadow-sm" data-index="0">
+          <img src="imagenes/galeria1.jpg" alt="Actividad pedagógica" loading="lazy">
+          <div class="galeria-overlay d-flex align-items-center justify-content-center">
+            <span class="fw-semibold text-white"><i class="fa-solid fa-graduation-cap me-2"></i>Actividad pedagógica</span>
+          </div>
+        </div>
+      </div>
 
       <!-- Imagen 2 -->
       <div class="col-6 col-md-4 galeria-col" data-category="deportes" data-aos="fade-up" data-aos-delay="50">
@@ -191,7 +199,7 @@
       </div>
 
       <div class="col-6 col-md-4 galeria-col d-none extra-img" data-category="cultural">
-        <div class="galeria-item rounded-4 overflow-hidden shadow-sm" data-index="7">
+        <div class="galeria-item rounded-4 overflow-hidden shadow-sm" data-index="9">
           <img src="imagenes/galeria10.jpg" alt="Torneo de fútbol" loading="lazy">
           <div class="galeria-overlay d-flex align-items-center justify-content-center">
             <span class="fw-semibold text-white">Encuentro folclorico y cultural</span>
@@ -200,7 +208,7 @@
       </div>
 
       <div class="col-6 col-md-4 galeria-col d-none extra-img" data-category="deportes">
-        <div class="galeria-item rounded-4 overflow-hidden shadow-sm" data-index="7">
+        <div class="galeria-item rounded-4 overflow-hidden shadow-sm" data-index="10">
           <img src="imagenes/galeria11.jpg" alt="Torneo de fútbol" loading="lazy">
           <div class="galeria-overlay d-flex align-items-center justify-content-center">
             <span class="fw-semibold text-white">Encuentro deportivo</span>
@@ -208,17 +216,14 @@
         </div>
       </div>
 
-      <div class="col-6 col-md-4 galeria-col d-none extra-img" data-category="Académico">
-        <div class="galeria-item rounded-4 overflow-hidden shadow-sm" data-index="7">
+      <div class="col-6 col-md-4 galeria-col d-none extra-img" data-category="academico">
+        <div class="galeria-item rounded-4 overflow-hidden shadow-sm" data-index="11">
           <img src="imagenes/galeria12.jpg" alt="Torneo de fútbol" loading="lazy">
           <div class="galeria-overlay d-flex align-items-center justify-content-center">
             <span class="fw-semibold text-white">Semillero</span>
           </div>
         </div>
       </div>
-
-
-
     </div>
 
     <!-- BOTÓN Cargar Más / Expandir Galería -->

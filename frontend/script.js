@@ -1,4 +1,7 @@
-const API_BASE = 'http://localhost:8080/api/public';
+const API_BASE_HOST = (typeof window !== 'undefined' && window.location && window.location.port && window.location.port !== '8080')
+  ? `${window.location.protocol}//${window.location.hostname}:8080`
+  : '';
+const API_BASE = `${API_BASE_HOST}/api/public`;
 
 const escapeHtml = (value = '') => value
   .replace(/&/g, '&amp;')
@@ -119,45 +122,64 @@ function inicializarContactoForm() {
 }
 
 function inicializarGaleriaLightbox() {
-  const galeriaItems = document.querySelectorAll('#galeria-grid .galeria-item img');
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.getElementById('lightboxImg');
   const lightboxCerrar = document.getElementById('lightboxCerrar');
   const lightboxPrev = document.getElementById('lightboxPrev');
   const lightboxNext = document.getElementById('lightboxNext');
 
-  if (!galeriaItems.length || !lightbox || !lightboxImg) return;
+  if (!lightbox || !lightboxImg) return;
 
-  const imagenesSrc = Array.from(galeriaItems).map(img => img.src);
-  let indiceImagenActual = 0;
+  const getVisibleImages = () => {
+    return Array.from(document.querySelectorAll('.galeria-col'))
+      .filter(col => window.getComputedStyle(col).display !== 'none')
+      .map(col => col.querySelector('.galeria-item img'))
+      .filter(Boolean);
+  };
 
-  const abrirLightbox = (index) => {
-    indiceImagenActual = index;
-    lightboxImg.src = imagenesSrc[indiceImagenActual];
+  let visibleImages = [];
+  let indiceActual = 0;
+
+  const abrirLightbox = (imgEl) => {
+    visibleImages = getVisibleImages();
+    indiceActual = visibleImages.indexOf(imgEl);
+    if (indiceActual === -1) indiceActual = 0;
+    lightboxImg.src = imgEl.src;
     lightbox.style.display = 'flex';
   };
 
-  galeriaItems.forEach((img, index) => {
-    img.addEventListener('click', () => abrirLightbox(index));
+  document.querySelectorAll('.galeria-item img').forEach(img => {
+    if (img._lightboxHandler) {
+      img.removeEventListener('click', img._lightboxHandler);
+    }
+    img._lightboxHandler = () => abrirLightbox(img);
+    img.addEventListener('click', img._lightboxHandler);
   });
 
-  if (lightboxCerrar) {
+  if (lightboxCerrar && !lightboxCerrar._hasListener) {
+    lightboxCerrar._hasListener = true;
     lightboxCerrar.addEventListener('click', () => {
       lightbox.style.display = 'none';
     });
   }
 
-  if (lightboxPrev) {
+  if (lightboxPrev && !lightboxPrev._hasListener) {
+    lightboxPrev._hasListener = true;
     lightboxPrev.addEventListener('click', () => {
-      indiceImagenActual = (indiceImagenActual - 1 + imagenesSrc.length) % imagenesSrc.length;
-      lightboxImg.src = imagenesSrc[indiceImagenActual];
+      visibleImages = getVisibleImages();
+      if (!visibleImages.length) return;
+      indiceActual = (indiceActual - 1 + visibleImages.length) % visibleImages.length;
+      lightboxImg.src = visibleImages[indiceActual].src;
     });
   }
 
-  if (lightboxNext) {
+  if (lightboxNext && !lightboxNext._hasListener) {
+    lightboxNext._hasListener = true;
     lightboxNext.addEventListener('click', () => {
-      indiceImagenActual = (indiceImagenActual + 1) % imagenesSrc.length;
-      lightboxImg.src = imagenesSrc[indiceImagenActual];
+      visibleImages = getVisibleImages();
+      if (!visibleImages.length) return;
+      indiceActual = (indiceActual + 1) % visibleImages.length;
+      lightboxImg.src = visibleImages[indiceActual].src;
     });
   }
 }
@@ -172,10 +194,15 @@ function inicializarFiltroGaleria() {
       filterBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
-      const filter = btn.getAttribute('data-filter');
+      const filter = (btn.getAttribute('data-filter') || 'all').toLowerCase();
       items.forEach(item => {
-        const category = item.getAttribute('data-category');
-        item.style.display = (filter === 'all' || category === filter) ? 'block' : 'none';
+        const rawCategory = item.getAttribute('data-category') || '';
+        const category = rawCategory.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (filter === 'all' || category === filter) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
       });
     });
   });
@@ -311,7 +338,7 @@ function inicializarChatbot() {
     chatInput.value = '';
 
     try {
-      const response = await fetch('http://localhost:8080/api/chatbot/pregunta', {
+      const response = await fetch(`${API_BASE_HOST}/api/chatbot/pregunta`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
@@ -411,22 +438,24 @@ async function cargarGaleria() {
 
   try {
     const items = await apiFetch('/galeria');
-    target.innerHTML = items.map((item, index) => `
-      <div class="col-6 col-md-4 galeria-col ${index >= 6 ? 'extra-img d-none' : ''}" data-category="${escapeHtml(item.categoria || 'academico')}" data-aos="fade-up">
-        <div class="galeria-item rounded-4 overflow-hidden shadow-sm" data-index="${index}">
-          <img src="${escapeHtml(item.imagenUrl || 'imagenes/galeria1.jpg')}" alt="${escapeHtml(item.titulo || 'Galería institucional')}" loading="lazy">
-          <div class="galeria-overlay d-flex align-items-center justify-content-center">
-            <span class="fw-semibold text-white"><i class="fa-solid fa-magnifying-glass-plus me-2"></i>${escapeHtml(item.titulo || 'Galería')}</span>
+    if (Array.isArray(items) && items.length > 0) {
+      target.innerHTML = items.map((item, index) => `
+        <div class="col-6 col-md-4 galeria-col ${index >= 6 ? 'extra-img d-none' : ''}" data-category="${escapeHtml(item.categoria || 'academico')}" data-aos="fade-up">
+          <div class="galeria-item rounded-4 overflow-hidden shadow-sm" data-index="${index}">
+            <img src="${escapeHtml(item.imagenUrl || 'imagenes/galeria1.jpg')}" alt="${escapeHtml(item.titulo || 'Galería institucional')}" loading="lazy">
+            <div class="galeria-overlay d-flex align-items-center justify-content-center">
+              <span class="fw-semibold text-white"><i class="fa-solid fa-magnifying-glass-plus me-2"></i>${escapeHtml(item.titulo || 'Galería')}</span>
+            </div>
           </div>
         </div>
-      </div>
-    `).join('');
-
+      `).join('');
+    }
+  } catch (error) {
+    console.warn('No se pudo cargar la galería desde la API, utilizando respaldo HTML local:', error);
+  } finally {
     inicializarGaleriaLightbox();
     inicializarFiltroGaleria();
     inicializarCargarMas();
-  } catch (error) {
-    console.warn('No se pudo cargar la galería:', error);
   }
 }
 
