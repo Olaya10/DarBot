@@ -8,8 +8,18 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Serve files from the uploads directory (relative to the working directory)
+        // Serve uploaded gallery files
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:uploads/");
+                .addResourceLocations("file:uploads/gallery/");
+
+        // Serve admin UI partials and related static files
+        registry.addResourceHandler("/admin/**")
+                .addResourceLocations("file:frontend/admin/")
+                .setCachePeriod(3600);
+
+        // Serve gallery images referenced in the UI
+        registry.addResourceHandler("/imagenes/**")
+                .addResourceLocations("file:frontend/imagenes/")
+                .setCachePeriod(3600);
     }
 }
