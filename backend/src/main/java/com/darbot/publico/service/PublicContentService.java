@@ -3,6 +3,7 @@ package com.darbot.publico.service;
 import com.darbot.publico.dto.*;
 import com.darbot.publico.entity.*;
 import com.darbot.publico.repository.*;
+import com.darbot.chatbot.repository.FaqRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ public class PublicContentService {
     private final PreinscripcionRepository preinscripcionRepository;
     private final ConfiguracionSitioRepository configuracionSitioRepository;
     private final EstadisticaRepository estadisticaRepository;
+    private final FaqRepository faqRepository;
 
     @Transactional(readOnly = true)
     public List<OfertaAcademicaResponse> obtenerOfertaAcademica() {
@@ -84,6 +86,13 @@ public class PublicContentService {
 
         Preinscripcion guardada = preinscripcionRepository.save(preinscripcion);
         return PreinscripcionResponse.from(guardada);
+    }
+
+    @Transactional(readOnly = true)
+    public List<FaqResponse> obtenerFaqs() {
+        return faqRepository.findByActivaTrue().stream()
+                .map(FaqResponse::from)
+                .toList();
     }
 
     public List<EstadisticaResponse> obtenerEstadisticas() {

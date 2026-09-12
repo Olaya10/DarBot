@@ -804,6 +804,41 @@ async function cargarInfoInstitucional() {
     console.warn('No se pudo cargar info institucional:', error);
   }
 }
+
+// ============================================
+// FAQs (Preguntas Frecuentes)
+// ============================================
+async function cargarFaqs() {
+  const target = document.getElementById('acordeonFaq');
+  if (!target) return;
+
+  try {
+    const faqs = await apiFetch('/faqs');
+    if (!Array.isArray(faqs) || faqs.length === 0) return;
+
+    target.innerHTML = faqs.map((f, i) => `
+      <div class="accordion-item">
+        <h3 class="accordion-header">
+          <button class="accordion-button ${i === 0 ? '' : 'collapsed'}" 
+                  type="button" 
+                  data-bs-toggle="collapse" 
+                  data-bs-target="#faq-${f.id}"
+                  aria-expanded="${i === 0 ? 'true' : 'false'}"
+                  aria-controls="faq-${f.id}">
+            ${escapeHtml(f.pregunta)}
+          </button>
+        </h3>
+        <div id="faq-${f.id}" 
+             class="accordion-collapse collapse ${i === 0 ? 'show' : ''}" 
+             data-bs-parent="#acordeonFaq">
+          <div class="accordion-body">${escapeHtml(f.respuesta)}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.warn('No se pudo cargar FAQs:', error);
+  }
+}
 document.addEventListener('DOMContentLoaded', async () => {
   const loader = document.getElementById('loader');
   if (loader) {
@@ -836,6 +871,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarNoticiasPagina();
   await cargarEstadisticas();
   await cargarInfoInstitucional();
+  await cargarFaqs();
 
   // Después de cargar el DOM dinámico
   inicializarPreinscripcion();
