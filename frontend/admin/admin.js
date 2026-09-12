@@ -1438,6 +1438,205 @@ if (isAdminSPA) {
     });
   }
 
+  // ---------- EQUIPO DIRECTIVO ----------
+  async function renderEquipo() {
+    pageTitle.textContent = 'Equipo Directivo';
+    viewContainer.innerHTML = `
+      <div class="admin-section">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div>
+            <h3 class="section-title mb-1">
+              <i class="fa-solid fa-user-tie me-2 text-danger"></i>Gestión de Equipo Directivo
+            </h3>
+            <p class="text-muted small mb-0">Los directivos que aparecen en el sitio público.</p>
+          </div>
+          <button id="crearEqBtn" class="btn btn-admin-primary">
+            <i class="fa-solid fa-plus me-1"></i> Añadir Miembro
+          </button>
+        </div>
+
+        <div class="card-admin">
+          <div class="card-admin-body p-0">
+            <div class="table-admin-wrap">
+              <table class="table-admin">
+                <thead>
+                  <tr>
+                    <th style="width:60px;">#</th>
+                    <th style="width:100px;">Foto</th>
+                    <th>Nombre</th>
+                    <th>Cargo</th>
+                    <th style="width:70px;">Orden</th>
+                    <th style="width:80px;">Activo</th>
+                    <th class="text-end" style="width:140px;">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="equipoBody">
+                  <tr><td colspan="7" class="text-center py-4 text-muted">Cargando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('crearEqBtn').addEventListener('click', () => openEquipoModal());
+
+    await loadEquipo();
+  }
+
+  async function loadEquipo() {
+    try {
+      const items = await apiFetch('/admin/equipo');
+      const tbody = document.getElementById('equipoBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (!items || !items.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No hay miembros registrados.</td></tr>`;
+        return;
+      }
+
+      items.forEach(item => {
+        const tr = document.createElement('tr');
+        const fotoSrc = item.fotoUrl ? (item.fotoUrl.startsWith('/') || item.fotoUrl.startsWith('http') ? item.fotoUrl : '/' + item.fotoUrl) : '';
+        tr.innerHTML = `
+          <td>${item.id}</td>
+          <td>${fotoSrc ? `<img src="${fotoSrc}" alt="${item.nombre || ''}" class="gallery-thumb" style="width:60px;height:60px;object-fit:cover;border-radius:50%;">` : '<span class="text-muted">—</span>'}</td>
+          <td><strong>${item.nombre || ''}</strong></td>
+          <td>${item.cargo || ''}</td>
+          <td>${item.orden != null ? item.orden : 0}</td>
+          <td>${item.activo !== false ? '<i class="fa-solid fa-circle-check text-success"></i>' : '<i class="fa-solid fa-circle-xmark text-danger"></i>'}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-primary me-2 btn-edit-eq" data-id="${item.id}"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-sm btn-danger btn-del-eq" data-id="${item.id}"><i class="fa-solid fa-trash"></i></button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll('.btn-edit-eq').forEach(b => {
+        b.addEventListener('click', () => openEquipoModal(parseInt(b.dataset.id, 10)));
+      });
+
+      tbody.querySelectorAll('.btn-del-eq').forEach(b => {
+        b.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar este miembro?')) return;
+          try {
+            await apiFetch(`/admin/equipo/${b.dataset.id}`, { method: 'DELETE' });
+            showToast('Miembro eliminado');
+            loadEquipo();
+          } catch (err) { alert(err.message); }
+        });
+      });
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function openEquipoModal(id = null) {
+    let item = { nombre: '', cargo: '', fotoUrl: '', orden: 0, activo: true };
+    if (id) {
+      try {
+        item = await apiFetch(`/admin/equipo/${id}`);
+      } catch (err) {
+        alert('No se pudo cargar: ' + err.message);
+        return;
+      }
+    }
+
+    const fotoActualSrc = item.fotoUrl ? (item.fotoUrl.startsWith('/') || item.fotoUrl.startsWith('http') ? item.fotoUrl : '/' + item.fotoUrl) : '';
+
+    const html = `
+      <h3><i class="fa-solid fa-user-tie me-2 text-danger"></i>${id ? 'Editar' : 'Añadir'} Miembro</h3>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Nombre *</label>
+        <input id="eq_nombre" class="form-control" value="${item.nombre || ''}" placeholder="Ej: Elkin Marquez Fernandez"/>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Cargo *</label>
+        <input id="eq_cargo" class="form-control" value="${item.cargo || ''}" placeholder="Ej: Rector"/>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Orden</label>
+        <input id="eq_orden" type="number" class="form-control" value="${item.orden != null ? item.orden : 0}" min="0"/>
+        <small class="text-muted">Menor número = aparece primero</small>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold d-block">
+          <input id="eq_activo" type="checkbox" ${item.activo !== false ? 'checked' : ''}/> Activo
+        </label>
+      </div>
+      ${id && fotoActualSrc ? `
+        <div class="form-row mb-3">
+          <label class="fw-semibold">Foto actual</label>
+          <div><img src="${fotoActualSrc}" style="max-width:120px; max-height:120px; border-radius:50%; object-fit:cover;"/></div>
+        </div>
+      ` : ''}
+      <div class="form-row mb-3">
+        <label class="fw-semibold">${id ? 'Reemplazar foto (opcional)' : 'Foto *'}</label>
+        <input id="eq_file" type="file" class="form-control" accept="image/*"/>
+        <small class="text-muted">JPG, PNG, WEBP. Máximo 10MB.</small>
+      </div>
+      <div class="form-row mb-3" id="eq_preview_wrap" style="display:none;">
+        <label class="fw-semibold">Vista previa</label>
+        <div><img id="eq_preview" style="max-width:120px; max-height:120px; border-radius:50%; object-fit:cover;"/></div>
+      </div>
+      <div class="modal-actions">
+        <button id="eq_cancel" class="btn btn-admin-outline">Cancelar</button>
+        <button id="eq_submit" class="btn btn-admin-primary">${id ? 'Guardar' : 'Crear'}</button>
+      </div>
+    `;
+    const overlay = showModal(html);
+
+    // Preview
+    const fileInput = overlay.querySelector('#eq_file');
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          overlay.querySelector('#eq_preview').src = ev.target.result;
+          overlay.querySelector('#eq_preview_wrap').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    overlay.querySelector('#eq_cancel').addEventListener('click', () => closeModal(overlay));
+    overlay.querySelector('#eq_submit').addEventListener('click', async () => {
+      const nombre = overlay.querySelector('#eq_nombre').value.trim();
+      const cargo = overlay.querySelector('#eq_cargo').value.trim();
+      const orden = parseInt(overlay.querySelector('#eq_orden').value || '0', 10);
+      const activo = overlay.querySelector('#eq_activo').checked;
+      const file = overlay.querySelector('#eq_file').files[0];
+
+      if (!nombre) return alert('El nombre es obligatorio');
+      if (!cargo) return alert('El cargo es obligatorio');
+      if (!id && !file) return alert('La foto es obligatoria');
+
+      const formData = new FormData();
+      formData.append('nombre', nombre);
+      formData.append('cargo', cargo);
+      formData.append('orden', orden);
+      formData.append('activo', activo);
+      if (file) formData.append('file', file);
+
+      try {
+        if (id) {
+          await apiFetch(`/admin/equipo/${id}`, { method: 'PUT', body: formData });
+          showToast('Miembro actualizado');
+        } else {
+          await apiFetch('/admin/equipo', { method: 'POST', body: formData });
+          showToast('Miembro creado');
+        }
+        closeModal(overlay);
+        loadEquipo();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    });
+  }
+
   async function renderChatbot() {
     pageTitle.textContent = 'Chatbot DarBot';
     viewContainer.innerHTML = `

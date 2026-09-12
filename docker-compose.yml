@@ -26,8 +26,8 @@ services:
     depends_on:
       - postgres_db
     volumes:
-      - ./frontend/imagenes/uploads:/app/uploads/galeria
-      - ./frontend/documentos:/app/uploads/documentos
+      - ./frontend/imagenes/uploads:/app/uploads
+      - ./frontend/documentos:/app/documentos
 
     networks:
       - darbot_network
