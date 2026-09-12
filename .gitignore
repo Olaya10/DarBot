@@ -16,3 +16,10 @@ backend/**/*.bak
 # Backups automáticos
 *.bak*
 **/*.bak*
+
+# Archivos subidos por usuarios (no versionar)
+frontend/documentos/*
+!frontend/documentos/.gitkeep
+frontend/imagenes/uploads/*
+!frontend/imagenes/uploads/.gitkeep
+uploads/
