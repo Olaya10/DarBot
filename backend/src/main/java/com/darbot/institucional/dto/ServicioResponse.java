@@ -7,7 +7,8 @@ public record ServicioResponse(
         String nombre,
         String descripcion,
         String horario,
-        String icono
+        String icono,
+        Boolean activo
 ) {
     public static ServicioResponse from(Servicio entity) {
         return new ServicioResponse(
@@ -15,7 +16,8 @@ public record ServicioResponse(
                 entity.getNombre(),
                 entity.getDescripcion(),
                 entity.getHorario(),
-                entity.getIcono()
+                entity.getIcono(),
+                entity.getActivo()
         );
     }
 }

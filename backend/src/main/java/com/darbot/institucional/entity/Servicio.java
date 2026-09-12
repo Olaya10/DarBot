@@ -27,6 +27,9 @@ public class Servicio {
     private String icono;
 
     @Column(nullable = false)
+    private Integer orden = 0;
+
+    @Column(nullable = false)
     private Boolean activo = true;
 
     @Column(name = "fecha_creacion", updatable = false)

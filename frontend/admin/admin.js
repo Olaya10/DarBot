@@ -1808,6 +1808,184 @@ if (isAdminSPA) {
     });
   }
 
+  // ---------- SERVICIOS INSTITUCIONALES ----------
+  async function renderServicios() {
+    pageTitle.textContent = 'Servicios Institucionales';
+    viewContainer.innerHTML = `
+      <div class="admin-section">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div>
+            <h3 class="section-title mb-1">
+              <i class="fa-solid fa-bell-concierge me-2 text-danger"></i>Gestión de Servicios
+            </h3>
+            <p class="text-muted small mb-0">Los servicios que aparecen en el sitio público.</p>
+          </div>
+          <button id="crearServBtn" class="btn btn-admin-primary">
+            <i class="fa-solid fa-plus me-1"></i> Añadir Servicio
+          </button>
+        </div>
+
+        <div class="card-admin">
+          <div class="card-admin-body p-0">
+            <div class="table-admin-wrap">
+              <table class="table-admin">
+                <thead>
+                  <tr>
+                    <th style="width:60px;">#</th>
+                    <th style="width:80px;">Icono</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Horario</th>
+                    <th style="width:70px;">Orden</th>
+                    <th style="width:80px;">Activo</th>
+                    <th class="text-end" style="width:140px;">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="serviciosBody">
+                  <tr><td colspan="8" class="text-center py-4 text-muted">Cargando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('crearServBtn').addEventListener('click', () => openServicioModal());
+
+    await loadServicios();
+  }
+
+  async function loadServicios() {
+    try {
+      const items = await apiFetch('/admin/servicios');
+      const tbody = document.getElementById('serviciosBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (!items || !items.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">No hay servicios registrados.</td></tr>`;
+        return;
+      }
+
+      items.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.id}</td>
+          <td style="text-align:center; font-size:1.5rem; color:#c8102e;"><i class="${item.icono || 'fa-solid fa-star'}"></i></td>
+          <td><strong>${item.nombre || ''}</strong></td>
+          <td>${item.descripcion || ''}</td>
+          <td><small class="text-muted">${item.horario || ''}</small></td>
+          <td>${item.orden != null ? item.orden : 0}</td>
+          <td>${item.activo !== false ? '<i class="fa-solid fa-circle-check text-success"></i>' : '<i class="fa-solid fa-circle-xmark text-danger"></i>'}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-primary me-2 btn-edit-serv" data-id="${item.id}"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-sm btn-danger btn-del-serv" data-id="${item.id}"><i class="fa-solid fa-trash"></i></button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll('.btn-edit-serv').forEach(b => {
+        b.addEventListener('click', () => openServicioModal(parseInt(b.dataset.id, 10)));
+      });
+
+      tbody.querySelectorAll('.btn-del-serv').forEach(b => {
+        b.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar este servicio?')) return;
+          try {
+            await apiFetch(`/admin/servicios/${b.dataset.id}`, { method: 'DELETE' });
+            showToast('Servicio eliminado');
+            loadServicios();
+          } catch (err) { alert(err.message); }
+        });
+      });
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function openServicioModal(id = null) {
+    let item = { icono: 'fa-solid fa-star', nombre: '', descripcion: '', horario: '', orden: 0, activo: true };
+    if (id) {
+      try {
+        item = await apiFetch(`/admin/servicios/${id}`);
+      } catch (err) {
+        alert('No se pudo cargar: ' + err.message);
+        return;
+      }
+    }
+
+    const html = `
+      <h3><i class="fa-solid fa-bell-concierge me-2 text-danger"></i>${id ? 'Editar' : 'Añadir'} Servicio</h3>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Icono FontAwesome *</label>
+        <input id="s_icono" class="form-control" value="${item.icono || 'fa-solid fa-star'}" placeholder="fa-solid fa-book"/>
+        <small class="text-muted">Vista previa: <i id="s_icono_preview" class="${item.icono || 'fa-solid fa-star'}" style="color:#c8102e; font-size:1.5rem;"></i></small>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Nombre *</label>
+        <input id="s_nombre" class="form-control" value="${item.nombre || ''}" placeholder="Ej: Biblioteca"/>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Descripción</label>
+        <textarea id="s_descripcion" class="form-control" rows="2" placeholder="Ej: Servicio de préstamo y consulta de libros">${item.descripcion || ''}</textarea>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Horario</label>
+        <input id="s_horario" class="form-control" value="${item.horario || ''}" placeholder="Ej: Lunes a viernes 8:00 AM - 6:00 PM"/>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Orden</label>
+        <input id="s_orden" type="number" class="form-control" value="${item.orden != null ? item.orden : 0}" min="0"/>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold d-block">
+          <input id="s_activo" type="checkbox" ${item.activo !== false ? 'checked' : ''}/> Activo
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button id="s_cancel" class="btn btn-admin-outline">Cancelar</button>
+        <button id="s_submit" class="btn btn-admin-primary">${id ? 'Guardar' : 'Crear'}</button>
+      </div>
+    `;
+    const overlay = showModal(html);
+
+    // Preview del icono
+    const iconoInput = overlay.querySelector('#s_icono');
+    iconoInput.addEventListener('input', (ev) => {
+      overlay.querySelector('#s_icono_preview').className = ev.target.value;
+    });
+
+    overlay.querySelector('#s_cancel').addEventListener('click', () => closeModal(overlay));
+    overlay.querySelector('#s_submit').addEventListener('click', async () => {
+      const icono = overlay.querySelector('#s_icono').value.trim();
+      const nombre = overlay.querySelector('#s_nombre').value.trim();
+      const descripcion = overlay.querySelector('#s_descripcion').value.trim();
+      const horario = overlay.querySelector('#s_horario').value.trim();
+      const orden = parseInt(overlay.querySelector('#s_orden').value || '0', 10);
+      const activo = overlay.querySelector('#s_activo').checked;
+
+      if (!icono) return alert('El icono es obligatorio');
+      if (!nombre) return alert('El nombre es obligatorio');
+
+      const payload = { icono, nombre, descripcion, horario, orden, activo };
+
+      try {
+        if (id) {
+          await apiFetch(`/admin/servicios/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+          showToast('Servicio actualizado');
+        } else {
+          await apiFetch('/admin/servicios', { method: 'POST', body: JSON.stringify(payload) });
+          showToast('Servicio creado');
+        }
+        closeModal(overlay);
+        loadServicios();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    });
+  }
+
   async function renderChatbot() {
     pageTitle.textContent = 'Chatbot DarBot';
     viewContainer.innerHTML = `
