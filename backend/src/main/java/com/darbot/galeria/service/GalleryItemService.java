@@ -22,7 +22,7 @@ import java.util.UUID;
 public class GalleryItemService {
 
     private final GalleryItemRepository repository;
-    private final Path uploadDir = Path.of("uploads/gallery");
+    private final Path uploadDir = Path.of("uploads/galeria");
 
     public List<GalleryItem> listar() {
         return repository.findAll();
@@ -41,7 +41,7 @@ public class GalleryItemService {
         item.setTitulo(request.titulo());
         item.setDescripcion(request.descripcion());
         item.setFecha(request.fecha() != null ? request.fecha() : LocalDateTime.now());
-        item.setUrlImagen("/" + uploadDir.resolve(filename).toString().replace("\\", "/"));
+        item.setUrlImagen("/imagenes/uploads/" + filename);
         return repository.save(item);
     }
 
@@ -54,7 +54,7 @@ public class GalleryItemService {
         if (request.fecha() != null) item.setFecha(request.fecha());
         if (file != null && !file.isEmpty()) {
             String filename = storeFile(file);
-            item.setUrlImagen("/" + uploadDir.resolve(filename).toString().replace("\\", "/"));
+            item.setUrlImagen("/imagenes/uploads/" + filename);
         }
         return repository.save(item);
     }

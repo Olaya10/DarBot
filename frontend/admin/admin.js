@@ -1048,39 +1048,84 @@ if (isAdminSPA) {
   }
 
   // --- Funciones globales de la galería (llamadas vía onclick inline) ---
+  // --- Funciones globales de la galería (con subida de archivos) ---
   window.openGaleriaModal = function () {
     const html = `
       <h3><i class="fa-solid fa-image me-2 text-danger"></i>Añadir Imagen</h3>
-      <div class="form-row"><label class="fw-semibold">Título</label>
-        <input id="g_titulo" class="form-control" placeholder="Título de la imagen"/></div>
-      <div class="form-row"><label class="fw-semibold">Descripción</label>
-        <textarea id="g_descripcion" class="form-control" rows="3" placeholder="Descripción breve"></textarea></div>
-      <div class="form-row"><label class="fw-semibold">URL de la imagen</label>
-        <input id="g_url" class="form-control" placeholder="https://... o imagenes/foto.jpg"/></div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Título *</label>
+        <input id="g_titulo" class="form-control" placeholder="Título de la imagen"/>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Descripción</label>
+        <textarea id="g_descripcion" class="form-control" rows="2" placeholder="Descripción breve"></textarea>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Categoría</label>
+        <select id="g_categoria" class="form-control">
+          <option value="academico">Académico</option>
+          <option value="deportes">Deportes</option>
+          <option value="cultural">Cultural</option>
+          <option value="eventos">Eventos</option>
+        </select>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Archivo de imagen *</label>
+        <input id="g_file" type="file" class="form-control" accept="image/*"/>
+        <small class="text-muted">JPG, PNG, WEBP. Máximo 10MB.</small>
+      </div>
+      <div class="form-row mb-3" id="g_preview_wrap" style="display:none;">
+        <label class="fw-semibold">Vista previa</label>
+        <div><img id="g_preview" style="max-width:100%; max-height:200px; border-radius:8px;"/></div>
+      </div>
       <div class="modal-actions">
         <button id="g_cancel" class="btn btn-admin-outline">Cancelar</button>
-        <button id="g_submit" class="btn btn-admin-primary">Guardar</button>
+        <button id="g_submit" class="btn btn-admin-primary">Subir Imagen</button>
       </div>
     `;
     const overlay = showModal(html);
+
+    // Preview
+    const fileInput = overlay.querySelector('#g_file');
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          overlay.querySelector('#g_preview').src = ev.target.result;
+          overlay.querySelector('#g_preview_wrap').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
     overlay.querySelector('#g_cancel').addEventListener('click', () => closeModal(overlay));
     overlay.querySelector('#g_submit').addEventListener('click', async () => {
       const titulo = overlay.querySelector('#g_titulo').value.trim();
       const descripcion = overlay.querySelector('#g_descripcion').value.trim();
-      const urlImagen = overlay.querySelector('#g_url').value.trim();
+      const categoria = overlay.querySelector('#g_categoria').value;
+      const file = overlay.querySelector('#g_file').files[0];
 
-      if (!titulo || !urlImagen) return alert('Título y URL son obligatorios');
+      if (!titulo) return alert('El título es obligatorio');
+      if (!file) return alert('Debes seleccionar una imagen');
+      if (!file.type.startsWith('image/')) return alert('El archivo debe ser una imagen');
+
+      const formData = new FormData();
+      formData.append('titulo', titulo);
+      formData.append('descripcion', descripcion);
+      formData.append('categoria', categoria);
+      formData.append('file', file);
 
       try {
         await apiFetch('/admin/galeria', {
           method: 'POST',
-          body: JSON.stringify({ titulo, descripcion, urlImagen })
+          body: formData
         });
         closeModal(overlay);
-        showToast('Imagen añadida con éxito');
+        showToast('Imagen subida correctamente');
         loadGaleria();
       } catch (err) {
-        alert('Error: ' + err.message);
+        alert('Error al subir: ' + err.message);
       }
     });
   };
@@ -1090,12 +1135,32 @@ if (isAdminSPA) {
       const item = await apiFetch(`/admin/galeria/${id}`);
       const html = `
         <h3><i class="fa-solid fa-pen me-2 text-danger"></i>Editar Imagen #${item.id}</h3>
-        <div class="form-row"><label class="fw-semibold">Título</label>
-          <input id="g_titulo" class="form-control" value="${item.titulo || ''}"/></div>
-        <div class="form-row"><label class="fw-semibold">Descripción</label>
-          <textarea id="g_descripcion" class="form-control" rows="3">${item.descripcion || ''}</textarea></div>
-        <div class="form-row"><label class="fw-semibold">URL de la imagen</label>
-          <input id="g_url" class="form-control" value="${item.urlImagen || ''}"/></div>
+        <div class="form-row mb-3">
+          <label class="fw-semibold">Título *</label>
+          <input id="g_titulo" class="form-control" value="${item.titulo || ''}"/>
+        </div>
+        <div class="form-row mb-3">
+          <label class="fw-semibold">Descripción</label>
+          <textarea id="g_descripcion" class="form-control" rows="2">${item.descripcion || ''}</textarea>
+        </div>
+        <div class="form-row mb-3">
+          <label class="fw-semibold">Categoría</label>
+          <select id="g_categoria" class="form-control">
+            <option value="academico" ${item.categoria === 'academico' ? 'selected' : ''}>Académico</option>
+            <option value="deportes" ${item.categoria === 'deportes' ? 'selected' : ''}>Deportes</option>
+            <option value="cultural" ${item.categoria === 'cultural' ? 'selected' : ''}>Cultural</option>
+            <option value="eventos" ${item.categoria === 'eventos' ? 'selected' : ''}>Eventos</option>
+          </select>
+        </div>
+        <div class="form-row mb-3">
+          <label class="fw-semibold">Imagen actual</label>
+          <div><img src="${item.urlImagen || ''}" style="max-width:100%; max-height:200px; border-radius:8px;"/></div>
+        </div>
+        <div class="form-row mb-3">
+          <label class="fw-semibold">Reemplazar imagen (opcional)</label>
+          <input id="g_file" type="file" class="form-control" accept="image/*"/>
+          <small class="text-muted">Si no seleccionas archivo, se mantiene la imagen actual.</small>
+        </div>
         <div class="modal-actions">
           <button id="g_cancel" class="btn btn-admin-outline">Cancelar</button>
           <button id="g_submit" class="btn btn-admin-primary">Guardar Cambios</button>
@@ -1106,20 +1171,27 @@ if (isAdminSPA) {
       overlay.querySelector('#g_submit').addEventListener('click', async () => {
         const titulo = overlay.querySelector('#g_titulo').value.trim();
         const descripcion = overlay.querySelector('#g_descripcion').value.trim();
-        const urlImagen = overlay.querySelector('#g_url').value.trim();
+        const categoria = overlay.querySelector('#g_categoria').value;
+        const file = overlay.querySelector('#g_file').files[0];
 
-        if (!titulo || !urlImagen) return alert('Título y URL son obligatorios');
+        if (!titulo) return alert('El título es obligatorio');
+
+        const formData = new FormData();
+        formData.append('titulo', titulo);
+        formData.append('descripcion', descripcion);
+        formData.append('categoria', categoria);
+        if (file) formData.append('file', file);
 
         try {
           await apiFetch(`/admin/galeria/${id}`, {
             method: 'PUT',
-            body: JSON.stringify({ titulo, descripcion, urlImagen })
+            body: formData
           });
           closeModal(overlay);
           showToast('Imagen actualizada');
           loadGaleria();
         } catch (err) {
-          alert('Error: ' + err.message);
+          alert('Error al actualizar: ' + err.message);
         }
       });
     } catch (err) {

@@ -51,7 +51,7 @@ public class FileStorageService {
         log.info("Archivo guardado: {}", target.toAbsolutePath());
 
         // Retornar ruta relativa para el frontend
-        return subcarpeta + "/" + filename;  // documentos/uuid.pdf
+        return "/" + subcarpeta + "/" + filename;  // documentos/uuid.pdf
     }
 
     /**
