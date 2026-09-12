@@ -1637,6 +1637,177 @@ if (isAdminSPA) {
     });
   }
 
+  // ---------- VALORES INSTITUCIONALES ----------
+  async function renderValores() {
+    pageTitle.textContent = 'Valores Institucionales';
+    viewContainer.innerHTML = `
+      <div class="admin-section">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div>
+            <h3 class="section-title mb-1">
+              <i class="fa-solid fa-hand-holding-heart me-2 text-danger"></i>Gestión de Valores
+            </h3>
+            <p class="text-muted small mb-0">Los valores que aparecen en el sitio público.</p>
+          </div>
+          <button id="crearValBtn" class="btn btn-admin-primary">
+            <i class="fa-solid fa-plus me-1"></i> Añadir Valor
+          </button>
+        </div>
+
+        <div class="card-admin">
+          <div class="card-admin-body p-0">
+            <div class="table-admin-wrap">
+              <table class="table-admin">
+                <thead>
+                  <tr>
+                    <th style="width:60px;">#</th>
+                    <th style="width:80px;">Icono</th>
+                    <th>Título</th>
+                    <th>Descripción</th>
+                    <th style="width:70px;">Orden</th>
+                    <th style="width:80px;">Activo</th>
+                    <th class="text-end" style="width:140px;">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="valoresBody">
+                  <tr><td colspan="7" class="text-center py-4 text-muted">Cargando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('crearValBtn').addEventListener('click', () => openValorModal());
+
+    await loadValores();
+  }
+
+  async function loadValores() {
+    try {
+      const items = await apiFetch('/admin/valores');
+      const tbody = document.getElementById('valoresBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (!items || !items.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">No hay valores registrados.</td></tr>`;
+        return;
+      }
+
+      items.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.id}</td>
+          <td style="text-align:center; font-size:1.5rem; color:#c8102e;"><i class="${item.icono || 'fa-solid fa-star'}"></i></td>
+          <td><strong>${item.titulo || ''}</strong></td>
+          <td>${item.descripcion || ''}</td>
+          <td>${item.orden != null ? item.orden : 0}</td>
+          <td>${item.activo !== false ? '<i class="fa-solid fa-circle-check text-success"></i>' : '<i class="fa-solid fa-circle-xmark text-danger"></i>'}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-primary me-2 btn-edit-val" data-id="${item.id}"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-sm btn-danger btn-del-val" data-id="${item.id}"><i class="fa-solid fa-trash"></i></button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll('.btn-edit-val').forEach(b => {
+        b.addEventListener('click', () => openValorModal(parseInt(b.dataset.id, 10)));
+      });
+
+      tbody.querySelectorAll('.btn-del-val').forEach(b => {
+        b.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar este valor?')) return;
+          try {
+            await apiFetch(`/admin/valores/${b.dataset.id}`, { method: 'DELETE' });
+            showToast('Valor eliminado');
+            loadValores();
+          } catch (err) { alert(err.message); }
+        });
+      });
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function openValorModal(id = null) {
+    let item = { icono: 'fa-solid fa-star', titulo: '', descripcion: '', orden: 0, activo: true };
+    if (id) {
+      try {
+        item = await apiFetch(`/admin/valores/${id}`);
+      } catch (err) {
+        alert('No se pudo cargar: ' + err.message);
+        return;
+      }
+    }
+
+    const html = `
+      <h3><i class="fa-solid fa-hand-holding-heart me-2 text-danger"></i>${id ? 'Editar' : 'Añadir'} Valor</h3>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Icono FontAwesome *</label>
+        <input id="v_icono" class="form-control" value="${item.icono || 'fa-solid fa-star'}" placeholder="fa-solid fa-handshake-angle"/>
+        <small class="text-muted">Vista previa: <i id="v_icono_preview" class="${item.icono || 'fa-solid fa-star'}" style="color:#c8102e; font-size:1.5rem;"></i></small>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Título *</label>
+        <input id="v_titulo" class="form-control" value="${item.titulo || ''}" placeholder="Ej: Respeto"/>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Descripción</label>
+        <textarea id="v_descripcion" class="form-control" rows="2" placeholder="Ej: Reconocemos la dignidad de cada persona.">${item.descripcion || ''}</textarea>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Orden</label>
+        <input id="v_orden" type="number" class="form-control" value="${item.orden != null ? item.orden : 0}" min="0"/>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold d-block">
+          <input id="v_activo" type="checkbox" ${item.activo !== false ? 'checked' : ''}/> Activo
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button id="v_cancel" class="btn btn-admin-outline">Cancelar</button>
+        <button id="v_submit" class="btn btn-admin-primary">${id ? 'Guardar' : 'Crear'}</button>
+      </div>
+    `;
+    const overlay = showModal(html);
+
+    // Preview del icono
+    const iconoInput = overlay.querySelector('#v_icono');
+    iconoInput.addEventListener('input', (ev) => {
+      overlay.querySelector('#v_icono_preview').className = ev.target.value;
+    });
+
+    overlay.querySelector('#v_cancel').addEventListener('click', () => closeModal(overlay));
+    overlay.querySelector('#v_submit').addEventListener('click', async () => {
+      const icono = overlay.querySelector('#v_icono').value.trim();
+      const titulo = overlay.querySelector('#v_titulo').value.trim();
+      const descripcion = overlay.querySelector('#v_descripcion').value.trim();
+      const orden = parseInt(overlay.querySelector('#v_orden').value || '0', 10);
+      const activo = overlay.querySelector('#v_activo').checked;
+
+      if (!icono) return alert('El icono es obligatorio');
+      if (!titulo) return alert('El título es obligatorio');
+
+      const payload = { icono, titulo, descripcion, orden, activo };
+
+      try {
+        if (id) {
+          await apiFetch(`/admin/valores/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+          showToast('Valor actualizado');
+        } else {
+          await apiFetch('/admin/valores', { method: 'POST', body: JSON.stringify(payload) });
+          showToast('Valor creado');
+        }
+        closeModal(overlay);
+        loadValores();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    });
+  }
+
   async function renderChatbot() {
     pageTitle.textContent = 'Chatbot DarBot';
     viewContainer.innerHTML = `

@@ -7,7 +7,8 @@ public record ValorInstitucionalResponse(
         String icono,
         String titulo,
         String descripcion,
-        Integer orden
+        Integer orden,
+        Boolean activo
 ) {
     public static ValorInstitucionalResponse from(ValorInstitucional entity) {
         return new ValorInstitucionalResponse(
@@ -15,7 +16,8 @@ public record ValorInstitucionalResponse(
                 entity.getIcono(),
                 entity.getTitulo(),
                 entity.getDescripcion(),
-                entity.getOrden()
+                entity.getOrden(),
+                entity.getActivo()
         );
     }
 }
