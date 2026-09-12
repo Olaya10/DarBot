@@ -41,8 +41,15 @@ public class PublicContentController {
         return ResponseEntity.ok(publicContentService.obtenerConfiguracion());
     }
 
+    @GetMapping("/estadisticas")
+    public ResponseEntity<List<EstadisticaResponse>> obtenerEstadisticas() {
+        return ResponseEntity.ok(publicContentService.obtenerEstadisticas());
+    }
+
     @PostMapping("/preinscripciones")
     public ResponseEntity<PreinscripcionResponse> crearPreinscripcion(@Valid @RequestBody PreinscripcionRequest request) {
         return ResponseEntity.ok(publicContentService.crearPreinscripcion(request));
     }
+
+
 }

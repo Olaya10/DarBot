@@ -741,6 +741,37 @@ async function cargarNoticiasPagina() {
     target.innerHTML = '<p class="text-center text-secondary">Error al cargar noticias.</p>';
   }
 }
+
+// ============================================
+// ESTADÍSTICAS
+// ============================================
+async function cargarEstadisticas() {
+  const target = document.getElementById('estadisticasList');
+  if (!target) return;
+
+  try {
+    const stats = await apiFetch('/estadisticas');
+    if (!Array.isArray(stats) || stats.length === 0) return;
+
+    target.innerHTML = stats.map((s, i) => `
+      <div class="col-6 col-lg-3" data-aos="fade-up" data-aos-delay="${i * 100}">
+        <div class="stat-item">
+          <div class="stat-numero">
+            <span class="contador" data-objetivo="${s.value}">0</span>${escapeHtml(s.sufijo || '')}
+          </div>
+          <div class="stat-label">${escapeHtml(s.label)}</div>
+        </div>
+      </div>
+    `).join('');
+
+    // Reiniciar contadores después de inyectar HTML
+    inicializarContadores();
+  } catch (error) {
+    console.warn('No se pudo cargar estadísticas:', error);
+  }
+}
+
+
 document.addEventListener('DOMContentLoaded', async () => {
   const loader = document.getElementById('loader');
   if (loader) {
@@ -771,6 +802,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarNoticias();
   await cargarEventos();
   await cargarNoticiasPagina();
+  await cargarEstadisticas();
 
   // Después de cargar el DOM dinámico
   inicializarPreinscripcion();
