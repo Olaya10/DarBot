@@ -1,6 +1,7 @@
 package com.darbot.contenidos.controller;
 
 import com.darbot.contenidos.dto.*;
+import com.darbot.contenidos.entity.Documento;
 import com.darbot.contenidos.service.ContenidoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -8,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 
 import java.util.List;
 
@@ -117,4 +120,26 @@ public class AdminContenidoController {
         contenidoService.eliminarDocumento(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping(value = "/documentos/upload", consumes = {"multipart/form-data"})
+    public ResponseEntity<DocumentoResponse> crearDocumentoConArchivo(
+            @RequestParam("titulo") String titulo,
+            @RequestParam(value = "descripcion", required = false) String descripcion,
+            @RequestParam(value = "tipo", required = false, defaultValue = "General") String tipo,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        Documento doc = contenidoService.crearDocumentoConArchivo(titulo, descripcion, tipo, file);
+        return ResponseEntity.status(HttpStatus.CREATED).body(DocumentoResponse.from(doc));
+    }
+
+    @PutMapping(value = "/documentos/{id}/upload", consumes = {"multipart/form-data"})
+    public ResponseEntity<DocumentoResponse> actualizarDocumentoConArchivo(
+            @PathVariable Long id,
+            @RequestParam(value = "titulo", required = false) String titulo,
+            @RequestParam(value = "descripcion", required = false) String descripcion,
+            @RequestParam(value = "tipo", required = false) String tipo,
+            @RequestParam(value = "file", required = false) MultipartFile file) throws IOException {
+        Documento doc = contenidoService.actualizarDocumentoConArchivo(id, titulo, descripcion, tipo, file);
+        return ResponseEntity.ok(DocumentoResponse.from(doc));
+    }
+
 }

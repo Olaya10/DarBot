@@ -31,9 +31,10 @@ function showToast(message, type = 'success') {
 }
 
 async function apiFetch(endpoint, options = {}) {
+  const isFormData = options.body instanceof FormData;
   const headers = {
     'Accept': 'application/json',
-    ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+    ...(options.body && !isFormData ? { 'Content-Type': 'application/json' } : {}),
     ...(options.headers || {})
   };
   const token = getToken();
@@ -790,7 +791,7 @@ if (isAdminSPA) {
         inner.innerHTML = `
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h3 class="h6 mb-0 fw-bold">Gestión de Documentos</h3>
-            <button id="crearDocBtn" class="btn btn-admin-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Crear Documento</button>
+            <button id="crearDocBtn" class="btn btn-admin-primary btn-sm"><i class="fa-solid fa-upload me-1"></i> Subir Documento</button>
           </div>
           <div class="table-admin-wrap">
             <table class="table-admin">
@@ -798,7 +799,9 @@ if (isAdminSPA) {
                 <tr>
                   <th>ID</th>
                   <th>Título</th>
-                  <th>URL</th>
+                  <th>Tipo</th>
+                  <th>Archivo</th>
+                  <th>Fecha</th>
                   <th class="text-end">Acciones</th>
                 </tr>
               </thead>
@@ -806,8 +809,20 @@ if (isAdminSPA) {
                 ${docs.map(d => `
                   <tr>
                     <td>#${d.id}</td>
-                    <td><strong>${d.titulo}</strong></td>
-                    <td>${d.url || ''}</td>
+                    <td>
+                      <strong>${d.titulo}</strong>
+                      ${d.descripcion ? `<br><small class="text-muted">${d.descripcion}</small>` : ''}
+                    </td>
+                    <td><span class="badge bg-secondary">${d.tipo || 'General'}</span></td>
+                    <td>
+                      ${d.rutaArchivo ? `
+                        <a href="${d.rutaArchivo}" target="_blank" class="text-decoration-none">
+                          <i class="fa-solid fa-file-pdf text-danger me-1"></i>
+                          ${d.nombreArchivo || 'Ver PDF'}
+                        </a>
+                      ` : '<span class="text-muted">—</span>'}
+                    </td>
+                    <td>${d.fechaPublicacion ? new Date(d.fechaPublicacion).toLocaleDateString('es-CO') : '-'}</td>
                     <td class="text-end">
                       <button data-id="${d.id}" class="btn btn-admin-outline btn-sm me-1 btn-edit-doc">Editar</button>
                       <button data-id="${d.id}" class="btn btn-admin-danger-outline btn-sm btn-delete-doc">Eliminar</button>
@@ -818,37 +833,100 @@ if (isAdminSPA) {
             </table>
           </div>
         `;
+
+        // Botón "Subir Documento"
         document.getElementById('crearDocBtn').addEventListener('click', () => {
           const html = `
-            <h3>Crear Documento</h3>
-            <div class="form-row"><label>Título</label><input id="m_titulo" class="form-control"/></div>
-            <div class="form-row"><label>URL</label><input id="m_url" class="form-control"/></div>
+            <h3 class="h5 fw-bold mb-3">Subir Documento PDF</h3>
+            <div class="form-row mb-3">
+              <label class="form-label">Título *</label>
+              <input id="m_titulo" class="form-control" placeholder="Ej: Manual de convivencia 2026"/>
+            </div>
+            <div class="form-row mb-3">
+              <label class="form-label">Descripción</label>
+              <textarea id="m_descripcion" class="form-control" rows="2" placeholder="Descripción breve del documento"></textarea>
+            </div>
+            <div class="form-row mb-3">
+              <label class="form-label">Tipo</label>
+              <select id="m_tipo" class="form-control">
+                <option value="Manual">Manual</option>
+                <option value="Circular">Circular</option>
+                <option value="Formato">Formato</option>
+                <option value="PEI">PEI</option>
+                <option value="General" selected>General</option>
+              </select>
+            </div>
+            <div class="form-row mb-3">
+              <label class="form-label">Archivo PDF *</label>
+              <input id="m_file" type="file" class="form-control" accept=".pdf,application/pdf"/>
+              <small class="text-muted">Tamaño máximo: 10MB</small>
+            </div>
             <div class="modal-actions">
               <button id="m_cancel" class="btn btn-admin-outline">Cancelar</button>
-              <button id="m_submit" class="btn btn-admin-primary">Crear</button>
+              <button id="m_submit" class="btn btn-admin-primary"><i class="fa-solid fa-upload me-1"></i> Subir</button>
             </div>
           `;
           const overlay = showModal(html);
           overlay.querySelector('#m_cancel').addEventListener('click', () => closeModal(overlay));
           overlay.querySelector('#m_submit').addEventListener('click', async () => {
             const titulo = overlay.querySelector('#m_titulo').value.trim();
-            const url = overlay.querySelector('#m_url').value.trim();
-            if (!titulo || !url) return alert('Título y URL son obligatorios');
+            const descripcion = overlay.querySelector('#m_descripcion').value.trim();
+            const tipo = overlay.querySelector('#m_tipo').value;
+            const file = overlay.querySelector('#m_file').files[0];
+
+            if (!titulo) return alert('El título es obligatorio');
+            if (!file) return alert('Debes seleccionar un archivo PDF');
+            if (file.type !== 'application/pdf') return alert('El archivo debe ser un PDF');
+
+            const formData = new FormData();
+            formData.append('titulo', titulo);
+            formData.append('descripcion', descripcion);
+            formData.append('tipo', tipo);
+            formData.append('file', file);
+
             try {
-              await apiFetch('/admin/contenidos/documentos', { method: 'POST', body: JSON.stringify({ titulo, url }) });
+              await apiFetch('/admin/contenidos/documentos/upload', {
+                method: 'POST',
+                body: formData
+              });
               closeModal(overlay);
-              showToast('Documento creado');
+              showToast('Documento subido correctamente');
               loadDocumentos();
-            } catch (err) { alert(err.message); }
+            } catch (err) {
+              alert('Error al subir: ' + err.message);
+            }
           });
         });
+
+        // Botones editar
         inner.querySelectorAll('.btn-edit-doc').forEach(b => {
           b.addEventListener('click', () => {
             const doc = docs.find(x => x.id == b.dataset.id);
             const html = `
-              <h3>Editar Documento #${doc.id}</h3>
-              <div class="form-row"><label>Título</label><input id="m_titulo" class="form-control" value="${doc.titulo || ''}"/></div>
-              <div class="form-row"><label>URL</label><input id="m_url" class="form-control" value="${doc.url || ''}"/></div>
+              <h3 class="h5 fw-bold mb-3">Editar Documento #${doc.id}</h3>
+              <div class="form-row mb-3">
+                <label class="form-label">Título *</label>
+                <input id="m_titulo" class="form-control" value="${doc.titulo || ''}"/>
+              </div>
+              <div class="form-row mb-3">
+                <label class="form-label">Descripción</label>
+                <textarea id="m_descripcion" class="form-control" rows="2">${doc.descripcion || ''}</textarea>
+              </div>
+              <div class="form-row mb-3">
+                <label class="form-label">Tipo</label>
+                <select id="m_tipo" class="form-control">
+                  <option value="Manual" ${doc.tipo === 'Manual' ? 'selected' : ''}>Manual</option>
+                  <option value="Circular" ${doc.tipo === 'Circular' ? 'selected' : ''}>Circular</option>
+                  <option value="Formato" ${doc.tipo === 'Formato' ? 'selected' : ''}>Formato</option>
+                  <option value="PEI" ${doc.tipo === 'PEI' ? 'selected' : ''}>PEI</option>
+                  <option value="General" ${doc.tipo === 'General' || !doc.tipo ? 'selected' : ''}>General</option>
+                </select>
+              </div>
+              <div class="form-row mb-3">
+                <label class="form-label">Reemplazar archivo (opcional)</label>
+                <input id="m_file" type="file" class="form-control" accept=".pdf,application/pdf"/>
+                <small class="text-muted">Actual: ${doc.nombreArchivo || 'sin archivo'}</small>
+              </div>
               <div class="modal-actions">
                 <button id="m_cancel" class="btn btn-admin-outline">Cancelar</button>
                 <button id="m_submit" class="btn btn-admin-primary">Guardar</button>
@@ -858,24 +936,42 @@ if (isAdminSPA) {
             overlay.querySelector('#m_cancel').addEventListener('click', () => closeModal(overlay));
             overlay.querySelector('#m_submit').addEventListener('click', async () => {
               const titulo = overlay.querySelector('#m_titulo').value.trim();
-              const url = overlay.querySelector('#m_url').value.trim();
-              if (!titulo || !url) return alert('Título y URL son obligatorios');
+              const descripcion = overlay.querySelector('#m_descripcion').value.trim();
+              const tipo = overlay.querySelector('#m_tipo').value;
+              const file = overlay.querySelector('#m_file').files[0];
+
+              if (!titulo) return alert('El título es obligatorio');
+
+              const formData = new FormData();
+              formData.append('titulo', titulo);
+              formData.append('descripcion', descripcion);
+              formData.append('tipo', tipo);
+              if (file) formData.append('file', file);
+
               try {
-                await apiFetch(`/admin/contenidos/documentos/${doc.id}`, { method: 'PUT', body: JSON.stringify({ titulo, url }) });
+                await apiFetch(`/admin/contenidos/documentos/${doc.id}/upload`, {
+                  method: 'PUT',
+                  body: formData
+                });
                 closeModal(overlay);
                 showToast('Documento actualizado');
                 loadDocumentos();
-              } catch (err) { alert(err.message); }
+              } catch (err) {
+                alert('Error al actualizar: ' + err.message);
+              }
             });
           });
         });
+
+        // Botones eliminar
         inner.querySelectorAll('.btn-delete-doc').forEach(b => {
           b.addEventListener('click', async () => {
-            if (confirm('¿Eliminar este documento?')) {
+            if (!confirm('¿Eliminar este documento?')) return;
+            try {
               await apiFetch(`/admin/contenidos/documentos/${b.dataset.id}`, { method: 'DELETE' });
               showToast('Documento eliminado');
               loadDocumentos();
-            }
+            } catch (err) { alert(err.message); }
           });
         });
       } catch (err) {

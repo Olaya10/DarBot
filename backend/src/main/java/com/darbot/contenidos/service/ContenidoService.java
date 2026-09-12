@@ -10,6 +10,9 @@ import com.darbot.contenidos.repository.DocumentoRepository;
 import com.darbot.contenidos.repository.EventoRepository;
 import com.darbot.contenidos.repository.NoticiaRepository;
 import com.darbot.common.exception.ResourceNotFoundException;
+import com.darbot.common.service.FileStorageService;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +28,7 @@ public class ContenidoService {
     private final NoticiaRepository noticiaRepository;
     private final EventoRepository eventoRepository;
     private final DocumentoRepository documentoRepository;
+    private final FileStorageService fileStorageService;
 
     // ==================== NOTICIAS ====================
 
@@ -169,4 +173,47 @@ public class ContenidoService {
         if (request.tipo() != null) entity.setTipo(request.tipo());
         if (request.estado() != null) entity.setEstado(request.estado());
     }
+
+    // ==================== DOCUMENTOS CON ARCHIVO ====================
+
+    @Transactional
+    public Documento crearDocumentoConArchivo(String titulo, String descripcion, String tipo,
+                                              MultipartFile archivo) throws IOException {
+        String ruta = fileStorageService.guardar(archivo, "documentos");
+        Documento documento = new Documento();
+        documento.setTitulo(titulo);
+        documento.setDescripcion(descripcion);
+        documento.setTipo(tipo);
+        documento.setNombreArchivo(archivo.getOriginalFilename());
+        documento.setRutaArchivo(ruta);
+        documento.setEstado("ACTIVO");
+        documento.setFechaCreacion(LocalDateTime.now());
+        documento.setFechaActualizacion(LocalDateTime.now());
+        if (documento.getFechaPublicacion() == null) {
+            documento.setFechaPublicacion(LocalDateTime.now());
+        }
+        return documentoRepository.save(documento);
+    }
+
+    @Transactional
+    public Documento actualizarDocumentoConArchivo(Long id, String titulo, String descripcion,
+                                                    String tipo, MultipartFile archivo) throws IOException {
+        Documento doc = obtenerDocumentoPorId(id);
+        if (titulo != null) doc.setTitulo(titulo);
+        if (descripcion != null) doc.setDescripcion(descripcion);
+        if (tipo != null) doc.setTipo(tipo);
+        if (archivo != null && !archivo.isEmpty()) {
+            // Eliminar archivo anterior
+            if (doc.getRutaArchivo() != null) {
+                fileStorageService.eliminar(doc.getRutaArchivo());
+            }
+            String ruta = fileStorageService.guardar(archivo, "documentos");
+            doc.setRutaArchivo(ruta);
+            doc.setNombreArchivo(archivo.getOriginalFilename());
+        }
+        doc.setFechaActualizacion(LocalDateTime.now());
+        return documentoRepository.save(doc);
+    }
+
+
 }
