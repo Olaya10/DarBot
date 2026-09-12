@@ -49,6 +49,11 @@ public class PublicContentController {
     public ResponseEntity<List<FaqResponse>> obtenerFaqs() {
         return ResponseEntity.ok(publicContentService.obtenerFaqs());
     }
+    @GetMapping("/equipo")
+    public ResponseEntity<List<EquipoDirectivoResponse>> obtenerEquipoDirectivo() {
+        return ResponseEntity.ok(publicContentService.obtenerEquipoDirectivo());
+    }
+
 
 
     @PostMapping("/preinscripciones")

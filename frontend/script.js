@@ -839,6 +839,35 @@ async function cargarFaqs() {
     console.warn('No se pudo cargar FAQs:', error);
   }
 }
+
+// ============================================
+// EQUIPO DIRECTIVO
+// ============================================
+async function cargarEquipo() {
+  const target = document.getElementById('equipoList');
+  if (!target) return;
+
+  try {
+    const equipo = await apiFetch('/equipo');
+    if (!Array.isArray(equipo) || equipo.length === 0) return;
+
+    target.innerHTML = equipo.map((m, i) => `
+      <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="${i * 100}">
+        <div class="tarjeta-equipo">
+          <div class="foto-wrap">
+            <img src="${escapeHtml(m.fotoUrl || 'imagenes/Logo IEDTP.jpeg')}" 
+                 alt="Fotografía de ${escapeHtml(m.nombre)}" 
+                 loading="lazy">
+          </div>
+          <h3>${escapeHtml(m.nombre)}</h3>
+          <p class="cargo">${escapeHtml(m.cargo)}</p>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.warn('No se pudo cargar equipo directivo:', error);
+  }
+}
 document.addEventListener('DOMContentLoaded', async () => {
   const loader = document.getElementById('loader');
   if (loader) {
@@ -872,6 +901,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarEstadisticas();
   await cargarInfoInstitucional();
   await cargarFaqs();
+  await cargarEquipo();
 
   // Después de cargar el DOM dinámico
   inicializarPreinscripcion();

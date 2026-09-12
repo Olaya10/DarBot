@@ -25,6 +25,7 @@ public class PublicContentService {
     private final ConfiguracionSitioRepository configuracionSitioRepository;
     private final EstadisticaRepository estadisticaRepository;
     private final FaqRepository faqRepository;
+    private final EquipoDirectivoRepository equipoDirectivoRepository;
 
     @Transactional(readOnly = true)
     public List<OfertaAcademicaResponse> obtenerOfertaAcademica() {
@@ -86,6 +87,13 @@ public class PublicContentService {
 
         Preinscripcion guardada = preinscripcionRepository.save(preinscripcion);
         return PreinscripcionResponse.from(guardada);
+    }
+
+    @Transactional(readOnly = true)
+    public List<EquipoDirectivoResponse> obtenerEquipoDirectivo() {
+        return equipoDirectivoRepository.findByActivoTrueOrderByOrdenAsc().stream()
+                .map(EquipoDirectivoResponse::from)
+                .toList();
     }
 
     @Transactional(readOnly = true)
