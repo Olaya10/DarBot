@@ -8,7 +8,8 @@ public record EstadisticaResponse(
         Integer value,
         String sufijo,
         String icono,
-        Integer orden
+        Integer orden,
+        Boolean activo
 ) {
     public static EstadisticaResponse from(Estadistica entity) {
         return new EstadisticaResponse(
@@ -17,7 +18,8 @@ public record EstadisticaResponse(
                 entity.getValue(),
                 entity.getSufijo(),
                 entity.getIcono(),
-                entity.getOrden()
+                entity.getOrden(),
+                entity.getActivo()
         );
     }
 }

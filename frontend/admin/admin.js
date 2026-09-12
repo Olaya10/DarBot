@@ -194,7 +194,11 @@ if (isAdminSPA) {
       case 'institucional': renderInstitucional(); break;
       case 'chatbot': renderChatbot(); break;
       case 'cache': renderCache(); break;
-      case 'galeria': renderGaleria(); break;   // <-- NUEVO
+      case 'galeria': renderGaleria(); break;
+      case 'estadisticas': renderEstadisticas(); break;
+      case 'equipo': renderEquipo(); break;
+      case 'valores': renderValores(); break;
+      case 'servicios': renderServicios(); break;
       default: renderDashboard(); break;
     }
   }
@@ -1257,6 +1261,183 @@ if (isAdminSPA) {
   };
 
   // ---------- CHATBOT ----------
+  // ---------- ESTADÍSTICAS ----------
+  async function renderEstadisticas() {
+    pageTitle.textContent = 'Estadísticas';
+    viewContainer.innerHTML = `
+      <div class="admin-section">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div>
+            <h3 class="section-title mb-1">
+              <i class="fa-solid fa-chart-line me-2 text-danger"></i>Gestión de Estadísticas
+            </h3>
+            <p class="text-muted small mb-0">Las cifras que aparecen en el home del sitio público.</p>
+          </div>
+          <button id="crearEstBtn" class="btn btn-admin-primary">
+            <i class="fa-solid fa-plus me-1"></i> Añadir Estadística
+          </button>
+        </div>
+
+        <div class="card-admin">
+          <div class="card-admin-body p-0">
+            <div class="table-admin-wrap">
+              <table class="table-admin">
+                <thead>
+                  <tr>
+                    <th style="width:60px;">#</th>
+                    <th>Label</th>
+                    <th style="width:100px;">Valor</th>
+                    <th style="width:80px;">Sufijo</th>
+                    <th style="width:200px;">Icono</th>
+                    <th style="width:70px;">Orden</th>
+                    <th style="width:80px;">Activo</th>
+                    <th class="text-end" style="width:140px;">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="estadisticasBody">
+                  <tr><td colspan="8" class="text-center py-4 text-muted">Cargando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('crearEstBtn').addEventListener('click', () => openEstadisticaModal());
+
+    await loadEstadisticas();
+  }
+
+  async function loadEstadisticas() {
+    try {
+      const items = await apiFetch('/admin/estadisticas');
+      const tbody = document.getElementById('estadisticasBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (!items || !items.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">No hay estadísticas registradas.</td></tr>`;
+        return;
+      }
+
+      items.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.id}</td>
+          <td><strong>${item.label || ''}</strong></td>
+          <td>${item.value != null ? item.value : 0}</td>
+          <td><code>${item.sufijo || ''}</code></td>
+          <td><i class="${item.icono || 'fa-solid fa-chart-simple'} me-2"></i><code>${item.icono || ''}</code></td>
+          <td>${item.orden != null ? item.orden : 0}</td>
+          <td>${item.activo !== false ? '<i class="fa-solid fa-circle-check text-success"></i>' : '<i class="fa-solid fa-circle-xmark text-danger"></i>'}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-primary me-2 btn-edit-est" data-id="${item.id}"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-sm btn-danger btn-del-est" data-id="${item.id}"><i class="fa-solid fa-trash"></i></button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll('.btn-edit-est').forEach(b => {
+        b.addEventListener('click', () => openEstadisticaModal(parseInt(b.dataset.id, 10)));
+      });
+
+      tbody.querySelectorAll('.btn-del-est').forEach(b => {
+        b.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar esta estadística?')) return;
+          try {
+            await apiFetch(`/admin/estadisticas/${b.dataset.id}`, { method: 'DELETE' });
+            showToast('Estadística eliminada');
+            loadEstadisticas();
+          } catch (err) { alert(err.message); }
+        });
+      });
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  async function openEstadisticaModal(id = null) {
+    let item = { label: '', value: 0, sufijo: '', icono: 'fa-solid fa-chart-simple', orden: 0, activo: true };
+    if (id) {
+      try {
+        item = await apiFetch(`/admin/estadisticas/${id}`);
+      } catch (err) {
+        alert('No se pudo cargar: ' + err.message);
+        return;
+      }
+    }
+
+    const html = `
+      <h3><i class="fa-solid fa-chart-line me-2 text-danger"></i>${id ? 'Editar' : 'Añadir'} Estadística</h3>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Label *</label>
+        <input id="e_label" class="form-control" value="${item.label || ''}" placeholder="Ej: Estudiantes"/>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Valor *</label>
+        <input id="e_value" type="number" class="form-control" value="${item.value != null ? item.value : 0}"/>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Sufijo (opcional)</label>
+        <input id="e_sufijo" class="form-control" value="${item.sufijo || ''}" placeholder="Ej: +"/>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Icono FontAwesome</label>
+        <input id="e_icono" class="form-control" value="${item.icono || 'fa-solid fa-chart-simple'}" placeholder="fa-solid fa-user-graduate"/>
+        <small class="text-muted">Vista previa: <i id="e_icono_preview" class="${item.icono || 'fa-solid fa-chart-simple'}"></i></small>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Orden</label>
+        <input id="e_orden" type="number" class="form-control" value="${item.orden != null ? item.orden : 0}" min="0"/>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold d-block">
+          <input id="e_activo" type="checkbox" ${item.activo !== false ? 'checked' : ''}/> Activo
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button id="e_cancel" class="btn btn-admin-outline">Cancelar</button>
+        <button id="e_submit" class="btn btn-admin-primary">${id ? 'Guardar' : 'Crear'}</button>
+      </div>
+    `;
+    const overlay = showModal(html);
+
+    // Preview del icono
+    const iconoInput = overlay.querySelector('#e_icono');
+    iconoInput.addEventListener('input', (ev) => {
+      overlay.querySelector('#e_icono_preview').className = ev.target.value;
+    });
+
+    overlay.querySelector('#e_cancel').addEventListener('click', () => closeModal(overlay));
+    overlay.querySelector('#e_submit').addEventListener('click', async () => {
+      const label = overlay.querySelector('#e_label').value.trim();
+      const value = parseInt(overlay.querySelector('#e_value').value || '0', 10);
+      const sufijo = overlay.querySelector('#e_sufijo').value.trim();
+      const icono = overlay.querySelector('#e_icono').value.trim();
+      const orden = parseInt(overlay.querySelector('#e_orden').value || '0', 10);
+      const activo = overlay.querySelector('#e_activo').checked;
+
+      if (!label) return alert('El label es obligatorio');
+
+      const payload = { label, value, sufijo, icono, orden, activo };
+
+      try {
+        if (id) {
+          await apiFetch(`/admin/estadisticas/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+          showToast('Estadística actualizada');
+        } else {
+          await apiFetch('/admin/estadisticas', { method: 'POST', body: JSON.stringify(payload) });
+          showToast('Estadística creada');
+        }
+        closeModal(overlay);
+        loadEstadisticas();
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    });
+  }
+
   async function renderChatbot() {
     pageTitle.textContent = 'Chatbot DarBot';
     viewContainer.innerHTML = `
