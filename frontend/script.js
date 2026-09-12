@@ -1,15 +1,22 @@
+// ============================================
+// CONFIGURACIÓN DE API
+// ============================================
 const API_BASE_HOST = (typeof window !== 'undefined' && window.location && window.location.port && window.location.port !== '8080')
   ? `${window.location.protocol}//${window.location.hostname}:8080`
   : '';
 const API_BASE = `${API_BASE_HOST}/api/public`;
+const API_BASE_CONTENIDOS = `${API_BASE_HOST}/api/contenidos`;
 
-const escapeHtml = (value = '') => value
+const escapeHtml = (value = '') => String(value)
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
   .replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#039;');
 
+// ============================================
+// FETCH GENÉRICO
+// ============================================
 async function apiFetch(endpoint, options = {}) {
   const response = await fetch(`${API_BASE}${endpoint}`, {
     headers: {
@@ -28,6 +35,42 @@ async function apiFetch(endpoint, options = {}) {
   return response.json();
 }
 
+// Fetch específico para /api/contenidos (noticias, eventos, documentos)
+async function apiFetchContenidos(endpoint, options = {}) {
+  const response = await fetch(`${API_BASE_CONTENIDOS}${endpoint}`, {
+    headers: {
+      'Accept': 'application/json',
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...options.headers,
+    },
+    ...options,
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} en ${endpoint}`);
+  }
+
+  return response.json();
+}
+
+// ============================================
+// UTILIDADES
+// ============================================
+const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+function formatearFecha(fecha) {
+  if (!fecha) return '';
+  try {
+    const d = new Date(fecha);
+    return `${d.getDate()} ${MESES_CORTOS[d.getMonth()]} ${d.getFullYear()}`;
+  } catch (e) {
+    return '';
+  }
+}
+
+// ============================================
+// INICIALIZADORES DE UI
+// ============================================
 function inicializarNavbarScroll() {
   const navbar = document.getElementById('navbarPrincipal');
   const heroSection = document.querySelector('.hero');
@@ -219,6 +262,9 @@ function inicializarCargarMas() {
   });
 }
 
+// ============================================
+// CHATBOT
+// ============================================
 function normalizarTextoChat(text = '') {
   return String(text)
     .replace(/\\n/g, '\n')
@@ -364,6 +410,11 @@ function inicializarChatbot() {
   });
 }
 
+// ============================================
+// CARGA DE DATOS DESDE API
+// ============================================
+
+// Configuración institucional (navbar, footer, contacto)
 async function cargarConfiguracion() {
   try {
     const config = await apiFetch('/configuracion');
@@ -413,6 +464,7 @@ async function cargarConfiguracion() {
   }
 }
 
+// Oferta académica
 async function cargarOfertaAcademica() {
   const container = document.getElementById('ofertaAcademicaList');
   if (!container) return;
@@ -424,6 +476,7 @@ async function cargarOfertaAcademica() {
         <div class="tarjeta-oferta">
           <i class="${escapeHtml(oferta.icono || 'fa-solid fa-graduation-cap')} icono-oferta"></i>
           <h3>${escapeHtml(oferta.nombre || 'Oferta académica')}</h3>
+          <p>${escapeHtml(oferta.descripcion || '')}</p>
         </div>
       </div>
     `).join('');
@@ -432,6 +485,7 @@ async function cargarOfertaAcademica() {
   }
 }
 
+// Galería
 async function cargarGaleria() {
   const target = document.getElementById('galeria-grid');
   if (!target) return;
@@ -459,6 +513,7 @@ async function cargarGaleria() {
   }
 }
 
+// Requisitos de matrícula
 async function cargarRequisitosMatricula() {
   const pasosContainer = document.getElementById('pasosMatriculaList');
   const preescolarList = document.getElementById('listaRequisitosPreescolar');
@@ -505,6 +560,81 @@ async function cargarRequisitosMatricula() {
   }
 }
 
+// ============================================
+// NOTICIAS
+// ============================================
+async function cargarNoticias() {
+  const target = document.getElementById('noticiasGrid');
+  if (!target) return;
+
+  try {
+    const noticias = await apiFetchContenidos('/noticias');
+    if (!Array.isArray(noticias) || noticias.length === 0) {
+      target.innerHTML = '<p class="text-center text-secondary">Próximamente...</p>';
+      return;
+    }
+
+    target.innerHTML = noticias.slice(0, 3).map((n, i) => `
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="${i * 150}">
+        <article class="tarjeta-noticia">
+          <div class="noticia-img">
+            <img src="${escapeHtml(n.imagenUrl || 'imagenes/estudiantes2.jpg')}" 
+                 alt="${escapeHtml(n.titulo)}" loading="lazy">
+            <span class="noticia-fecha">${formatearFecha(n.fechaPublicacion)}</span>
+          </div>
+          <div class="noticia-cuerpo">
+            <h3>${escapeHtml(n.titulo)}</h3>
+            <p>${escapeHtml(n.resumen || '')}</p>
+            <a href="noticias.html#noticia-${n.id}" class="enlace-leer-mas">
+              Leer más <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          </div>
+        </article>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.warn('No se pudo cargar noticias:', error);
+  }
+}
+
+// ============================================
+// EVENTOS
+// ============================================
+async function cargarEventos() {
+  const target = document.getElementById('eventosGrid');
+  if (!target) return;
+
+  try {
+    const eventos = await apiFetchContenidos('/eventos');
+    if (!Array.isArray(eventos) || eventos.length === 0) {
+      target.innerHTML = '<p class="text-center text-secondary">Sin eventos próximos.</p>';
+      return;
+    }
+
+    target.innerHTML = eventos.slice(0, 4).map((ev, i) => {
+      const d = new Date(ev.fecha);
+      return `
+        <div class="evento-fila" data-aos="fade-up" data-aos-delay="${i * 100}">
+          <div class="evento-fecha">
+            <span class="dia">${d.getDate()}</span>
+            <span class="mes">${MESES_CORTOS[d.getMonth()]}</span>
+          </div>
+          <div>
+            <h4>${escapeHtml(ev.titulo)}</h4>
+            <p>${escapeHtml(ev.descripcion || '')}</p>
+            ${ev.lugar ? `<small class="text-secondary"><i class="fa-solid fa-location-dot me-1"></i>${escapeHtml(ev.lugar)}</small>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (error) {
+    console.warn('No se pudo cargar eventos:', error);
+  }
+}
+
+// ============================================
+// PREINSCRIPCIÓN
+// ============================================
 function inicializarPreinscripcion() {
   const form = document.getElementById('formPreinscripcion');
   if (!form) return;
@@ -566,6 +696,9 @@ function inicializarPreinscripcion() {
   });
 }
 
+// ============================================
+// INICIALIZACIÓN
+// ============================================
 document.addEventListener('DOMContentLoaded', async () => {
   const loader = document.getElementById('loader');
   if (loader) {
@@ -581,15 +714,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     anioSpan.textContent = new Date().getFullYear();
   }
 
+  // Inicializadores de UI (síncronos)
   inicializarNavbarScroll();
   inicializarBotonVolverArriba();
   inicializarContadores();
   inicializarContactoForm();
   inicializarChatbot();
 
+  // Cargas desde API (asíncronas)
   await cargarConfiguracion();
   await cargarOfertaAcademica();
   await cargarGaleria();
   await cargarRequisitosMatricula();
+  await cargarNoticias();
+  await cargarEventos();
+
+  // Después de cargar el DOM dinámico
   inicializarPreinscripcion();
 });
