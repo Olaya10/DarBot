@@ -459,6 +459,16 @@ async function cargarConfiguracion() {
         el.href = config[key];
       }
     });
+
+    // Hero (título y frase)
+    const heroTitulo = document.querySelector('.hero h1');
+    if (heroTitulo && config.hero_titulo) {
+      heroTitulo.textContent = config.hero_titulo;
+    }
+    const heroFrase = document.querySelector('.hero .frase');
+    if (heroFrase && config.hero_frase) {
+      heroFrase.textContent = config.hero_frase;
+    }
   } catch (error) {
     console.warn('No se pudo cargar la configuración pública:', error);
   }
@@ -772,6 +782,28 @@ async function cargarEstadisticas() {
 }
 
 
+
+// ============================================
+// INFORMACIÓN INSTITUCIONAL (Misión, Visión, Historia)
+// ============================================
+async function cargarInfoInstitucional() {
+  try {
+    const res = await fetch(`${API_BASE_HOST}/api/institucional/info`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const info = await res.json();
+
+    const misionEl = document.getElementById('infoMision');
+    if (misionEl && info.mision) misionEl.textContent = info.mision;
+
+    const visionEl = document.getElementById('infoVision');
+    if (visionEl && info.vision) visionEl.textContent = info.vision;
+
+    const historiaEl = document.getElementById('infoHistoria');
+    if (historiaEl && info.historia) historiaEl.textContent = info.historia;
+  } catch (error) {
+    console.warn('No se pudo cargar info institucional:', error);
+  }
+}
 document.addEventListener('DOMContentLoaded', async () => {
   const loader = document.getElementById('loader');
   if (loader) {
@@ -803,6 +835,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarEventos();
   await cargarNoticiasPagina();
   await cargarEstadisticas();
+  await cargarInfoInstitucional();
 
   // Después de cargar el DOM dinámico
   inicializarPreinscripcion();
