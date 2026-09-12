@@ -699,6 +699,48 @@ function inicializarPreinscripcion() {
 // ============================================
 // INICIALIZACIÓN
 // ============================================
+
+// ============================================
+// NOTICIAS - Página completa (noticias.html)
+// ============================================
+async function cargarNoticiasPagina() {
+  const target = document.getElementById('noticiasList');
+  if (!target) return;
+
+  try {
+    const noticias = await apiFetchContenidos('/noticias');
+    if (!Array.isArray(noticias) || noticias.length === 0) {
+      target.innerHTML = '<p class="text-center text-secondary">Próximamente publicaremos noticias.</p>';
+      return;
+    }
+
+    target.innerHTML = noticias.map(n => `
+      <article class="col-12" id="noticia-${n.id}">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+          <div class="row g-0 align-items-center">
+            <div class="col-lg-5">
+              <img src="${escapeHtml(n.imagenUrl || 'imagenes/estudiantes2.jpg')}" 
+                   class="img-fluid w-100 h-100 object-fit-cover" 
+                   alt="${escapeHtml(n.titulo)}" 
+                   style="min-height: 280px;">
+            </div>
+            <div class="col-lg-7">
+              <div class="card-body p-4 p-md-5">
+                <span class="badge bg-danger mb-2">${formatearFecha(n.fechaPublicacion)}</span>
+                <h2 class="card-title fw-bold mb-3">${escapeHtml(n.titulo)}</h2>
+                <p class="card-text text-secondary fs-5">${escapeHtml(n.resumen || '')}</p>
+                <p class="card-text text-secondary">${escapeHtml(n.contenido || '')}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    `).join('');
+  } catch (error) {
+    console.warn('No se pudo cargar las noticias:', error);
+    target.innerHTML = '<p class="text-center text-secondary">Error al cargar noticias.</p>';
+  }
+}
 document.addEventListener('DOMContentLoaded', async () => {
   const loader = document.getElementById('loader');
   if (loader) {
@@ -728,6 +770,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarRequisitosMatricula();
   await cargarNoticias();
   await cargarEventos();
+  await cargarNoticiasPagina();
 
   // Después de cargar el DOM dinámico
   inicializarPreinscripcion();
