@@ -7,7 +7,11 @@ public record GalleryItemResponse(
     String titulo,
     String descripcion,
     LocalDateTime fecha,
-    String urlImagen
+    String urlImagen,
+    String categoria,
+    Integer orden,
+    Boolean activo,
+    Boolean destacado
 ) {
     public static GalleryItemResponse from(com.darbot.galeria.entity.GalleryItem item) {
         return new GalleryItemResponse(
@@ -15,7 +19,11 @@ public record GalleryItemResponse(
             item.getTitulo(),
             item.getDescripcion(),
             item.getFecha(),
-            item.getUrlImagen()
+            item.getUrlImagen(),
+            item.getCategoria(),
+            item.getOrden(),
+            item.getActivo(),
+            item.getDestacado()
         );
     }
 }

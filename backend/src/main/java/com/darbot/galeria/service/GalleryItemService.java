@@ -42,6 +42,10 @@ public class GalleryItemService {
         item.setDescripcion(request.descripcion());
         item.setFecha(request.fecha() != null ? request.fecha() : LocalDateTime.now());
         item.setUrlImagen("/imagenes/uploads/" + filename);
+        if (request.categoria() != null) item.setCategoria(request.categoria());
+        if (request.orden() != null) item.setOrden(request.orden());
+        if (request.activo() != null) item.setActivo(request.activo());
+        if (request.destacado() != null) item.setDestacado(request.destacado());
         return repository.save(item);
     }
 
@@ -52,6 +56,10 @@ public class GalleryItemService {
         if (request.titulo() != null) item.setTitulo(request.titulo());
         if (request.descripcion() != null) item.setDescripcion(request.descripcion());
         if (request.fecha() != null) item.setFecha(request.fecha());
+        if (request.categoria() != null) item.setCategoria(request.categoria());
+        if (request.orden() != null) item.setOrden(request.orden());
+        if (request.activo() != null) item.setActivo(request.activo());
+        if (request.destacado() != null) item.setDestacado(request.destacado());
         if (file != null && !file.isEmpty()) {
             String filename = storeFile(file);
             item.setUrlImagen("/imagenes/uploads/" + filename);

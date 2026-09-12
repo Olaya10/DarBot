@@ -3,6 +3,8 @@ package com.darbot.publico.service;
 import com.darbot.publico.dto.*;
 import com.darbot.publico.entity.*;
 import com.darbot.publico.repository.*;
+import com.darbot.galeria.repository.GalleryItemRepository;
+import com.darbot.galeria.entity.GalleryItem;
 import com.darbot.chatbot.repository.FaqRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,7 +20,7 @@ import java.util.stream.Collectors;
 public class PublicContentService {
 
     private final OfertaAcademicaRepository ofertaAcademicaRepository;
-    private final GaleriaRepository galeriaRepository;
+    private final GalleryItemRepository galleryItemRepository;
     private final RequisitoMatriculaRepository requisitoMatriculaRepository;
     private final RequisitoMatriculaItemRepository requisitoMatriculaItemRepository;
     private final PreinscripcionRepository preinscripcionRepository;
@@ -37,11 +39,11 @@ public class PublicContentService {
 
     @Transactional(readOnly = true)
     public List<GaleriaResponse> obtenerGaleria(String categoria) {
-        List<Galeria> galerias;
+        List<GalleryItem> galerias;
         if (categoria == null || categoria.isBlank()) {
-            galerias = galeriaRepository.findByActivoTrueOrderByOrdenAsc();
+            galerias = galleryItemRepository.findByActivoTrueOrderByOrdenAsc();
         } else {
-            galerias = galeriaRepository.findByActivoTrueAndCategoriaOrderByOrdenAsc(categoria.trim().toLowerCase());
+            galerias = galleryItemRepository.findByActivoTrueAndCategoriaOrderByOrdenAsc(categoria.trim().toLowerCase());
         }
         return galerias.stream().map(GaleriaResponse::from).toList();
     }
