@@ -1032,8 +1032,10 @@ if (isAdminSPA) {
           <td>${item.id}</td>
           <td><img src="${item.urlImagen}" alt="${item.titulo || ''}" class="gallery-thumb"></td>
           <td>${item.titulo || ''}</td>
-          <td>${item.descripcion || ''}</td>
-          <td>${item.fecha ? new Date(item.fecha).toLocaleDateString() : ''}</td>
+          <td><span class="badge bg-secondary">${item.categoria || 'academico'}</span></td>
+          <td>${item.orden != null ? item.orden : 0}</td>
+          <td>${item.destacado ? '<i class="fa-solid fa-star text-warning"></i>' : '<span class="text-muted">—</span>'}</td>
+          <td>${item.activo !== false ? '<i class="fa-solid fa-circle-check text-success"></i>' : '<i class="fa-solid fa-circle-xmark text-danger"></i>'}</td>
           <td>
             <button class="btn btn-sm btn-primary me-2"
                     onclick="editGaleria(${item.id})"><i class="fa-solid fa-pen"></i></button>
@@ -1068,6 +1070,21 @@ if (isAdminSPA) {
           <option value="cultural">Cultural</option>
           <option value="eventos">Eventos</option>
         </select>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Orden</label>
+        <input id="g_orden" type="number" class="form-control" value="0" min="0"/>
+        <small class="text-muted">Menor número = aparece primero</small>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold d-block">
+          <input id="g_destacado" type="checkbox"/> Destacado (aparece primero)
+        </label>
+      </div>
+      <div class="form-row mb-3">
+        <label class="fw-semibold d-block">
+          <input id="g_activo" type="checkbox" checked/> Activo (visible en el sitio)
+        </label>
       </div>
       <div class="form-row mb-3">
         <label class="fw-semibold">Archivo de imagen *</label>
@@ -1110,10 +1127,17 @@ if (isAdminSPA) {
       if (!file) return alert('Debes seleccionar una imagen');
       if (!file.type.startsWith('image/')) return alert('El archivo debe ser una imagen');
 
+      const orden = parseInt(overlay.querySelector('#g_orden').value || '0', 10);
+      const destacado = overlay.querySelector('#g_destacado').checked;
+      const activo = overlay.querySelector('#g_activo').checked;
+
       const formData = new FormData();
       formData.append('titulo', titulo);
       formData.append('descripcion', descripcion);
       formData.append('categoria', categoria);
+      formData.append('orden', orden);
+      formData.append('destacado', destacado);
+      formData.append('activo', activo);
       formData.append('file', file);
 
       try {
@@ -1153,6 +1177,21 @@ if (isAdminSPA) {
           </select>
         </div>
         <div class="form-row mb-3">
+          <label class="fw-semibold">Orden</label>
+          <input id="g_orden" type="number" class="form-control" value="${item.orden != null ? item.orden : 0}" min="0"/>
+          <small class="text-muted">Menor número = aparece primero</small>
+        </div>
+        <div class="form-row mb-3">
+          <label class="fw-semibold d-block">
+            <input id="g_destacado" type="checkbox" ${item.destacado ? 'checked' : ''}/> Destacado
+          </label>
+        </div>
+        <div class="form-row mb-3">
+          <label class="fw-semibold d-block">
+            <input id="g_activo" type="checkbox" ${item.activo !== false ? 'checked' : ''}/> Activo
+          </label>
+        </div>
+        <div class="form-row mb-3">
           <label class="fw-semibold">Imagen actual</label>
           <div><img src="${item.urlImagen || ''}" style="max-width:100%; max-height:200px; border-radius:8px;"/></div>
         </div>
@@ -1176,10 +1215,17 @@ if (isAdminSPA) {
 
         if (!titulo) return alert('El título es obligatorio');
 
+        const orden = parseInt(overlay.querySelector('#g_orden').value || '0', 10);
+        const destacado = overlay.querySelector('#g_destacado').checked;
+        const activo = overlay.querySelector('#g_activo').checked;
+
         const formData = new FormData();
         formData.append('titulo', titulo);
         formData.append('descripcion', descripcion);
         formData.append('categoria', categoria);
+        formData.append('orden', orden);
+        formData.append('destacado', destacado);
+        formData.append('activo', activo);
         if (file) formData.append('file', file);
 
         try {
