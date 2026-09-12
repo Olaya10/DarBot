@@ -893,6 +893,38 @@ async function cargarValores() {
     console.warn('No se pudo cargar valores:', error);
   }
 }
+
+// ============================================
+// SERVICIOS INSTITUCIONALES
+// ============================================
+async function cargarServicios() {
+  const target = document.getElementById('serviciosList');
+  if (!target) return;
+
+  try {
+    const res = await fetch(`${API_BASE_HOST}/api/institucional/servicios`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const servicios = await res.json();
+    if (!Array.isArray(servicios) || servicios.length === 0) return;
+
+    target.innerHTML = servicios.map((s, i) => `
+      <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="${i * 100}">
+        <div class="tarjeta-servicio">
+          <div class="icono-servicio">
+            <i class="${escapeHtml(s.icono || 'fa-solid fa-star')}"></i>
+          </div>
+          <div>
+            <h4>${escapeHtml(s.nombre)}</h4>
+            ${s.descripcion ? `<p class="text-secondary small mb-1">${escapeHtml(s.descripcion)}</p>` : ''}
+            ${s.horario ? `<p class="text-muted small mb-0"><i class="fa-regular fa-clock me-1"></i>${escapeHtml(s.horario)}</p>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.warn('No se pudo cargar servicios:', error);
+  }
+}
 document.addEventListener('DOMContentLoaded', async () => {
   const loader = document.getElementById('loader');
   if (loader) {
@@ -928,6 +960,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarFaqs();
   await cargarEquipo();
   await cargarValores();
+  await cargarServicios();
 
   // Después de cargar el DOM dinámico
   inicializarPreinscripcion();
