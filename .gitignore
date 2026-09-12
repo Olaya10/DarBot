@@ -12,3 +12,7 @@
 *.bak
 frontend/*.bak*
 backend/**/*.bak
+
+# Backups automáticos
+*.bak*
+**/*.bak*
