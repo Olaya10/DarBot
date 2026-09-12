@@ -868,6 +868,31 @@ async function cargarEquipo() {
     console.warn('No se pudo cargar equipo directivo:', error);
   }
 }
+
+// ============================================
+// VALORES INSTITUCIONALES
+// ============================================
+async function cargarValores() {
+  const target = document.getElementById('valoresList');
+  if (!target) return;
+
+  try {
+    const valores = await apiFetch('/valores');
+    if (!Array.isArray(valores) || valores.length === 0) return;
+
+    target.innerHTML = valores.map((v, i) => `
+      <div class="col-6 col-md-4 col-lg-2" data-aos="zoom-in" data-aos-delay="${i * 80}">
+        <div class="tarjeta-valor">
+          <div class="sello"><i class="${escapeHtml(v.icono)}"></i></div>
+          <h4>${escapeHtml(v.titulo)}</h4>
+          <p>${escapeHtml(v.descripcion || '')}</p>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.warn('No se pudo cargar valores:', error);
+  }
+}
 document.addEventListener('DOMContentLoaded', async () => {
   const loader = document.getElementById('loader');
   if (loader) {
@@ -902,6 +927,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarInfoInstitucional();
   await cargarFaqs();
   await cargarEquipo();
+  await cargarValores();
 
   // Después de cargar el DOM dinámico
   inicializarPreinscripcion();

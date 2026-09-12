@@ -53,6 +53,11 @@ public class PublicContentController {
     public ResponseEntity<List<EquipoDirectivoResponse>> obtenerEquipoDirectivo() {
         return ResponseEntity.ok(publicContentService.obtenerEquipoDirectivo());
     }
+    @GetMapping("/valores")
+    public ResponseEntity<List<ValorInstitucionalResponse>> obtenerValores() {
+        return ResponseEntity.ok(publicContentService.obtenerValores());
+    }
+
 
 
 
