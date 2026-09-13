@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentos | Institución Educativa Darío Torregroza Pérez</title>
+
+  <!-- SEO -->
+  <meta name="description" content="Documentos institucionales: manuales, circulares, formatos y PEI de la Institución Educativa Darío Torregroza Pérez.">
+  <meta name="author" content="Institución Educativa Darío Torregroza Pérez">
+  <meta name="robots" content="index, follow">
+
+  <!-- Favicon -->
+  <link rel="icon" href="imagenes/Logo IEDTP.jpeg" type="image/svg+xml" class="institucion-favicon">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#c8102e">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Bootstrap 5 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+  <!-- AOS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.1/aos.css">
+
+  <!-- Hoja de estilos propia -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <a href="#contenido-principal" class="skip-link">Saltar al contenido principal</a>
+
+  <!-- ============ NAVBAR ============ -->
+  <header>
+    <nav class="navbar navbar-ie navbar-expand-lg navbar-paginas" id="navbarPrincipal">
+      <div class="container">
+        <a class="navbar-brand" href="index.html#inicio">
+          <img src="imagenes/Logo IEDTP.jpeg" alt="Escudo" class="logo-img institucion-logo">
+          <span>
+            <span class="d-block marca-nombre institucion-nombre">I.E. Darío Torregroza Pérez</span>
+            <span class="d-block marca-lema institucion-lema">Camino a la excelencia</span>
+          </span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Abrir menú">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navMenu">
+          <ul class="navbar-nav align-items-lg-center gap-lg-1">
+            <li class="nav-item"><a class="nav-link" href="index.html#inicio">Inicio</a></li>
+            <li class="nav-item"><a class="nav-link" href="index.html#nosotros">Nosotros</a></li>
+            <li class="nav-item"><a class="nav-link" href="index.html#oferta-academica">Oferta Académica</a></li>
+            <li class="nav-item"><a class="nav-link" href="index.html#noticias">Noticias</a></li>
+            <li class="nav-item"><a class="nav-link" href="galeria.html">Galería</a></li>
+            <li class="nav-item"><a class="nav-link" href="matricula.html">Matrícula</a></li>
+            <li class="nav-item"><a class="nav-link active" href="documentos.html">Documentos</a></li>
+            <li class="nav-item"><a class="nav-link nav-acceso-inst" href="institucional.html"><i class="fa-solid fa-user-lock me-1"></i>Acceso Inst.</a></li>
+            <li class="nav-item"><a class="nav-link nav-cta" href="contacto.html">Contacto</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main id="contenido-principal">
+
+    <!-- ============ HERO DE PÁGINA ============ -->
+    <section class="page-hero py-5 bg-hueso">
+      <div class="container text-center py-4">
+        <span class="eyebrow d-flex justify-content-center" data-aos="fade-up">Documentos oficiales</span>
+        <h1 class="display-5 fw-bold mb-3" data-aos="fade-up">Documentos Institucionales</h1>
+        <p class="section-lead mx-auto mb-0" data-aos="fade-up">
+          Manuales, circulares, formatos y documentos oficiales disponibles para descarga.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ FILTROS ============ -->
+    <section class="py-4">
+      <div class="container">
+        <div class="d-flex flex-wrap justify-content-center gap-2 mb-4" id="filtrosDocumentos">
+          <button class="btn btn-sm btn-outline-danger active" data-filter="todos">Todos</button>
+          <button class="btn btn-sm btn-outline-danger" data-filter="manual">Manuales</button>
+          <button class="btn btn-sm btn-outline-danger" data-filter="circular">Circulares</button>
+          <button class="btn btn-sm btn-outline-danger" data-filter="formato">Formatos</button>
+          <button class="btn btn-sm btn-outline-danger" data-filter="pei">PEI</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DOCUMENTOS ============ -->
+    <section class="section-pad pt-0">
+      <div class="container">
+        <div class="row g-4" id="documentosList">
+          <div class="text-center py-5 text-muted">
+            <div class="spinner-border spinner-border-sm text-danger me-2" role="status"></div>
+            Cargando documentos...
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer-ie">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="footer-marca">
+            <img src="imagenes/Logo IEDTP.jpeg" alt="Escudo institucional" class="logo-img institucion-logo">
+            <div>
+              <strong class="d-block text-white footer-brand-name">I.E. Darío Torregroza Pérez</strong>
+              <span class="small footer-brand-tag">Camino a la excelencia</span>
+            </div>
+          </div>
+          <p>Institución educativa oficial comprometida con una formación integral, incluyente y de calidad para toda la comunidad.</p>
+          <div class="redes-sociales d-flex gap-3">
+            <a href="#" data-social="facebook" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <i class="fa-brands fa-facebook-f"></i>
+            </a>
+            <a href="#" data-social="instagram" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <i class="fa-brands fa-instagram"></i>
+            </a>
+            <a href="https://ieeldariotorregroza.blogspot.com/" data-social="blogger" target="_blank" rel="noopener noreferrer" aria-label="Blogger">
+              <i class="fa-brands fa-blogger-b"></i>
+            </a>
+          </div>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h5>Enlaces rápidos</h5>
+          <ul>
+            <li><a href="index.html#inicio">Inicio</a></li>
+            <li><a href="index.html#nosotros">Nosotros</a></li>
+            <li><a href="index.html#oferta-academica">Oferta Académica</a></li>
+            <li><a href="index.html#noticias">Noticias</a></li>
+          </ul>
+        </div>
+        <div class="col-6 col-lg-2">
+          <h5>Institucional</h5>
+          <ul>
+            <li><a href="index.html#mision">Misión y Visión</a></li>
+            <li><a href="galeria.html">Galería</a></li>
+            <li><a href="matricula.html">Matrícula</a></li>
+            <li><a href="documentos.html">Documentos</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-4">
+          <h5>Contacto</h5>
+          <ul>
+            <li><i class="fa-solid fa-location-dot me-2"></i><span id="footerDireccion">Calle 18 # Carrera 27, Ciénaga</span></li>
+            <li><i class="fa-solid fa-phone me-2"></i><span id="footerTelefono">+57 (000) 000 0000</span></li>
+            <li><i class="fa-solid fa-envelope me-2"></i><span id="footerEmail">iedariotorregrozaperez@semcienaga.gov.co</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-linea-final">
+        &copy; <span id="anioActual"></span> Institución Educativa Darío Torregroza Pérez. Todos los derechos reservados.
+      </div>
+    </div>
+  </footer>
+
+  <button id="volver-arriba" aria-label="Volver arriba">
+    <i class="fa-solid fa-arrow-up"></i>
+  </button>
+
+  <!-- Bootstrap Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- AOS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.1/aos.js"></script>
+  <!-- Script propio -->
+  <script src="script.js"></script>
+
+</body>
+</html>

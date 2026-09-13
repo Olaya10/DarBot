@@ -732,6 +732,75 @@ function inicializarPreinscripcion() {
 }
 
 // ============================================
+// DOCUMENTOS PÚBLICOS
+// ============================================
+async function cargarDocumentosPublicos() {
+  const target = document.getElementById('documentosList');
+  if (!target) return;
+
+  try {
+    const res = await fetch(`${API_BASE_HOST}/api/contenidos/documentos`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const docs = await res.json();
+    
+    if (!Array.isArray(docs) || docs.length === 0) {
+      target.innerHTML = '<p class="text-center text-muted">No hay documentos disponibles.</p>';
+      return;
+    }
+
+    const renderDocs = (filtro = 'todos') => {
+      const filtrados = filtro === 'todos' 
+        ? docs 
+        : docs.filter(d => (d.tipo || '').toLowerCase() === filtro);
+      
+      if (filtrados.length === 0) {
+        target.innerHTML = '<p class="text-center text-muted col-12">No hay documentos en esta categoría.</p>';
+        return;
+      }
+      
+      target.innerHTML = filtrados.map((d, i) => {
+        const ruta = d.rutaArchivo || '';
+        const rutaFinal = ruta.startsWith('/') || ruta.startsWith('http') ? ruta : '/' + ruta;
+        const tipo = (d.tipo || 'General').toLowerCase();
+        
+        return `
+          <div class="col-md-6 col-lg-4" data-categoria="${tipo}" data-aos="fade-up" data-aos-delay="${i * 50}">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-4">
+              <div class="d-flex align-items-center mb-3">
+                <div class="me-3" style="width:50px;height:50px;background:#fde8ec;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                  <i class="fa-solid fa-file-pdf text-danger" style="font-size:1.5rem;"></i>
+                </div>
+                <span class="badge bg-secondary">${escapeHtml(d.tipo || 'General')}</span>
+              </div>
+              <h3 class="h6 fw-bold mb-2">${escapeHtml(d.titulo)}</h3>
+              <p class="text-secondary small mb-3">${escapeHtml(d.descripcion || 'Documento institucional')}</p>
+              <a href="${rutaFinal}" download class="btn btn-sm btn-admin-primary mt-auto">
+                <i class="fa-solid fa-download me-1"></i> Descargar
+              </a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    };
+    
+    renderDocs('todos');
+
+    // Filtros
+    document.querySelectorAll('#filtrosDocumentos [data-filter]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#filtrosDocumentos [data-filter]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderDocs(btn.dataset.filter);
+      });
+    });
+
+  } catch (error) {
+    console.warn('No se pudieron cargar los documentos:', error);
+    target.innerHTML = '<p class="text-center text-muted">Error al cargar documentos.</p>';
+  }
+}
+
+// ============================================
 // SEDES INSTITUCIONALES
 // ============================================
 async function cargarSedes() {
@@ -1043,6 +1112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarEstadisticas();
   await cargarInfoInstitucional();
   await cargarSedes();
+  await cargarDocumentosPublicos();
   await cargarFaqs();
   await cargarEquipo();
   await cargarValores();
