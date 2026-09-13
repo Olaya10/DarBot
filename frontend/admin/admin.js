@@ -991,18 +991,354 @@ if (isAdminSPA) {
   }
 
   // ---------- INSTITUCIONAL ----------
+  // ---------- INSTITUCIONAL (Sedes, Áreas, Contactos) ----------
   async function renderInstitucional() {
     pageTitle.textContent = 'Información Institucional';
     viewContainer.innerHTML = `
-      <div class="card-admin">
-        <div class="card-admin-header">
-          <h2 class="card-admin-title"><i class="fa-solid fa-landmark me-2 text-danger"></i>Sedes y Contactos</h2>
+      <div class="admin-section">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div>
+            <h3 class="section-title mb-1">
+              <i class="fa-solid fa-landmark me-2 text-danger"></i>Información Institucional
+            </h3>
+            <p class="text-muted small mb-0">Administra las sedes, áreas de atención y canales institucionales.</p>
+          </div>
         </div>
-        <div class="card-admin-body">
-          <p class="text-muted">Administra las sedes principales, las áreas de atención y los canales institucionales.</p>
+
+        <div class="card-admin">
+          <div class="admin-tab-nav">
+            <button id="tabSedes" class="admin-tab-btn active"><i class="fa-solid fa-building me-2"></i>Sedes</button>
+            <button id="tabAreas" class="admin-tab-btn"><i class="fa-solid fa-diagram-project me-2"></i>Áreas</button>
+            <button id="tabContactos" class="admin-tab-btn"><i class="fa-solid fa-address-book me-2"></i>Contactos</button>
+          </div>
+          <div class="card-admin-body" id="instContent">
+            <div class="text-center py-4 text-muted">Cargando...</div>
+          </div>
         </div>
       </div>
     `;
+
+    const tabSedes = document.getElementById('tabSedes');
+    const tabAreas = document.getElementById('tabAreas');
+    const tabContactos = document.getElementById('tabContactos');
+    const instContent = document.getElementById('instContent');
+
+    const setTab = (active) => {
+      [tabSedes, tabAreas, tabContactos].forEach(t => t.classList.remove('active'));
+      active.classList.add('active');
+    };
+
+    // ==================== SEDES ====================
+    const loadSedes = async () => {
+      setTab(tabSedes);
+      instContent.innerHTML = '<div class="text-center py-4 text-muted">Cargando sedes...</div>';
+      try {
+        const sedes = await apiFetch('/admin/institucional/sedes');
+        instContent.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="h6 mb-0 fw-bold">Sedes (${sedes.length})</h4>
+            <button id="crearSedeBtn" class="btn btn-admin-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Añadir Sede</button>
+          </div>
+          <div class="table-admin-wrap">
+            <table class="table-admin">
+              <thead>
+                <tr>
+                  <th style="width:50px;">#</th>
+                  <th>Nombre</th>
+                  <th>Dirección</th>
+                  <th>Teléfono</th>
+                  <th>Jornada</th>
+                  <th style="width:80px;">Activa</th>
+                  <th class="text-end" style="width:140px;">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${sedes.map(s => `
+                  <tr>
+                    <td>${s.id}</td>
+                    <td><strong>${s.nombre || ''}</strong><br><small class="text-muted">${s.descripcion || ''}</small></td>
+                    <td>${s.direccion || ''}</td>
+                    <td>${s.telefono || '—'}</td>
+                    <td>${s.jornada || '—'}</td>
+                    <td>${s.activa !== false ? '<i class="fa-solid fa-circle-check text-success"></i>' : '<i class="fa-solid fa-circle-xmark text-danger"></i>'}</td>
+                    <td class="text-end">
+                      <button class="btn btn-sm btn-primary me-2 btn-edit-sede" data-id="${s.id}"><i class="fa-solid fa-pen"></i></button>
+                      <button class="btn btn-sm btn-danger btn-del-sede" data-id="${s.id}"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        document.getElementById('crearSedeBtn').addEventListener('click', () => openSedeModal());
+        instContent.querySelectorAll('.btn-edit-sede').forEach(b => {
+          b.addEventListener('click', () => openSedeModal(parseInt(b.dataset.id, 10)));
+        });
+        instContent.querySelectorAll('.btn-del-sede').forEach(b => {
+          b.addEventListener('click', async () => {
+            if (!confirm('¿Eliminar esta sede?')) return;
+            try {
+              await apiFetch(`/admin/institucional/sedes/${b.dataset.id}`, { method: 'DELETE' });
+              showToast('Sede eliminada');
+              loadSedes();
+            } catch (err) { alert(err.message); }
+          });
+        });
+      } catch (err) {
+        instContent.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+      }
+    };
+
+    const openSedeModal = async (id = null) => {
+      let sede = { nombre: '', direccion: '', telefono: '', jornada: 'Única', descripcion: '', horarioAtencion: '', activa: true };
+      if (id) {
+        try { sede = await apiFetch(`/admin/institucional/sedes/${id}`); }
+        catch (err) { alert('Error: ' + err.message); return; }
+      }
+      const html = `
+        <h3><i class="fa-solid fa-building me-2 text-danger"></i>${id ? 'Editar' : 'Añadir'} Sede</h3>
+        <div class="form-row mb-3"><label class="fw-semibold">Nombre *</label><input id="sd_nombre" class="form-control" value="${sede.nombre || ''}"/></div>
+        <div class="form-row mb-3"><label class="fw-semibold">Dirección *</label><input id="sd_direccion" class="form-control" value="${sede.direccion || ''}"/></div>
+        <div class="form-row mb-3"><label class="fw-semibold">Teléfono</label><input id="sd_telefono" class="form-control" value="${sede.telefono || ''}"/></div>
+        <div class="form-row mb-3"><label class="fw-semibold">Jornada</label><input id="sd_jornada" class="form-control" value="${sede.jornada || 'Única'}"/></div>
+        <div class="form-row mb-3"><label class="fw-semibold">Horario atención</label><input id="sd_horario" class="form-control" value="${sede.horarioAtencion || ''}" placeholder="Ej: 7:00 a.m. - 2:00 p.m."/></div>
+        <div class="form-row mb-3"><label class="fw-semibold">Descripción</label><textarea id="sd_descripcion" class="form-control" rows="2">${sede.descripcion || ''}</textarea></div>
+        <div class="form-row mb-3"><label class="fw-semibold d-block"><input id="sd_activa" type="checkbox" ${sede.activa !== false ? 'checked' : ''}/> Activa</label></div>
+        <div class="modal-actions">
+          <button id="sd_cancel" class="btn btn-admin-outline">Cancelar</button>
+          <button id="sd_submit" class="btn btn-admin-primary">${id ? 'Guardar' : 'Crear'}</button>
+        </div>
+      `;
+      const overlay = showModal(html);
+      overlay.querySelector('#sd_cancel').addEventListener('click', () => closeModal(overlay));
+      overlay.querySelector('#sd_submit').addEventListener('click', async () => {
+        const payload = {
+          nombre: overlay.querySelector('#sd_nombre').value.trim(),
+          direccion: overlay.querySelector('#sd_direccion').value.trim(),
+          telefono: overlay.querySelector('#sd_telefono').value.trim(),
+          jornada: overlay.querySelector('#sd_jornada').value.trim(),
+          horarioAtencion: overlay.querySelector('#sd_horario').value.trim(),
+          descripcion: overlay.querySelector('#sd_descripcion').value.trim(),
+          activa: overlay.querySelector('#sd_activa').checked
+        };
+        if (!payload.nombre || !payload.direccion) return alert('Nombre y dirección son obligatorios');
+        try {
+          if (id) await apiFetch(`/admin/institucional/sedes/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+          else await apiFetch('/admin/institucional/sedes', { method: 'POST', body: JSON.stringify(payload) });
+          closeModal(overlay);
+          showToast(id ? 'Sede actualizada' : 'Sede creada');
+          loadSedes();
+        } catch (err) { alert('Error: ' + err.message); }
+      });
+    };
+
+    // ==================== ÁREAS ====================
+    const loadAreas = async () => {
+      setTab(tabAreas);
+      instContent.innerHTML = '<div class="text-center py-4 text-muted">Cargando áreas...</div>';
+      try {
+        const areas = await apiFetch('/admin/institucional/areas');
+        instContent.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="h6 mb-0 fw-bold">Áreas (${areas.length})</h4>
+            <button id="crearAreaBtn" class="btn btn-admin-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Añadir Área</button>
+          </div>
+          <div class="table-admin-wrap">
+            <table class="table-admin">
+              <thead><tr>
+                <th style="width:50px;">#</th><th>Nombre</th><th>Descripción</th>
+                <th style="width:80px;">Activo</th><th class="text-end" style="width:140px;">Acciones</th>
+              </tr></thead>
+              <tbody>
+                ${areas.map(a => `
+                  <tr>
+                    <td>${a.id}</td>
+                    <td><strong>${a.nombre || ''}</strong></td>
+                    <td>${a.descripcion || ''}</td>
+                    <td>${a.activo !== false ? '<i class="fa-solid fa-circle-check text-success"></i>' : '<i class="fa-solid fa-circle-xmark text-danger"></i>'}</td>
+                    <td class="text-end">
+                      <button class="btn btn-sm btn-primary me-2 btn-edit-area" data-id="${a.id}"><i class="fa-solid fa-pen"></i></button>
+                      <button class="btn btn-sm btn-danger btn-del-area" data-id="${a.id}"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        document.getElementById('crearAreaBtn').addEventListener('click', () => openAreaModal());
+        instContent.querySelectorAll('.btn-edit-area').forEach(b => {
+          b.addEventListener('click', () => openAreaModal(parseInt(b.dataset.id, 10)));
+        });
+        instContent.querySelectorAll('.btn-del-area').forEach(b => {
+          b.addEventListener('click', async () => {
+            if (!confirm('¿Eliminar esta área? Se eliminarán sus contactos.')) return;
+            try {
+              await apiFetch(`/admin/institucional/areas/${b.dataset.id}`, { method: 'DELETE' });
+              showToast('Área eliminada');
+              loadAreas();
+            } catch (err) { alert(err.message); }
+          });
+        });
+      } catch (err) {
+        instContent.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+      }
+    };
+
+    const openAreaModal = async (id = null) => {
+      let area = { nombre: '', descripcion: '', activo: true };
+      if (id) {
+        try { area = await apiFetch(`/admin/institucional/areas/${id}`); }
+        catch (err) { alert('Error: ' + err.message); return; }
+      }
+      const html = `
+        <h3><i class="fa-solid fa-diagram-project me-2 text-danger"></i>${id ? 'Editar' : 'Añadir'} Área</h3>
+        <div class="form-row mb-3"><label class="fw-semibold">Nombre *</label><input id="ar_nombre" class="form-control" value="${area.nombre || ''}"/></div>
+        <div class="form-row mb-3"><label class="fw-semibold">Descripción</label><textarea id="ar_descripcion" class="form-control" rows="2">${area.descripcion || ''}</textarea></div>
+        <div class="form-row mb-3"><label class="fw-semibold d-block"><input id="ar_activo" type="checkbox" ${area.activo !== false ? 'checked' : ''}/> Activo</label></div>
+        <div class="modal-actions">
+          <button id="ar_cancel" class="btn btn-admin-outline">Cancelar</button>
+          <button id="ar_submit" class="btn btn-admin-primary">${id ? 'Guardar' : 'Crear'}</button>
+        </div>
+      `;
+      const overlay = showModal(html);
+      overlay.querySelector('#ar_cancel').addEventListener('click', () => closeModal(overlay));
+      overlay.querySelector('#ar_submit').addEventListener('click', async () => {
+        const payload = {
+          nombre: overlay.querySelector('#ar_nombre').value.trim(),
+          descripcion: overlay.querySelector('#ar_descripcion').value.trim(),
+          activo: overlay.querySelector('#ar_activo').checked
+        };
+        if (!payload.nombre) return alert('El nombre es obligatorio');
+        try {
+          if (id) await apiFetch(`/admin/institucional/areas/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+          else await apiFetch('/admin/institucional/areas', { method: 'POST', body: JSON.stringify(payload) });
+          closeModal(overlay);
+          showToast(id ? 'Área actualizada' : 'Área creada');
+          loadAreas();
+        } catch (err) { alert('Error: ' + err.message); }
+      });
+    };
+
+    // ==================== CONTACTOS ====================
+    const loadContactos = async () => {
+      setTab(tabContactos);
+      instContent.innerHTML = '<div class="text-center py-4 text-muted">Cargando contactos...</div>';
+      try {
+        const [contactos, areas] = await Promise.all([
+          apiFetch('/admin/institucional/contactos'),
+          apiFetch('/admin/institucional/areas')
+        ]);
+        instContent.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="h6 mb-0 fw-bold">Contactos (${contactos.length})</h4>
+            <button id="crearContactoBtn" class="btn btn-admin-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Añadir Contacto</button>
+          </div>
+          <div class="table-admin-wrap">
+            <table class="table-admin">
+              <thead><tr>
+                <th style="width:50px;">#</th><th>Área</th><th>Tipo</th><th>Valor</th><th>Descripción</th>
+                <th style="width:80px;">Activo</th><th class="text-end" style="width:140px;">Acciones</th>
+              </tr></thead>
+              <tbody>
+                ${contactos.map(c => `
+                  <tr>
+                    <td>${c.id}</td>
+                    <td>${c.area ? c.area.nombre : '—'}</td>
+                    <td><span class="badge bg-secondary">${c.tipo || ''}</span></td>
+                    <td><strong>${c.valor || ''}</strong></td>
+                    <td>${c.descripcion || ''}</td>
+                    <td>${c.activo !== false ? '<i class="fa-solid fa-circle-check text-success"></i>' : '<i class="fa-solid fa-circle-xmark text-danger"></i>'}</td>
+                    <td class="text-end">
+                      <button class="btn btn-sm btn-primary me-2 btn-edit-cont" data-id="${c.id}"><i class="fa-solid fa-pen"></i></button>
+                      <button class="btn btn-sm btn-danger btn-del-cont" data-id="${c.id}"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        document.getElementById('crearContactoBtn').addEventListener('click', () => openContactoModal(null, areas));
+        instContent.querySelectorAll('.btn-edit-cont').forEach(b => {
+          b.addEventListener('click', () => openContactoModal(parseInt(b.dataset.id, 10), areas));
+        });
+        instContent.querySelectorAll('.btn-del-cont').forEach(b => {
+          b.addEventListener('click', async () => {
+            if (!confirm('¿Eliminar este contacto?')) return;
+            try {
+              await apiFetch(`/admin/institucional/contactos/${b.dataset.id}`, { method: 'DELETE' });
+              showToast('Contacto eliminado');
+              loadContactos();
+            } catch (err) { alert(err.message); }
+          });
+        });
+      } catch (err) {
+        instContent.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+      }
+    };
+
+    const openContactoModal = async (id = null, areas = []) => {
+      let cont = { areaId: areas[0]?.id || null, tipo: 'TELEFONO', valor: '', descripcion: '', activo: true };
+      if (id) {
+        try {
+          const c = await apiFetch(`/admin/institucional/contactos/${id}`);
+          cont = { areaId: c.area?.id, tipo: c.tipo, valor: c.valor, descripcion: c.descripcion, activo: c.activo };
+        } catch (err) { alert('Error: ' + err.message); return; }
+      }
+      const html = `
+        <h3><i class="fa-solid fa-address-book me-2 text-danger"></i>${id ? 'Editar' : 'Añadir'} Contacto</h3>
+        <div class="form-row mb-3">
+          <label class="fw-semibold">Área *</label>
+          <select id="co_area" class="form-control">
+            ${areas.map(a => `<option value="${a.id}" ${a.id === cont.areaId ? 'selected' : ''}>${a.nombre}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-row mb-3">
+          <label class="fw-semibold">Tipo *</label>
+          <select id="co_tipo" class="form-control">
+            <option value="TELEFONO" ${cont.tipo === 'TELEFONO' ? 'selected' : ''}>Teléfono</option>
+            <option value="CORREO" ${cont.tipo === 'CORREO' ? 'selected' : ''}>Correo</option>
+            <option value="WHATSAPP" ${cont.tipo === 'WHATSAPP' ? 'selected' : ''}>WhatsApp</option>
+            <option value="DIRECCION" ${cont.tipo === 'DIRECCION' ? 'selected' : ''}>Dirección</option>
+          </select>
+        </div>
+        <div class="form-row mb-3"><label class="fw-semibold">Valor *</label><input id="co_valor" class="form-control" value="${cont.valor || ''}" placeholder="Ej: 1234567 o email@x.com"/></div>
+        <div class="form-row mb-3"><label class="fw-semibold">Descripción</label><input id="co_descripcion" class="form-control" value="${cont.descripcion || ''}"/></div>
+        <div class="form-row mb-3"><label class="fw-semibold d-block"><input id="co_activo" type="checkbox" ${cont.activo !== false ? 'checked' : ''}/> Activo</label></div>
+        <div class="modal-actions">
+          <button id="co_cancel" class="btn btn-admin-outline">Cancelar</button>
+          <button id="co_submit" class="btn btn-admin-primary">${id ? 'Guardar' : 'Crear'}</button>
+        </div>
+      `;
+      const overlay = showModal(html);
+      overlay.querySelector('#co_cancel').addEventListener('click', () => closeModal(overlay));
+      overlay.querySelector('#co_submit').addEventListener('click', async () => {
+        const payload = {
+          areaId: parseInt(overlay.querySelector('#co_area').value, 10),
+          tipo: overlay.querySelector('#co_tipo').value,
+          valor: overlay.querySelector('#co_valor').value.trim(),
+          descripcion: overlay.querySelector('#co_descripcion').value.trim(),
+          activo: overlay.querySelector('#co_activo').checked
+        };
+        if (!payload.areaId || !payload.valor) return alert('Área y valor son obligatorios');
+        try {
+          if (id) await apiFetch(`/admin/institucional/contactos/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+          else await apiFetch('/admin/institucional/contactos', { method: 'POST', body: JSON.stringify(payload) });
+          closeModal(overlay);
+          showToast(id ? 'Contacto actualizado' : 'Contacto creado');
+          loadContactos();
+        } catch (err) { alert('Error: ' + err.message); }
+      });
+    };
+
+    tabSedes.addEventListener('click', loadSedes);
+    tabAreas.addEventListener('click', loadAreas);
+    tabContactos.addEventListener('click', loadContactos);
+
+    loadSedes();
   }
 
   // ---------- GALERÍA ----------
