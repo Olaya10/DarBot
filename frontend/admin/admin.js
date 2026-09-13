@@ -2778,63 +2778,647 @@ if (isAdminSPA) {
   }
 
   async function renderChatbot() {
-    pageTitle.textContent = 'Chatbot DarBot';
-    viewContainer.innerHTML = `
+  pageTitle.textContent = 'Chatbot DarBot';
+  viewContainer.innerHTML = `
+    <div class="admin-section">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+          <h3 class="section-title mb-1">
+            <i class="fa-solid fa-robot me-2 text-danger"></i>Gestión del Chatbot
+          </h3>
+          <p class="text-muted small mb-0">Administra las intenciones, FAQs, sinónimos y frases del chatbot.</p>
+        </div>
+      </div>
+
       <div class="card-admin">
         <div class="admin-tab-nav">
           <button id="tabIntenciones" class="admin-tab-btn active"><i class="fa-solid fa-brain me-2"></i>Intenciones</button>
           <button id="tabFaqs" class="admin-tab-btn"><i class="fa-solid fa-circle-question me-2"></i>FAQs</button>
+          <button id="tabSinonimos" class="admin-tab-btn"><i class="fa-solid fa-language me-2"></i>Sinónimos</button>
+          <button id="tabFrases" class="admin-tab-btn"><i class="fa-solid fa-quote-left me-2"></i>Frases</button>
+          <button id="tabPendientes" class="admin-tab-btn">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>Pendientes
+            <span id="badgePendientes" class="badge bg-danger ms-1 d-none">0</span>
+          </button>
         </div>
-        <div class="card-admin-body">
-          <div id="chatbotInner">Cargando...</div>
+        <div class="card-admin-body" id="chatbotInner">
+          <div class="text-center py-4 text-muted">Cargando...</div>
         </div>
       </div>
-    `;
-    const inner = document.getElementById('chatbotInner');
-    const tabIntenciones = document.getElementById('tabIntenciones');
-    const tabFaqs = document.getElementById('tabFaqs');
+    </div>
+  `;
 
-    const loadIntenciones = async () => {
-      tabIntenciones.classList.add('active'); tabFaqs.classList.remove('active');
-      try {
-        const intents = await apiFetch('/admin/chatbot/intenciones');
-        inner.innerHTML = `
+  const inner = document.getElementById('chatbotInner');
+  const tabs = {
+    intenciones: document.getElementById('tabIntenciones'),
+    faqs: document.getElementById('tabFaqs'),
+    sinonimos: document.getElementById('tabSinonimos'),
+    frases: document.getElementById('tabFrases'),
+    pendientes: document.getElementById('tabPendientes'),
+  };
+
+  const setTab = (active) => {
+    Object.values(tabs).forEach(t => t.classList.remove('active'));
+    active.classList.add('active');
+  };
+
+  // ═══════════════════════════════════════════════════════
+  // INTENCIONES
+  // ═══════════════════════════════════════════════════════
+  const loadIntenciones = async () => {
+    setTab(tabs.intenciones);
+    inner.innerHTML = '<div class="text-center py-4 text-muted">Cargando intenciones...</div>';
+    try {
+      const intents = await apiFetch('/admin/chatbot/intenciones');
+      inner.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="h6 mb-0 fw-bold">Intenciones (${intents.length})</h4>
+          <button id="crearIntencionBtn" class="btn btn-admin-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Nueva Intención</button>
+        </div>
+        <div class="table-admin-wrap">
           <table class="table-admin">
-            <thead><tr><th>ID</th><th>Intención</th><th>Prioridad</th><th>Estado</th></tr></thead>
+            <thead>
+              <tr>
+                <th style="width:50px;">#</th>
+                <th>Intención</th>
+                <th style="width:100px;">Palabras</th>
+                <th style="width:90px;">Prioridad</th>
+                <th style="width:90px;">Estado</th>
+                <th class="text-end" style="width:140px;">Acciones</th>
+              </tr>
+            </thead>
             <tbody>
               ${intents.map(i => `
                 <tr>
                   <td>#${i.id}</td>
                   <td><strong>${i.nombre}</strong><br><small class="text-muted">${i.descripcion || ''}</small></td>
+                  <td><span class="badge bg-secondary">${(i.palabrasClave || []).length}</span></td>
                   <td><span class="badge bg-primary">${i.prioridad}</span></td>
-                  <td><span class="status-pill ${i.activa ? 'active' : 'inactive'}">${i.activa ? 'Activa' : 'Inactiva'}</span></td>
+                  <td>${i.activa ? '<i class="fa-solid fa-circle-check text-success"></i>' : '<i class="fa-solid fa-circle-xmark text-danger"></i>'}</td>
+                  <td class="text-end">
+                    <button class="btn btn-sm btn-info me-1 btn-ver-int" data-id="${i.id}" title="Ver palabras clave"><i class="fa-solid fa-key"></i></button>
+                    <button class="btn btn-sm btn-primary me-1 btn-edit-int" data-id="${i.id}"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn btn-sm btn-danger btn-del-int" data-id="${i.id}"><i class="fa-solid fa-trash"></i></button>
+                  </td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
-        `;
-      } catch (e) { inner.innerHTML = e.message; }
-    };
+        </div>
+      `;
 
-    tabIntenciones.addEventListener('click', loadIntenciones);
-    tabFaqs.addEventListener('click', async () => {
-      tabFaqs.classList.add('active'); tabIntenciones.classList.remove('active');
-      inner.innerHTML = 'Cargando FAQs...';
+      document.getElementById('crearIntencionBtn').addEventListener('click', () => openIntencionModal());
+      inner.querySelectorAll('.btn-edit-int').forEach(b => {
+        b.addEventListener('click', () => openIntencionModal(parseInt(b.dataset.id, 10)));
+      });
+      inner.querySelectorAll('.btn-ver-int').forEach(b => {
+        b.addEventListener('click', () => verPalabrasClave(parseInt(b.dataset.id, 10)));
+      });
+      inner.querySelectorAll('.btn-del-int').forEach(b => {
+        b.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar esta intención y todas sus palabras clave?')) return;
+          try {
+            await apiFetch(`/admin/chatbot/intenciones/${b.dataset.id}`, { method: 'DELETE' });
+            showToast('Intención eliminada');
+            loadIntenciones();
+          } catch (err) { alert(err.message); }
+        });
+      });
+    } catch (e) { inner.innerHTML = `<div class="alert alert-danger">${e.message}</div>`; }
+  };
+
+  const openIntencionModal = async (id = null) => {
+    let int_ = { nombre: '', descripcion: '', prioridad: 5, activa: true, respuestaPorDefecto: '' };
+    if (id) {
+      try { int_ = await apiFetch(`/admin/chatbot/intenciones/${id}`); }
+      catch (e) { alert('Error: ' + e.message); return; }
+    }
+    const html = `
+      <h3><i class="fa-solid fa-brain me-2 text-danger"></i>${id ? 'Editar' : 'Nueva'} Intención</h3>
+      <div class="form-row mb-3"><label class="fw-semibold">Nombre *</label>
+        <input id="int_nombre" class="form-control" value="${int_.nombre || ''}" placeholder="Ej: CONSULTAR_BECAS"/></div>
+      <div class="form-row mb-3"><label class="fw-semibold">Descripción</label>
+        <input id="int_descripcion" class="form-control" value="${int_.descripcion || ''}"/></div>
+      <div class="form-row mb-3"><label class="fw-semibold">Prioridad (1-10)</label>
+        <input id="int_prioridad" type="number" class="form-control" value="${int_.prioridad || 5}" min="1" max="10"/></div>
+      <div class="form-row mb-3"><label class="fw-semibold">Respuesta por defecto</label>
+        <textarea id="int_respuesta" class="form-control" rows="2" placeholder="Mensaje si no hay datos">${int_.respuestaPorDefecto || ''}</textarea></div>
+      <div class="form-row mb-3"><label class="fw-semibold d-block">
+        <input id="int_activa" type="checkbox" ${int_.activa !== false ? 'checked' : ''}/> Activa
+      </label></div>
+      <div class="modal-actions">
+        <button id="int_cancel" class="btn btn-admin-outline">Cancelar</button>
+        <button id="int_submit" class="btn btn-admin-primary">${id ? 'Guardar' : 'Crear'}</button>
+      </div>
+    `;
+    const overlay = showModal(html);
+    overlay.querySelector('#int_cancel').addEventListener('click', () => closeModal(overlay));
+    overlay.querySelector('#int_submit').addEventListener('click', async () => {
+      const payload = {
+        nombre: overlay.querySelector('#int_nombre').value.trim(),
+        descripcion: overlay.querySelector('#int_descripcion').value.trim(),
+        prioridad: parseInt(overlay.querySelector('#int_prioridad').value || '5', 10),
+        respuestaPorDefecto: overlay.querySelector('#int_respuesta').value.trim(),
+        activa: overlay.querySelector('#int_activa').checked
+      };
+      if (!payload.nombre) return alert('El nombre es obligatorio');
       try {
-        const faqs = await apiFetch('/admin/chatbot/faqs');
-        inner.innerHTML = `
+        if (id) await apiFetch(`/admin/chatbot/intenciones/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+        else await apiFetch('/admin/chatbot/intenciones', { method: 'POST', body: JSON.stringify(payload) });
+        closeModal(overlay);
+        showToast(id ? 'Intención actualizada' : 'Intención creada');
+        loadIntenciones();
+      } catch (e) { alert('Error: ' + e.message); }
+    });
+  };
+
+  const verPalabrasClave = async (id) => {
+    try {
+      const int_ = await apiFetch(`/admin/chatbot/intenciones/${id}`);
+      const palabras = int_.palabrasClave || [];
+      const html = `
+        <h3><i class="fa-solid fa-key me-2 text-danger"></i>Palabras clave: ${int_.nombre}</h3>
+        <div class="mb-3">
+          <div class="input-group mb-3">
+            <input id="nueva_palabra" class="form-control" placeholder="Nueva palabra clave"/>
+            <input id="nuevo_peso" type="number" class="form-control" style="max-width:100px;" value="1" min="1" max="10" title="Peso"/>
+            <button id="add_palabra" class="btn btn-admin-primary" type="button"><i class="fa-solid fa-plus"></i></button>
+          </div>
+          <small class="text-muted">Peso: 1 = normal, 5 = importante, 10 = crítico</small>
+        </div>
+        <div style="max-height:300px;overflow-y:auto;">
           <table class="table-admin">
-            <thead><tr><th>ID</th><th>Pregunta</th><th>Respuesta</th></tr></thead>
+            <thead><tr><th>Palabra</th><th style="width:70px;">Peso</th><th style="width:70px;"></th></tr></thead>
             <tbody>
-              ${faqs.map(f => `<tr><td>#${f.id}</td><td><strong>${f.pregunta}</strong></td><td>${f.respuesta}</td></tr>`).join('')}
+              ${palabras.map(p => `
+                <tr>
+                  <td>${p.palabra}</td>
+                  <td><span class="badge ${p.peso >= 5 ? 'bg-danger' : 'bg-secondary'}">${p.peso}</span></td>
+                  <td><button class="btn btn-sm btn-danger btn-del-palabra" data-id="${p.id}"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+              `).join('') || '<tr><td colspan="3" class="text-center text-muted">Sin palabras clave</td></tr>'}
             </tbody>
           </table>
-        `;
-      } catch (e) { inner.innerHTML = e.message; }
-    });
+        </div>
+        <div class="modal-actions">
+          <button id="pal_cancel" class="btn btn-admin-outline">Cerrar</button>
+        </div>
+      `;
+      const overlay = showModal(html);
+      overlay.querySelector('#pal_cancel').addEventListener('click', () => closeModal(overlay));
+      overlay.querySelector('#add_palabra').addEventListener('click', async () => {
+        const palabra = overlay.querySelector('#nueva_palabra').value.trim();
+        const peso = parseInt(overlay.querySelector('#nuevo_peso').value || '1', 10);
+        if (!palabra) return alert('Escribe una palabra');
+        try {
+          await apiFetch(`/admin/chatbot/intenciones/${id}/palabras-clave`, {
+            method: 'POST',
+            body: JSON.stringify({ palabra, peso })
+          });
+          showToast('Palabra agregada');
+          closeModal(overlay);
+          verPalabrasClave(id);
+        } catch (e) { alert(e.message); }
+      });
+      overlay.querySelectorAll('.btn-del-palabra').forEach(b => {
+        b.addEventListener('click', async () => {
+          try {
+            await apiFetch(`/admin/chatbot/palabras-clave/${b.dataset.id}`, { method: 'DELETE' });
+            showToast('Palabra eliminada');
+            closeModal(overlay);
+            verPalabrasClave(id);
+          } catch (e) { alert(e.message); }
+        });
+      });
+    } catch (e) { alert('Error: ' + e.message); }
+  };
 
-    loadIntenciones();
-  }
+  // ═══════════════════════════════════════════════════════
+  // FAQs
+  // ═══════════════════════════════════════════════════════
+  const loadFaqs = async () => {
+    setTab(tabs.faqs);
+    inner.innerHTML = '<div class="text-center py-4 text-muted">Cargando FAQs...</div>';
+    try {
+      const faqs = await apiFetch('/admin/chatbot/faqs');
+      inner.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="h6 mb-0 fw-bold">FAQs (${faqs.length})</h4>
+          <button id="crearFaqBtn" class="btn btn-admin-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Nueva FAQ</button>
+        </div>
+        <div class="table-admin-wrap">
+          <table class="table-admin">
+            <thead><tr>
+              <th style="width:50px;">#</th><th>Pregunta</th><th>Categoría</th><th style="width:80px;">Activa</th>
+              <th class="text-end" style="width:140px;">Acciones</th>
+            </tr></thead>
+            <tbody>
+              ${faqs.map(f => `
+                <tr>
+                  <td>#${f.id}</td>
+                  <td><strong>${f.pregunta}</strong><br><small class="text-muted">${(f.respuesta || '').substring(0, 80)}...</small></td>
+                  <td><span class="badge bg-secondary">${f.categoria || 'General'}</span></td>
+                  <td>${f.activa ? '<i class="fa-solid fa-circle-check text-success"></i>' : '<i class="fa-solid fa-circle-xmark text-danger"></i>'}</td>
+                  <td class="text-end">
+                    <button class="btn btn-sm btn-primary me-1 btn-edit-faq" data-id="${f.id}"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn btn-sm btn-danger btn-del-faq" data-id="${f.id}"><i class="fa-solid fa-trash"></i></button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      document.getElementById('crearFaqBtn').addEventListener('click', () => openFaqModal());
+      inner.querySelectorAll('.btn-edit-faq').forEach(b => {
+        b.addEventListener('click', () => openFaqModal(parseInt(b.dataset.id, 10), faqs));
+      });
+      inner.querySelectorAll('.btn-del-faq').forEach(b => {
+        b.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar esta FAQ?')) return;
+          try {
+            await apiFetch(`/admin/chatbot/faqs/${b.dataset.id}`, { method: 'DELETE' });
+            showToast('FAQ eliminada');
+            loadFaqs();
+          } catch (e) { alert(e.message); }
+        });
+      });
+    } catch (e) { inner.innerHTML = `<div class="alert alert-danger">${e.message}</div>`; }
+  };
+
+  const openFaqModal = (id = null, faqs = []) => {
+    let faq = { pregunta: '', respuesta: '', categoria: 'General', activa: true };
+    if (id) {
+      faq = faqs.find(f => f.id === id) || faq;
+    }
+    const html = `
+      <h3><i class="fa-solid fa-circle-question me-2 text-danger"></i>${id ? 'Editar' : 'Nueva'} FAQ</h3>
+      <div class="form-row mb-3"><label class="fw-semibold">Pregunta *</label>
+        <input id="faq_pregunta" class="form-control" value="${faq.pregunta || ''}"/></div>
+      <div class="form-row mb-3"><label class="fw-semibold">Respuesta *</label>
+        <textarea id="faq_respuesta" class="form-control" rows="4">${faq.respuesta || ''}</textarea></div>
+      <div class="form-row mb-3"><label class="fw-semibold">Categoría</label>
+        <input id="faq_categoria" class="form-control" value="${faq.categoria || 'General'}"/></div>
+      <div class="form-row mb-3"><label class="fw-semibold d-block">
+        <input id="faq_activa" type="checkbox" ${faq.activa !== false ? 'checked' : ''}/> Activa
+      </label></div>
+      <div class="modal-actions">
+        <button id="faq_cancel" class="btn btn-admin-outline">Cancelar</button>
+        <button id="faq_submit" class="btn btn-admin-primary">${id ? 'Guardar' : 'Crear'}</button>
+      </div>
+    `;
+    const overlay = showModal(html);
+    overlay.querySelector('#faq_cancel').addEventListener('click', () => closeModal(overlay));
+    overlay.querySelector('#faq_submit').addEventListener('click', async () => {
+      const payload = {
+        pregunta: overlay.querySelector('#faq_pregunta').value.trim(),
+        respuesta: overlay.querySelector('#faq_respuesta').value.trim(),
+        categoria: overlay.querySelector('#faq_categoria').value.trim(),
+        activa: overlay.querySelector('#faq_activa').checked
+      };
+      if (!payload.pregunta || !payload.respuesta) return alert('Pregunta y respuesta son obligatorias');
+      try {
+        if (id) await apiFetch(`/admin/chatbot/faqs/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+        else await apiFetch('/admin/chatbot/faqs', { method: 'POST', body: JSON.stringify(payload) });
+        closeModal(overlay);
+        showToast(id ? 'FAQ actualizada' : 'FAQ creada');
+        loadFaqs();
+      } catch (e) { alert('Error: ' + e.message); }
+    });
+  };
+
+  // ═══════════════════════════════════════════════════════
+  // SINÓNIMOS
+  // ═══════════════════════════════════════════════════════
+  const loadSinonimos = async () => {
+    setTab(tabs.sinonimos);
+    inner.innerHTML = '<div class="text-center py-4 text-muted">Cargando sinónimos...</div>';
+    try {
+      const sinonimos = await apiFetch('/admin/chatbot/sinonimos');
+      inner.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="h6 mb-0 fw-bold">Sinónimos (${sinonimos.length})</h4>
+          <button id="crearSinBtn" class="btn btn-admin-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Nuevo Sinónimo</button>
+        </div>
+        <div class="table-admin-wrap">
+          <table class="table-admin">
+            <thead><tr>
+              <th style="width:50px;">#</th><th>Palabra base</th><th>Sinónimo</th><th>Intención</th>
+              <th style="width:80px;">Activa</th><th class="text-end" style="width:140px;">Acciones</th>
+            </tr></thead>
+            <tbody>
+              ${sinonimos.map(s => `
+                <tr>
+                  <td>#${s.id}</td>
+                  <td><strong>${s.palabraBase}</strong></td>
+                  <td>${s.sinonimo}</td>
+                  <td>${s.intencionNombre ? `<span class="badge bg-secondary">${s.intencionNombre}</span>` : '—'}</td>
+                  <td>${s.activa ? '<i class="fa-solid fa-circle-check text-success"></i>' : '<i class="fa-solid fa-circle-xmark text-danger"></i>'}</td>
+                  <td class="text-end">
+                    <button class="btn btn-sm btn-primary me-1 btn-edit-sin" data-id="${s.id}"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn btn-sm btn-danger btn-del-sin" data-id="${s.id}"><i class="fa-solid fa-trash"></i></button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      document.getElementById('crearSinBtn').addEventListener('click', () => openSinonimoModal(null, sinonimos));
+      inner.querySelectorAll('.btn-edit-sin').forEach(b => {
+        b.addEventListener('click', () => openSinonimoModal(parseInt(b.dataset.id, 10), sinonimos));
+      });
+      inner.querySelectorAll('.btn-del-sin').forEach(b => {
+        b.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar este sinónimo?')) return;
+          try {
+            await apiFetch(`/admin/chatbot/sinonimos/${b.dataset.id}`, { method: 'DELETE' });
+            showToast('Sinónimo eliminado');
+            loadSinonimos();
+          } catch (e) { alert(e.message); }
+        });
+      });
+    } catch (e) { inner.innerHTML = `<div class="alert alert-danger">${e.message}</div>`; }
+  };
+
+  const openSinonimoModal = async (id = null, sinonimos = []) => {
+    let sin = { palabraBase: '', sinonimo: '', intencionId: null, activa: true };
+    if (id) {
+      sin = sinonimos.find(s => s.id === id) || sin;
+    }
+    
+    // Cargar intenciones para el select
+    let intenciones = [];
+    try { intenciones = await apiFetch('/admin/chatbot/intenciones'); } catch (e) {}
+    
+    const html = `
+      <h3><i class="fa-solid fa-language me-2 text-danger"></i>${id ? 'Editar' : 'Nuevo'} Sinónimo</h3>
+      <div class="form-row mb-3"><label class="fw-semibold">Palabra base *</label>
+        <input id="sin_base" class="form-control" value="${sin.palabraBase || ''}" placeholder="Ej: evento"/></div>
+      <div class="form-row mb-3"><label class="fw-semibold">Sinónimo *</label>
+        <input id="sin_sinonimo" class="form-control" value="${sin.sinonimo || ''}" placeholder="Ej: acto, feriado"/></div>
+      <div class="form-row mb-3"><label class="fw-semibold">Intención asociada (opcional)</label>
+        <select id="sin_intencion" class="form-control">
+          <option value="">-- Ninguna --</option>
+          ${intenciones.map(i => `<option value="${i.id}" ${i.id === sin.intencionId ? 'selected' : ''}>${i.nombre}</option>`).join('')}
+        </select></div>
+      <div class="form-row mb-3"><label class="fw-semibold d-block">
+        <input id="sin_activa" type="checkbox" ${sin.activa !== false ? 'checked' : ''}/> Activa
+      </label></div>
+      <div class="modal-actions">
+        <button id="sin_cancel" class="btn btn-admin-outline">Cancelar</button>
+        <button id="sin_submit" class="btn btn-admin-primary">${id ? 'Guardar' : 'Crear'}</button>
+      </div>
+    `;
+    const overlay = showModal(html);
+    overlay.querySelector('#sin_cancel').addEventListener('click', () => closeModal(overlay));
+    overlay.querySelector('#sin_submit').addEventListener('click', async () => {
+      const intencionVal = overlay.querySelector('#sin_intencion').value;
+      const payload = {
+        palabraBase: overlay.querySelector('#sin_base').value.trim(),
+        sinonimo: overlay.querySelector('#sin_sinonimo').value.trim(),
+        intencionId: intencionVal ? parseInt(intencionVal, 10) : null,
+        activa: overlay.querySelector('#sin_activa').checked
+      };
+      if (!payload.palabraBase || !payload.sinonimo) return alert('Palabra base y sinónimo son obligatorios');
+      try {
+        if (id) await apiFetch(`/admin/chatbot/sinonimos/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+        else await apiFetch('/admin/chatbot/sinonimos', { method: 'POST', body: JSON.stringify(payload) });
+        closeModal(overlay);
+        showToast(id ? 'Sinónimo actualizado' : 'Sinónimo creado');
+        loadSinonimos();
+      } catch (e) { alert('Error: ' + e.message); }
+    });
+  };
+
+  // ═══════════════════════════════════════════════════════
+  // FRASES ESPECÍFICAS
+  // ═══════════════════════════════════════════════════════
+  const loadFrases = async () => {
+    setTab(tabs.frases);
+    inner.innerHTML = '<div class="text-center py-4 text-muted">Cargando frases...</div>';
+    try {
+      const frases = await apiFetch('/admin/chatbot/frases');
+      inner.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="h6 mb-0 fw-bold">Frases específicas (${frases.length})</h4>
+          <button id="crearFraseBtn" class="btn btn-admin-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Nueva Frase</button>
+        </div>
+        <div class="table-admin-wrap">
+          <table class="table-admin">
+            <thead><tr>
+              <th style="width:50px;">#</th><th>Frase</th><th>Intención</th>
+              <th style="width:70px;">Peso</th><th style="width:80px;">Activa</th>
+              <th class="text-end" style="width:140px;">Acciones</th>
+            </tr></thead>
+            <tbody>
+              ${frases.map(f => `
+                <tr>
+                  <td>#${f.id}</td>
+                  <td><strong>"${f.frase}"</strong></td>
+                  <td><span class="badge bg-secondary">${f.intencionNombre}</span></td>
+                  <td><span class="badge bg-primary">${f.peso}</span></td>
+                  <td>${f.activa ? '<i class="fa-solid fa-circle-check text-success"></i>' : '<i class="fa-solid fa-circle-xmark text-danger"></i>'}</td>
+                  <td class="text-end">
+                    <button class="btn btn-sm btn-primary me-1 btn-edit-frase" data-id="${f.id}"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn btn-sm btn-danger btn-del-frase" data-id="${f.id}"><i class="fa-solid fa-trash"></i></button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      document.getElementById('crearFraseBtn').addEventListener('click', () => openFraseModal(null, frases));
+      inner.querySelectorAll('.btn-edit-frase').forEach(b => {
+        b.addEventListener('click', () => openFraseModal(parseInt(b.dataset.id, 10), frases));
+      });
+      inner.querySelectorAll('.btn-del-frase').forEach(b => {
+        b.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar esta frase?')) return;
+          try {
+            await apiFetch(`/admin/chatbot/frases/${b.dataset.id}`, { method: 'DELETE' });
+            showToast('Frase eliminada');
+            loadFrases();
+          } catch (e) { alert(e.message); }
+        });
+      });
+    } catch (e) { inner.innerHTML = `<div class="alert alert-danger">${e.message}</div>`; }
+  };
+
+  const openFraseModal = async (id = null, frases = []) => {
+    let frase = { frase: '', intencionId: null, peso: 10, activa: true };
+    if (id) {
+      frase = frases.find(f => f.id === id) || frase;
+    }
+    
+    let intenciones = [];
+    try { intenciones = await apiFetch('/admin/chatbot/intenciones'); } catch (e) {}
+    
+    const html = `
+      <h3><i class="fa-solid fa-quote-left me-2 text-danger"></i>${id ? 'Editar' : 'Nueva'} Frase</h3>
+      <div class="form-row mb-3"><label class="fw-semibold">Frase *</label>
+        <input id="frase_texto" class="form-control" value="${frase.frase || ''}" placeholder="Ej: qué hay de comer"/></div>
+      <div class="form-row mb-3"><label class="fw-semibold">Intención *</label>
+        <select id="frase_intencion" class="form-control">
+          <option value="">-- Seleccionar --</option>
+          ${intenciones.map(i => `<option value="${i.id}" ${i.id === frase.intencionId ? 'selected' : ''}>${i.nombre}</option>`).join('')}
+        </select></div>
+      <div class="form-row mb-3"><label class="fw-semibold">Peso (mayor = más prioridad)</label>
+        <input id="frase_peso" type="number" class="form-control" value="${frase.peso || 10}" min="1" max="100"/></div>
+      <div class="form-row mb-3"><label class="fw-semibold d-block">
+        <input id="frase_activa" type="checkbox" ${frase.activa !== false ? 'checked' : ''}/> Activa
+      </label></div>
+      <div class="modal-actions">
+        <button id="frase_cancel" class="btn btn-admin-outline">Cancelar</button>
+        <button id="frase_submit" class="btn btn-admin-primary">${id ? 'Guardar' : 'Crear'}</button>
+      </div>
+    `;
+    const overlay = showModal(html);
+    overlay.querySelector('#frase_cancel').addEventListener('click', () => closeModal(overlay));
+    overlay.querySelector('#frase_submit').addEventListener('click', async () => {
+      const intencionVal = overlay.querySelector('#frase_intencion').value;
+      if (!intencionVal) return alert('Selecciona una intención');
+      const payload = {
+        frase: overlay.querySelector('#frase_texto').value.trim(),
+        intencionId: parseInt(intencionVal, 10),
+        peso: parseInt(overlay.querySelector('#frase_peso').value || '10', 10),
+        activa: overlay.querySelector('#frase_activa').checked
+      };
+      if (!payload.frase) return alert('La frase es obligatoria');
+      try {
+        if (id) await apiFetch(`/admin/chatbot/frases/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+        else await apiFetch('/admin/chatbot/frases', { method: 'POST', body: JSON.stringify(payload) });
+        closeModal(overlay);
+        showToast(id ? 'Frase actualizada' : 'Frase creada');
+        loadFrases();
+      } catch (e) { alert('Error: ' + e.message); }
+    });
+  };
+
+  // ═══════════════════════════════════════════════════════
+  // PREGUNTAS SIN RESPUESTA
+  // ═══════════════════════════════════════════════════════
+  const loadPendientes = async () => {
+    setTab(tabs.pendientes);
+    inner.innerHTML = '<div class="text-center py-4 text-muted">Cargando preguntas pendientes...</div>';
+    try {
+      const pendientes = await apiFetch('/admin/chatbot/preguntas?resuelta=false');
+      
+      // Actualizar badge
+      const badge = document.getElementById('badgePendientes');
+      if (pendientes.length > 0) {
+        badge.textContent = pendientes.length;
+        badge.classList.remove('d-none');
+      } else {
+        badge.classList.add('d-none');
+      }
+      
+      inner.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="h6 mb-0 fw-bold">Preguntas sin respuesta (${pendientes.length})</h4>
+        </div>
+        ${pendientes.length === 0 ? '<div class="alert alert-success">🎉 ¡No hay preguntas pendientes!</div>' : `
+        <div class="table-admin-wrap">
+          <table class="table-admin">
+            <thead><tr>
+              <th style="width:50px;">#</th><th>Pregunta</th><th>Fecha</th>
+              <th class="text-end" style="width:260px;">Acciones</th>
+            </tr></thead>
+            <tbody>
+              ${pendientes.map(p => `
+                <tr>
+                  <td>#${p.id}</td>
+                  <td><strong>${p.pregunta}</strong></td>
+                  <td><small class="text-muted">${p.fecha ? new Date(p.fecha).toLocaleDateString('es-CO') : ''}</small></td>
+                  <td class="text-end">
+                    <button class="btn btn-sm btn-success me-1 btn-conv-faq" data-id="${p.id}" data-pregunta="${p.pregunta.replace(/"/g, '&quot;')}"><i class="fa-solid fa-arrow-right me-1"></i>Convertir a FAQ</button>
+                    <button class="btn btn-sm btn-outline-secondary me-1 btn-resolver" data-id="${p.id}"><i class="fa-solid fa-check"></i></button>
+                    <button class="btn btn-sm btn-danger btn-del-pend" data-id="${p.id}"><i class="fa-solid fa-trash"></i></button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        `}
+      `;
+      
+      inner.querySelectorAll('.btn-conv-faq').forEach(b => {
+        b.addEventListener('click', () => openConvertirFaqModal(parseInt(b.dataset.id, 10), b.dataset.pregunta));
+      });
+      inner.querySelectorAll('.btn-resolver').forEach(b => {
+        b.addEventListener('click', async () => {
+          try {
+            await apiFetch(`/admin/chatbot/preguntas/${b.dataset.id}/resolver`, { method: 'PUT' });
+            showToast('Marcada como resuelta');
+            loadPendientes();
+          } catch (e) { alert(e.message); }
+        });
+      });
+      inner.querySelectorAll('.btn-del-pend').forEach(b => {
+        b.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar esta pregunta?')) return;
+          try {
+            await apiFetch(`/admin/chatbot/preguntas/${b.dataset.id}`, { method: 'DELETE' });
+            showToast('Pregunta eliminada');
+            loadPendientes();
+          } catch (e) { alert(e.message); }
+        });
+      });
+    } catch (e) { inner.innerHTML = `<div class="alert alert-danger">${e.message}</div>`; }
+  };
+
+  const openConvertirFaqModal = async (id, pregunta) => {
+    const html = `
+      <h3><i class="fa-solid fa-arrow-right me-2 text-danger"></i>Convertir a FAQ</h3>
+      <div class="alert alert-info">
+        <strong>Pregunta:</strong> ${pregunta}
+      </div>
+      <div class="form-row mb-3"><label class="fw-semibold">Respuesta *</label>
+        <textarea id="conv_respuesta" class="form-control" rows="5" placeholder="Escribe la respuesta que quieres que dé el chatbot..."></textarea></div>
+      <div class="modal-actions">
+        <button id="conv_cancel" class="btn btn-admin-outline">Cancelar</button>
+        <button id="conv_submit" class="btn btn-admin-primary"><i class="fa-solid fa-check me-1"></i> Convertir a FAQ</button>
+      </div>
+    `;
+    const overlay = showModal(html);
+    overlay.querySelector('#conv_cancel').addEventListener('click', () => closeModal(overlay));
+    overlay.querySelector('#conv_submit').addEventListener('click', async () => {
+      const respuesta = overlay.querySelector('#conv_respuesta').value.trim();
+      if (!respuesta) return alert('Escribe una respuesta');
+      try {
+        await apiFetch(`/admin/chatbot/preguntas/${id}/convertir-faq?respuesta=${encodeURIComponent(respuesta)}`, { method: 'POST' });
+        closeModal(overlay);
+        showToast('FAQ creada desde pregunta pendiente');
+        loadPendientes();
+      } catch (e) { alert('Error: ' + e.message); }
+    });
+  };
+
+  // ═══════════════════════════════════════════════════════
+  // EVENT LISTENERS DE TABS
+  // ═══════════════════════════════════════════════════════
+  tabs.intenciones.addEventListener('click', loadIntenciones);
+  tabs.faqs.addEventListener('click', loadFaqs);
+  tabs.sinonimos.addEventListener('click', loadSinonimos);
+  tabs.frases.addEventListener('click', loadFrases);
+  tabs.pendientes.addEventListener('click', loadPendientes);
+
+  // Cargar badge de pendientes y la primera tab
+  loadIntenciones();
+  (async () => {
+    try {
+      const pendientes = await apiFetch('/admin/chatbot/preguntas?resuelta=false');
+      const badge = document.getElementById('badgePendientes');
+      if (badge && pendientes.length > 0) {
+        badge.textContent = pendientes.length;
+        badge.classList.remove('d-none');
+      }
+    } catch (e) {}
+  })();
+}
+
 
   // ---------- CACHE ----------
   async function renderCache() {

@@ -1,14 +1,8 @@
 package com.darbot.chatbot.controller;
 
-import com.darbot.chatbot.dto.IntencionAdminResponse;
-import com.darbot.chatbot.dto.PalabraClaveResponse;
-import com.darbot.chatbot.dto.SinonimoAdminResponse;
-import com.darbot.chatbot.entity.Intencion;
-import com.darbot.chatbot.entity.PalabraClaveIntencion;
-import com.darbot.chatbot.entity.Sinonimo;
-import com.darbot.chatbot.repository.IntencionRepository;
-import com.darbot.chatbot.repository.PalabraClaveIntencionRepository;
-import com.darbot.chatbot.repository.SinonimoRepository;
+import com.darbot.chatbot.dto.*;
+import com.darbot.chatbot.entity.*;
+import com.darbot.chatbot.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,10 +22,35 @@ public class ChatbotKnowledgeAdminController {
     private final IntencionRepository intencionRepository;
     private final PalabraClaveIntencionRepository palabraClaveRepository;
     private final SinonimoRepository sinonimoRepository;
+    private final FraseEspecificaRepository fraseRepository;
+
+    // ═══════════════════════════════════════════════════════
+    // INTENCIONES
+    // ═══════════════════════════════════════════════════════
 
     @GetMapping("/intenciones")
+    @Transactional(readOnly = true)
     public List<IntencionAdminResponse> listarIntenciones() {
-        return intencionRepository.findAllByOrderByPrioridadDesc().stream().map(IntencionAdminResponse::from).toList();
+        return intencionRepository.findAllByOrderByPrioridadDesc().stream()
+                .map(IntencionAdminResponse::from).toList();
+    }
+
+    @GetMapping("/intenciones/{id}")
+    @Transactional(readOnly = true)
+    public IntencionAdminResponse obtenerIntencion(@PathVariable Long id) {
+        return IntencionAdminResponse.from(intencionRepository.findById(id).orElseThrow());
+    }
+
+    @PostMapping("/intenciones")
+    public ResponseEntity<IntencionAdminResponse> crearIntencion(@RequestBody Map<String, Object> datos) {
+        Intencion intencion = new Intencion();
+        intencion.setNombre((String) datos.get("nombre"));
+        intencion.setDescripcion((String) datos.get("descripcion"));
+        intencion.setRespuestaPorDefecto((String) datos.get("respuestaPorDefecto"));
+        intencion.setActiva(!Boolean.FALSE.equals(datos.get("activa")));
+        if (datos.get("prioridad") instanceof Number p) intencion.setPrioridad(p.intValue());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(IntencionAdminResponse.from(intencionRepository.save(intencion)));
     }
 
     @PutMapping("/intenciones/{id}")
@@ -44,6 +63,16 @@ public class ChatbotKnowledgeAdminController {
         if (datos.get("prioridad") instanceof Number prioridad) intencion.setPrioridad(prioridad.intValue());
         return IntencionAdminResponse.from(intencionRepository.save(intencion));
     }
+
+    @DeleteMapping("/intenciones/{id}")
+    public ResponseEntity<Void> eliminarIntencion(@PathVariable Long id) {
+        intencionRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // PALABRAS CLAVE
+    // ═══════════════════════════════════════════════════════
 
     @PostMapping("/intenciones/{id}/palabras-clave")
     public ResponseEntity<PalabraClaveResponse> agregarPalabraClave(@PathVariable Long id, @RequestBody Map<String, Object> datos) {
@@ -70,6 +99,10 @@ public class ChatbotKnowledgeAdminController {
         palabraClaveRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+
+    // ═══════════════════════════════════════════════════════
+    // SINÓNIMOS
+    // ═══════════════════════════════════════════════════════
 
     @GetMapping("/sinonimos")
     @Transactional(readOnly = true)
@@ -105,5 +138,45 @@ public class ChatbotKnowledgeAdminController {
             sinonimo.setIntencion(null);
         }
         return sinonimo;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // FRASES ESPECÍFICAS
+    // ═══════════════════════════════════════════════════════
+
+    @GetMapping("/frases")
+    @Transactional(readOnly = true)
+    public List<FraseEspecificaResponse> listarFrases() {
+        return fraseRepository.findAll().stream().map(FraseEspecificaResponse::from).toList();
+    }
+
+    @PostMapping("/frases")
+    public ResponseEntity<FraseEspecificaResponse> crearFrase(@RequestBody Map<String, Object> datos) {
+        FraseEspecifica frase = new FraseEspecifica();
+        frase.setFrase((String) datos.get("frase"));
+        if (datos.get("intencionId") instanceof Number intencionId) {
+            frase.setIntencion(intencionRepository.findById(intencionId.longValue()).orElseThrow());
+        }
+        frase.setActiva(!Boolean.FALSE.equals(datos.get("activa")));
+        if (datos.get("peso") instanceof Number peso) frase.setPeso(peso.intValue());
+        return ResponseEntity.status(HttpStatus.CREATED).body(FraseEspecificaResponse.from(fraseRepository.save(frase)));
+    }
+
+    @PutMapping("/frases/{id}")
+    public FraseEspecificaResponse actualizarFrase(@PathVariable Long id, @RequestBody Map<String, Object> datos) {
+        FraseEspecifica frase = fraseRepository.findById(id).orElseThrow();
+        frase.setFrase((String) datos.get("frase"));
+        if (datos.get("intencionId") instanceof Number intencionId) {
+            frase.setIntencion(intencionRepository.findById(intencionId.longValue()).orElseThrow());
+        }
+        frase.setActiva(!Boolean.FALSE.equals(datos.get("activa")));
+        if (datos.get("peso") instanceof Number peso) frase.setPeso(peso.intValue());
+        return FraseEspecificaResponse.from(fraseRepository.save(frase));
+    }
+
+    @DeleteMapping("/frases/{id}")
+    public ResponseEntity<Void> eliminarFrase(@PathVariable Long id) {
+        fraseRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }
