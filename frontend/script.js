@@ -460,6 +460,19 @@ async function cargarConfiguracion() {
       }
     });
 
+    // Actualizar logo institucional en todas sus variantes
+    const logoUrl = config.logo_url || 'imagenes/Logo IEDTP.jpeg';
+
+    // 1. Imágenes del navbar, footer, login (todas las que tengan la clase)
+    document.querySelectorAll('img.institucion-logo').forEach(img => {
+      img.src = logoUrl;
+    });
+
+    // 2. Favicon
+    document.querySelectorAll('link.institucion-favicon, link[rel="icon"]').forEach(link => {
+      link.href = logoUrl;
+    });
+
     // Hero (título y frase)
     const heroTitulo = document.querySelector('.hero h1');
     if (heroTitulo && config.hero_titulo) {

@@ -199,6 +199,7 @@ if (isAdminSPA) {
       case 'equipo': renderEquipo(); break;
       case 'valores': renderValores(); break;
       case 'servicios': renderServicios(); break;
+      case 'configuracion': renderConfiguracion(); break;
       default: renderDashboard(); break;
     }
   }
@@ -2320,6 +2321,442 @@ if (isAdminSPA) {
         alert('Error: ' + err.message);
       }
     });
+  }
+
+  // ---------- CONFIGURACIÓN GENERAL ----------
+  async function renderConfiguracion() {
+    pageTitle.textContent = 'Configuración General';
+    viewContainer.innerHTML = `
+      <div class="admin-section">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <div>
+            <h3 class="section-title mb-1">
+              <i class="fa-solid fa-gear me-2 text-danger"></i>Configuración General
+            </h3>
+            <p class="text-muted small mb-0">Edita el contenido principal que se muestra en el sitio público.</p>
+          </div>
+        </div>
+
+        <div class="card-admin">
+          <div class="admin-tab-nav">
+            <button id="tabHero" class="admin-tab-btn active"><i class="fa-solid fa-star me-2"></i>Hero</button>
+            <button id="tabInfoInst" class="admin-tab-btn"><i class="fa-solid fa-landmark me-2"></i>Info Institucional</button>
+            <button id="tabContacto" class="admin-tab-btn"><i class="fa-solid fa-address-card me-2"></i>Contacto</button>
+            <button id="tabRedes" class="admin-tab-btn"><i class="fa-solid fa-share-nodes me-2"></i>Redes</button>
+          </div>
+          <div class="card-admin-body" id="configContent">
+            <div class="text-center py-4 text-muted">Cargando...</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const tabHero = document.getElementById('tabHero');
+    const tabInfoInst = document.getElementById('tabInfoInst');
+    const tabContacto = document.getElementById('tabContacto');
+    const tabRedes = document.getElementById('tabRedes');
+    const configContent = document.getElementById('configContent');
+
+    const setTab = (active) => {
+      [tabHero, tabInfoInst, tabContacto, tabRedes].forEach(t => t.classList.remove('active'));
+      active.classList.add('active');
+    };
+
+    // ==================== HERO ====================
+    const loadHero = async () => {
+      setTab(tabHero);
+      configContent.innerHTML = '<div class="text-center py-4 text-muted">Cargando...</div>';
+      try {
+        const config = await apiFetch('/admin/configuracion');
+        const map = {};
+        config.forEach(c => { map[c.clave] = c.valor || ''; });
+
+        configContent.innerHTML = `
+          <h4 class="h6 fw-bold mb-3">Contenido del Hero (portada)</h4>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Título del Hero</label>
+            <input id="cfg_hero_titulo" class="form-control" value="${map.hero_titulo || ''}" placeholder="Ej: Darío Torregroza Pérez"/>
+            <small class="text-muted">Aparece como H1 en la portada</small>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Frase del Hero</label>
+            <input id="cfg_hero_frase" class="form-control" value="${map.hero_frase || ''}" placeholder="Ej: Camino a la excelencia"/>
+            <small class="text-muted">Aparece debajo del título</small>
+          </div>
+          <div class="modal-actions">
+            <button id="cfg_hero_save" class="btn btn-admin-primary"><i class="fa-solid fa-save me-1"></i> Guardar Cambios</button>
+          </div>
+        `;
+
+        document.getElementById('cfg_hero_save').addEventListener('click', async () => {
+          const payload = {
+            hero_titulo: document.getElementById('cfg_hero_titulo').value.trim(),
+            hero_frase: document.getElementById('cfg_hero_frase').value.trim()
+          };
+          try {
+            await apiFetch('/admin/configuracion', { method: 'PUT', body: JSON.stringify(payload) });
+            showToast('Hero actualizado');
+          } catch (err) { alert('Error: ' + err.message); }
+        });
+      } catch (err) {
+        configContent.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+      }
+    };
+
+    // ==================== INFO INSTITUCIONAL ====================
+    const loadInfoInst = async () => {
+      setTab(tabInfoInst);
+      configContent.innerHTML = '<div class="text-center py-4 text-muted">Cargando...</div>';
+      try {
+        const info = await apiFetch('/admin/institucional/info');
+        configContent.innerHTML = `
+          <h4 class="h6 fw-bold mb-3">Información Institucional</h4>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Nombre Institución</label>
+            <input id="ii_nombreInstitucion" class="form-control" value="${info.nombreInstitucion || ''}"/>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Descripción</label>
+            <textarea id="ii_descripcion" class="form-control" rows="2">${info.descripcion || ''}</textarea>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Historia</label>
+            <textarea id="ii_historia" class="form-control" rows="4">${info.historia || ''}</textarea>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Misión</label>
+            <textarea id="ii_mision" class="form-control" rows="4">${info.mision || ''}</textarea>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Visión</label>
+            <textarea id="ii_vision" class="form-control" rows="4">${info.vision || ''}</textarea>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Valores</label>
+            <textarea id="ii_valores" class="form-control" rows="3">${info.valores || ''}</textarea>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Filosofía</label>
+            <textarea id="ii_filosofia" class="form-control" rows="3">${info.filosofia || ''}</textarea>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Teléfono General</label>
+            <input id="ii_telefonoGeneral" class="form-control" value="${info.telefonoGeneral || ''}"/>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Correo General</label>
+            <input id="ii_correoGeneral" class="form-control" value="${info.correoGeneral || ''}"/>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Sitio Web</label>
+            <input id="ii_sitioWeb" class="form-control" value="${info.sitioWeb || ''}"/>
+          </div>
+          <div class="modal-actions">
+            <button id="cfg_info_save" class="btn btn-admin-primary"><i class="fa-solid fa-save me-1"></i> Guardar Cambios</button>
+          </div>
+        `;
+
+        document.getElementById('cfg_info_save').addEventListener('click', async () => {
+          const payload = {
+            nombre: document.getElementById('ii_nombreInstitucion').value.trim(),
+            nombreInstitucion: document.getElementById('ii_nombreInstitucion').value.trim(),
+            descripcion: document.getElementById('ii_descripcion').value.trim(),
+            historia: document.getElementById('ii_historia').value.trim(),
+            mision: document.getElementById('ii_mision').value.trim(),
+            vision: document.getElementById('ii_vision').value.trim(),
+            valores: document.getElementById('ii_valores').value.trim(),
+            filosofia: document.getElementById('ii_filosofia').value.trim(),
+            telefonoGeneral: document.getElementById('ii_telefonoGeneral').value.trim(),
+            correoGeneral: document.getElementById('ii_correoGeneral').value.trim(),
+            sitioWeb: document.getElementById('ii_sitioWeb').value.trim()
+          };
+          try {
+            await apiFetch(`/admin/institucional/info/${info.id}`, { method: 'PUT', body: JSON.stringify(payload) });
+            showToast('Información institucional actualizada');
+          } catch (err) { alert('Error: ' + err.message); }
+        });
+      } catch (err) {
+        configContent.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+      }
+    };
+
+    // ==================== CONTACTO ====================
+    const loadContacto = async () => {
+      setTab(tabContacto);
+      configContent.innerHTML = '<div class="text-center py-4 text-muted">Cargando...</div>';
+      try {
+        const config = await apiFetch('/admin/configuracion');
+        const map = {};
+        config.forEach(c => { map[c.clave] = c.valor || ''; });
+
+        configContent.innerHTML = `
+          <h4 class="h6 fw-bold mb-3">Datos de Contacto</h4>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Dirección</label>
+            <input id="cfg_direccion" class="form-control" value="${map.direccion || ''}"/>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Teléfono</label>
+            <input id="cfg_telefono" class="form-control" value="${map.telefono || ''}"/>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Email</label>
+            <input id="cfg_email" class="form-control" value="${map.email || ''}"/>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">📍 Ubicación en el Mapa</label>
+            
+            <div class="alert alert-info small mb-2">
+              <i class="fa-solid fa-lightbulb me-1"></i>
+              <strong>Opción 1 (recomendada):</strong> Escribe el nombre del lugar y el sistema genera el mapa automáticamente.
+            </div>
+            
+            <div class="input-group mb-2">
+              <input id="cfg_lugar" class="form-control" 
+                     placeholder="Ej: Colegio Darío Torregroza, Ciénaga Magdalena"
+                     value=""/>
+              <button id="cfg_generar_mapa" class="btn btn-admin-primary" type="button">
+                <i class="fa-solid fa-magnifying-glass me-1"></i> Generar
+              </button>
+            </div>
+            
+            <details class="mb-2">
+              <summary class="text-muted small" style="cursor:pointer;">
+                <i class="fa-solid fa-chevron-right me-1"></i>
+                <strong>Opción 2 (avanzada):</strong> Pegar código HTML de Google Maps
+              </summary>
+              <div class="mt-2 p-2 bg-light rounded">
+                <ol class="small mb-2 ps-3">
+                  <li>Ve a <a href="https://maps.google.com" target="_blank">Google Maps</a></li>
+                  <li>Busca tu institución</li>
+                  <li>Click en <strong>Compartir</strong> → <strong>Insertar un mapa</strong></li>
+                  <li>Copia el código HTML completo</li>
+                  <li>Pégalo aquí:</li>
+                </ol>
+                <textarea id="cfg_mapa_embed_html" class="form-control" rows="3" 
+                          placeholder='<iframe src="https://www.google.com/maps/embed?..." ...></iframe>'></textarea>
+                <button id="cfg_extraer_mapa" class="btn btn-sm btn-admin-outline mt-2" type="button">
+                  <i class="fa-solid fa-check me-1"></i> Extraer URL del código
+                </button>
+              </div>
+            </details>
+            
+            <input type="hidden" id="cfg_mapa_embed" value="${map.mapa_embed || ''}"/>
+            
+            <div class="mb-2">
+              <label class="fw-semibold small mb-1">Vista previa del mapa:</label>
+              <div id="cfg_mapa_preview" class="border rounded overflow-hidden" style="height:250px; background:#f5f5f5;">
+                <div class="text-center py-5 text-muted">
+                  <i class="fa-solid fa-map fa-2x mb-2"></i><br>
+                  <small>Sin mapa configurado</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Logo Institucional</label>
+            <div class="mb-2">
+              <img id="cfg_logo_preview" src="${(map.logo_url || 'imagenes/Logo IEDTP.jpeg').startsWith('/') || (map.logo_url || '').startsWith('http') ? map.logo_url : '/' + (map.logo_url || 'imagenes/Logo IEDTP.jpeg')}" 
+                   style="max-width:120px; max-height:120px; border-radius:50%; border:3px solid #c8102e; padding:4px; background:#fff;" 
+                   alt="Logo actual"/>
+            </div>
+            <input id="cfg_logo_file" type="file" class="form-control" accept="image/*"/>
+            <small class="text-muted">JPG, PNG, SVG, WEBP. Máximo 5MB.</small>
+            <div class="mt-2 d-flex gap-2">
+              <button id="cfg_logo_upload" class="btn btn-admin-primary btn-sm">
+                <i class="fa-solid fa-upload me-1"></i> Subir Logo
+              </button>
+              <button id="cfg_logo_restore" class="btn btn-admin-outline btn-sm">
+                <i class="fa-solid fa-rotate-left me-1"></i> Restaurar Original
+              </button>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button id="cfg_contacto_save" class="btn btn-admin-primary"><i class="fa-solid fa-save me-1"></i> Guardar Cambios</button>
+          </div>
+        `;
+
+        // Preview al seleccionar archivo
+        const logoFileInput = document.getElementById('cfg_logo_file');
+        logoFileInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              document.getElementById('cfg_logo_preview').src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+
+        // Botón "Subir Logo"
+        document.getElementById('cfg_logo_upload').addEventListener('click', async () => {
+          const file = logoFileInput.files[0];
+          if (!file) return alert('Selecciona una imagen primero');
+          if (!file.type.startsWith('image/')) return alert('El archivo debe ser una imagen');
+
+          const formData = new FormData();
+          formData.append('file', file);
+
+          try {
+            const res = await apiFetch('/admin/configuracion/upload-logo', {
+              method: 'POST',
+              body: formData
+            });
+            showToast('Logo actualizado: ' + res.logo_url);
+            // Recargar la vista para reflejar el cambio
+            loadContacto();
+          } catch (err) {
+            alert('Error al subir logo: ' + err.message);
+          }
+        });
+
+        // Botón "Restaurar Original"
+        document.getElementById('cfg_logo_restore').addEventListener('click', async () => {
+          if (!confirm('¿Restaurar el logo original del sistema?')) return;
+          try {
+            await apiFetch('/admin/configuracion/restore-logo', { method: 'POST' });
+            showToast('Logo restaurado');
+            loadContacto();
+          } catch (err) {
+            alert('Error: ' + err.message);
+          }
+        });
+
+        // ═══════════════════════════════════════════════════
+        // MAPA INTUITIVO
+        // ═══════════════════════════════════════════════════
+        
+        const mapaEmbedInput = document.getElementById('cfg_mapa_embed');
+        const mapaPreview = document.getElementById('cfg_mapa_preview');
+        
+        // Función para actualizar la vista previa del mapa
+        const updateMapaPreview = (embedUrl) => {
+          if (!embedUrl) {
+            mapaPreview.innerHTML = `
+              <div class="text-center py-5 text-muted">
+                <i class="fa-solid fa-map fa-2x mb-2"></i><br>
+                <small>Sin mapa configurado</small>
+              </div>`;
+            return;
+          }
+          // Si el embedUrl es una URL completa, mostrarla como iframe
+          let src = embedUrl;
+          // Si viene con comillas o iframe, extraer solo la URL
+          if (embedUrl.includes('src=')) {
+            const match = embedUrl.match(/src=["']([^"']+)["']/);
+            if (match) src = match[1];
+          }
+          mapaPreview.innerHTML = `
+            <iframe src="${src}" width="100%" height="100%" 
+                    style="border:0;" allowfullscreen="" loading="lazy" 
+                    referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+        };
+        
+        // Cargar mapa actual
+        updateMapaPreview(mapaEmbedInput.value);
+        
+        // Botón "Generar mapa desde lugar"
+        document.getElementById('cfg_generar_mapa').addEventListener('click', () => {
+          const lugar = document.getElementById('cfg_lugar').value.trim();
+          if (!lugar) return alert('Escribe un lugar primero');
+          
+          // Generar URL de embed simple de Google Maps
+          const embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(lugar)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+          
+          mapaEmbedInput.value = embedUrl;
+          updateMapaPreview(embedUrl);
+          showToast('Mapa generado. No olvides guardar los cambios.');
+        });
+        
+        // Botón "Extraer URL del código"
+        document.getElementById('cfg_extraer_mapa').addEventListener('click', () => {
+          const html = document.getElementById('cfg_mapa_embed_html').value.trim();
+          if (!html) return alert('Pega el código HTML de Google Maps primero');
+          
+          const match = html.match(/src=["']([^"']+)["']/);
+          if (!match) return alert('No se encontró una URL válida en el código');
+          
+          mapaEmbedInput.value = match[1];
+          updateMapaPreview(match[1]);
+          document.getElementById('cfg_mapa_embed_html').value = '';
+          showToast('URL extraída correctamente. No olvides guardar.');
+        });
+        
+        // ═══════════════════════════════════════════════════
+        // GUARDAR CAMBIOS
+        // ═══════════════════════════════════════════════════
+        document.getElementById('cfg_contacto_save').addEventListener('click', async () => {
+          const payload = {
+            direccion: document.getElementById('cfg_direccion').value.trim(),
+            telefono: document.getElementById('cfg_telefono').value.trim(),
+            email: document.getElementById('cfg_email').value.trim(),
+            mapa_embed: mapaEmbedInput.value.trim()
+          };
+          try {
+            await apiFetch('/admin/configuracion', { method: 'PUT', body: JSON.stringify(payload) });
+            showToast('Contacto actualizado');
+          } catch (err) { alert('Error: ' + err.message); }
+        });
+      } catch (err) {
+        configContent.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+      }
+    };
+
+    // ==================== REDES ====================
+    const loadRedes = async () => {
+      setTab(tabRedes);
+      configContent.innerHTML = '<div class="text-center py-4 text-muted">Cargando...</div>';
+      try {
+        const config = await apiFetch('/admin/configuracion');
+        const map = {};
+        config.forEach(c => { map[c.clave] = c.valor || ''; });
+
+        configContent.innerHTML = `
+          <h4 class="h6 fw-bold mb-3">Redes Sociales</h4>
+          <div class="form-row mb-3">
+            <label class="fw-semibold"><i class="fa-brands fa-facebook me-2" style="color:#1877f2"></i>Facebook</label>
+            <input id="cfg_facebook" class="form-control" value="${map.facebook || ''}" placeholder="https://facebook.com/..."/>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold"><i class="fa-brands fa-instagram me-2" style="color:#e4405f"></i>Instagram</label>
+            <input id="cfg_instagram" class="form-control" value="${map.instagram || ''}" placeholder="https://instagram.com/..."/>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold"><i class="fa-brands fa-youtube me-2" style="color:#ff0000"></i>YouTube</label>
+            <input id="cfg_youtube" class="form-control" value="${map.youtube || ''}" placeholder="https://youtube.com/..."/>
+          </div>
+          <div class="form-row mb-3">
+            <label class="fw-semibold">Instagram (dejar vacío si no aplica)</label>
+            <input id="cfg_instagram_2" class="form-control" value="${map.instagram || ''}" disabled style="display:none"/>
+          </div>
+          <div class="modal-actions">
+            <button id="cfg_redes_save" class="btn btn-admin-primary"><i class="fa-solid fa-save me-1"></i> Guardar Cambios</button>
+          </div>
+        `;
+
+        document.getElementById('cfg_redes_save').addEventListener('click', async () => {
+          const payload = {
+            facebook: document.getElementById('cfg_facebook').value.trim(),
+            instagram: document.getElementById('cfg_instagram').value.trim(),
+            youtube: document.getElementById('cfg_youtube').value.trim()
+          };
+          try {
+            await apiFetch('/admin/configuracion', { method: 'PUT', body: JSON.stringify(payload) });
+            showToast('Redes actualizadas');
+          } catch (err) { alert('Error: ' + err.message); }
+        });
+      } catch (err) {
+        configContent.innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+      }
+    };
+
+    tabHero.addEventListener('click', loadHero);
+    tabInfoInst.addEventListener('click', loadInfoInst);
+    tabContacto.addEventListener('click', loadContacto);
+    tabRedes.addEventListener('click', loadRedes);
+
+    loadHero();
   }
 
   async function renderChatbot() {
