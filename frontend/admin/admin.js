@@ -2831,6 +2831,18 @@ if (isAdminSPA) {
     try {
       const intents = await apiFetch('/admin/chatbot/intenciones');
       inner.innerHTML = `
+        <div class="chatbot-help-banner">
+          <div class="help-icon"><i class="fa-solid fa-lightbulb"></i></div>
+          <div class="help-content">
+            <h4>¿Qué es una intención?</h4>
+            <p>Una <strong>intención</strong> es la categoría que el chatbot detecta cuando alguien escribe. Por ejemplo, si escriben "¿qué eventos hay?", se activa la intención <code>CONSULTAR_EVENTOS</code>.</p>
+            <ul>
+              <li><strong>Palabras clave:</strong> palabras que activan esta intención (🔑)</li>
+              <li><strong>Prioridad:</strong> 1-10, mayor número = se evalúa primero</li>
+              <li><strong>Respuesta por defecto:</strong> mensaje si no hay datos</li>
+            </ul>
+          </div>
+        </div>
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h4 class="h6 mb-0 fw-bold">Intenciones (${intents.length})</h4>
           <button id="crearIntencionBtn" class="btn btn-admin-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Nueva Intención</button>
@@ -2895,23 +2907,95 @@ if (isAdminSPA) {
     }
     const html = `
       <h3><i class="fa-solid fa-brain me-2 text-danger"></i>${id ? 'Editar' : 'Nueva'} Intención</h3>
-      <div class="form-row mb-3"><label class="fw-semibold">Nombre *</label>
-        <input id="int_nombre" class="form-control" value="${int_.nombre || ''}" placeholder="Ej: CONSULTAR_BECAS"/></div>
-      <div class="form-row mb-3"><label class="fw-semibold">Descripción</label>
-        <input id="int_descripcion" class="form-control" value="${int_.descripcion || ''}"/></div>
-      <div class="form-row mb-3"><label class="fw-semibold">Prioridad (1-10)</label>
-        <input id="int_prioridad" type="number" class="form-control" value="${int_.prioridad || 5}" min="1" max="10"/></div>
-      <div class="form-row mb-3"><label class="fw-semibold">Respuesta por defecto</label>
-        <textarea id="int_respuesta" class="form-control" rows="2" placeholder="Mensaje si no hay datos">${int_.respuestaPorDefecto || ''}</textarea></div>
-      <div class="form-row mb-3"><label class="fw-semibold d-block">
-        <input id="int_activa" type="checkbox" ${int_.activa !== false ? 'checked' : ''}/> Activa
-      </label></div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold">
+          Nombre *
+          <span class="help-tooltip" data-tip="El nombre único que identifica esta intención. Usa MAYÚSCULAS y guiones bajos.">?</span>
+        </label>
+        <input id="int_nombre" class="form-control" value="${int_.nombre || ''}" placeholder="Ej: CONSULTAR_BECAS"/>
+        <div class="modal-example">
+          💡 <strong>Ejemplos:</strong> <code>CONSULTAR_EVENTOS</code>, <code>CONSULTAR_NOTICIAS</code>, <code>CONSULTAR_BECAS</code>
+        </div>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold">
+          Descripción
+          <span class="help-tooltip" data-tip="Explica brevemente qué tipo de preguntas activa esta intención. Ayuda a otros administradores a entenderla.">?</span>
+        </label>
+        <input id="int_descripcion" class="form-control" value="${int_.descripcion || ''}" placeholder="Ej: Consultas sobre becas y ayudas económicas"/>
+        <div class="modal-example">
+          💡 <strong>Ejemplo:</strong> "Consultas sobre becas, subsidios y apoyos económicos"
+        </div>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold">
+          Prioridad (1-10)
+          <span class="help-tooltip" data-tip="Si dos intenciones coinciden, gana la de MAYOR prioridad. Usa 10 para intenciones críticas (saludo, matrícula) y 5 para las normales.">?</span>
+        </label>
+        <div class="d-flex align-items-center gap-2">
+          <input id="int_prioridad" type="number" class="form-control" value="${int_.prioridad || 5}" min="1" max="10" style="max-width:100px;"/>
+          <div class="peso-indicator" id="prioridad_indicator">
+            <span class="dot active-1"></span>
+            <span class="dot active-2"></span>
+            <span class="dot active-3"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+          <span class="text-muted small" id="prioridad_label">Normal</span>
+        </div>
+        <div class="modal-example">
+          💡 <strong>Guía:</strong> 9-10 = Crítica | 6-8 = Importante | 3-5 = Normal | 1-2 = Poco frecuente
+        </div>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold">
+          Respuesta por defecto
+          <span class="help-tooltip" data-tip="Mensaje que se envía si la intención se detecta pero no hay datos disponibles. Opcional.">?</span>
+        </label>
+        <textarea id="int_respuesta" class="form-control" rows="2" placeholder="Ej: Lo siento, no hay becas disponibles actualmente.">${int_.respuestaPorDefecto || ''}</textarea>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold d-block">
+          <input id="int_activa" type="checkbox" ${int_.activa !== false ? 'checked' : ''}/> 
+          Activa
+          <span class="help-tooltip" data-tip="Si está desmarcada, el chatbot no usará esta intención.">?</span>
+        </label>
+      </div>
+      
       <div class="modal-actions">
         <button id="int_cancel" class="btn btn-admin-outline">Cancelar</button>
         <button id="int_submit" class="btn btn-admin-primary">${id ? 'Guardar' : 'Crear'}</button>
       </div>
     `;
     const overlay = showModal(html);
+    
+    // Listener para el indicador de prioridad
+    const prioridadInput = overlay.querySelector('#int_prioridad');
+    const prioridadIndicator = overlay.querySelector('#prioridad_indicator');
+    const prioridadLabel = overlay.querySelector('#prioridad_label');
+    const actualizarIndicador = () => {
+      const val = parseInt(prioridadInput.value || '5', 10);
+      const dots = prioridadIndicator.querySelectorAll('.dot');
+      dots.forEach((dot, i) => {
+        dot.className = 'dot';
+        if (i < Math.ceil(val / 2)) {
+          const level = Math.min(5, Math.ceil(val / 2));
+          dot.classList.add(`active-${level}`);
+        }
+      });
+      if (val >= 9) prioridadLabel.textContent = 'Crítica';
+      else if (val >= 6) prioridadLabel.textContent = 'Importante';
+      else if (val >= 3) prioridadLabel.textContent = 'Normal';
+      else prioridadLabel.textContent = 'Poco frecuente';
+    };
+    prioridadInput.addEventListener('input', actualizarIndicador);
+    actualizarIndicador();
+    
     overlay.querySelector('#int_cancel').addEventListener('click', () => closeModal(overlay));
     overlay.querySelector('#int_submit').addEventListener('click', async () => {
       const payload = {
@@ -2938,28 +3022,51 @@ if (isAdminSPA) {
       const palabras = int_.palabrasClave || [];
       const html = `
         <h3><i class="fa-solid fa-key me-2 text-danger"></i>Palabras clave: ${int_.nombre}</h3>
-        <div class="mb-3">
-          <div class="input-group mb-3">
-            <input id="nueva_palabra" class="form-control" placeholder="Nueva palabra clave"/>
-            <input id="nuevo_peso" type="number" class="form-control" style="max-width:100px;" value="1" min="1" max="10" title="Peso"/>
+        
+        <div class="chatbot-help-banner" style="padding:12px 16px;margin-bottom:16px;">
+          <div class="help-icon" style="width:32px;height:32px;font-size:0.9rem;"><i class="fa-solid fa-info"></i></div>
+          <div class="help-content">
+            <p style="font-size:0.82rem;">Estas palabras activan la intención <strong>${int_.nombre}</strong> cuando el usuario las escribe. A mayor peso, más fácil será detectar la intención.</p>
+          </div>
+        </div>
+        
+        <div class="form-row mb-3">
+          <label class="fw-semibold">Agregar nueva palabra</label>
+          <div class="input-group">
+            <input id="nueva_palabra" class="form-control" placeholder="Ej: beca, becas, ayuda económica"/>
+            <input id="nuevo_peso" type="number" class="form-control" style="max-width:80px;" value="5" min="1" max="10"/>
             <button id="add_palabra" class="btn btn-admin-primary" type="button"><i class="fa-solid fa-plus"></i></button>
           </div>
-          <small class="text-muted">Peso: 1 = normal, 5 = importante, 10 = crítico</small>
         </div>
-        <div style="max-height:300px;overflow-y:auto;">
+        
+        <div class="modal-example mb-3">
+          💡 <strong>Guía de peso:</strong><br>
+          <span class="badge bg-success">1-2</span> Normal (ej: "beca") &nbsp;
+          <span class="badge bg-warning">3-4</span> Importante &nbsp;
+          <span class="badge bg-danger">5+</span> Crítico (ej: "quiero una beca")
+        </div>
+        
+        <div style="max-height:280px;overflow-y:auto;">
           <table class="table-admin">
-            <thead><tr><th>Palabra</th><th style="width:70px;">Peso</th><th style="width:70px;"></th></tr></thead>
+            <thead><tr><th>Palabra</th><th style="width:80px;">Peso</th><th style="width:60px;"></th></tr></thead>
             <tbody>
-              ${palabras.map(p => `
-                <tr>
-                  <td>${p.palabra}</td>
-                  <td><span class="badge ${p.peso >= 5 ? 'bg-danger' : 'bg-secondary'}">${p.peso}</span></td>
-                  <td><button class="btn btn-sm btn-danger btn-del-palabra" data-id="${p.id}"><i class="fa-solid fa-trash"></i></button></td>
-                </tr>
-              `).join('') || '<tr><td colspan="3" class="text-center text-muted">Sin palabras clave</td></tr>'}
+              ${palabras.map(p => {
+                let badge = 'bg-secondary';
+                if (p.peso >= 5) badge = 'bg-danger';
+                else if (p.peso >= 3) badge = 'bg-warning text-dark';
+                else if (p.peso >= 1) badge = 'bg-success';
+                return `
+                  <tr>
+                    <td>${p.palabra}</td>
+                    <td><span class="badge ${badge}">${p.peso}</span></td>
+                    <td><button class="btn btn-sm btn-danger btn-del-palabra" data-id="${p.id}"><i class="fa-solid fa-trash"></i></button></td>
+                  </tr>
+                `;
+              }).join('') || '<tr><td colspan="3" class="text-center text-muted py-3">Sin palabras clave</td></tr>'}
             </tbody>
           </table>
         </div>
+        
         <div class="modal-actions">
           <button id="pal_cancel" class="btn btn-admin-outline">Cerrar</button>
         </div>
@@ -3002,6 +3109,18 @@ if (isAdminSPA) {
     try {
       const faqs = await apiFetch('/admin/chatbot/faqs');
       inner.innerHTML = `
+        <div class="chatbot-help-banner">
+          <div class="help-icon"><i class="fa-solid fa-circle-question"></i></div>
+          <div class="help-content">
+            <h4>¿Qué es una FAQ?</h4>
+            <p>Una <strong>FAQ</strong> (Pregunta Frecuente) es una pregunta con su respuesta directa. Se usa cuando el usuario pregunta algo específico que <em>no</em> encaja en una intención general.</p>
+            <ul>
+              <li><strong>Pregunta:</strong> tal como la escribiría el usuario</li>
+              <li><strong>Respuesta:</strong> información completa y clara</li>
+              <li><strong>Categoría:</strong> para organizar (Horarios, Admisiones, etc.)</li>
+            </ul>
+          </div>
+        </div>
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h4 class="h6 mb-0 fw-bold">FAQs (${faqs.length})</h4>
           <button id="crearFaqBtn" class="btn btn-admin-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Nueva FAQ</button>
@@ -3053,15 +3172,54 @@ if (isAdminSPA) {
     }
     const html = `
       <h3><i class="fa-solid fa-circle-question me-2 text-danger"></i>${id ? 'Editar' : 'Nueva'} FAQ</h3>
-      <div class="form-row mb-3"><label class="fw-semibold">Pregunta *</label>
-        <input id="faq_pregunta" class="form-control" value="${faq.pregunta || ''}"/></div>
-      <div class="form-row mb-3"><label class="fw-semibold">Respuesta *</label>
-        <textarea id="faq_respuesta" class="form-control" rows="4">${faq.respuesta || ''}</textarea></div>
-      <div class="form-row mb-3"><label class="fw-semibold">Categoría</label>
-        <input id="faq_categoria" class="form-control" value="${faq.categoria || 'General'}"/></div>
-      <div class="form-row mb-3"><label class="fw-semibold d-block">
-        <input id="faq_activa" type="checkbox" ${faq.activa !== false ? 'checked' : ''}/> Activa
-      </label></div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold">
+          Pregunta *
+          <span class="help-tooltip" data-tip="Escribe la pregunta tal como la haría un usuario. El chatbot buscará similitudes.">?</span>
+        </label>
+        <input id="faq_pregunta" class="form-control" value="${faq.pregunta || ''}" placeholder="Ej: ¿Tienen programa de becas?"/>
+        <div class="modal-example">
+          💡 <strong>Ejemplos:</strong> "¿Cuál es el horario?", "¿Cómo me inscribo?", "¿Dónde queda el colegio?"
+        </div>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold">
+          Respuesta *
+          <span class="help-tooltip" data-tip="Respuesta clara y completa. Incluye toda la información relevante.">?</span>
+        </label>
+        <textarea id="faq_respuesta" class="form-control" rows="4" placeholder="Escribe la respuesta completa aquí...">${faq.respuesta || ''}</textarea>
+        <div class="modal-example">
+          💡 <strong>Tip:</strong> Si es un horario, incluye días y horas. Si es un contacto, incluye teléfono y correo.
+        </div>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold">
+          Categoría
+          <span class="help-tooltip" data-tip="Sirve para organizar las FAQs. Ejemplos: Horarios, Admisiones, Ubicación, Contacto, Becas.">?</span>
+        </label>
+        <input id="faq_categoria" class="form-control" value="${faq.categoria || 'General'}" list="categorias_faq"/>
+        <datalist id="categorias_faq">
+          <option value="General">
+          <option value="Horarios">
+          <option value="Admisiones">
+          <option value="Ubicación">
+          <option value="Contacto">
+          <option value="Becas">
+          <option value="Servicios">
+        </datalist>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold d-block">
+          <input id="faq_activa" type="checkbox" ${faq.activa !== false ? 'checked' : ''}/> 
+          Activa
+          <span class="help-tooltip" data-tip="Si está desmarcada, el chatbot no usará esta FAQ.">?</span>
+        </label>
+      </div>
+      
       <div class="modal-actions">
         <button id="faq_cancel" class="btn btn-admin-outline">Cancelar</button>
         <button id="faq_submit" class="btn btn-admin-primary">${id ? 'Guardar' : 'Crear'}</button>
@@ -3096,6 +3254,18 @@ if (isAdminSPA) {
     try {
       const sinonimos = await apiFetch('/admin/chatbot/sinonimos');
       inner.innerHTML = `
+        <div class="chatbot-help-banner">
+          <div class="help-icon"><i class="fa-solid fa-language"></i></div>
+          <div class="help-content">
+            <h4>¿Qué es un sinónimo?</h4>
+            <p>Un <strong>sinónimo</strong> permite que el chatbot entienda diferentes formas de decir lo mismo. Por ejemplo: "evento" y "acto" significan lo mismo.</p>
+            <ul>
+              <li><strong>Palabra base:</strong> la palabra principal (ej: <code>evento</code>)</li>
+              <li><strong>Sinónimo:</strong> la variación (ej: <code>acto</code>, <code>feriado</code>)</li>
+              <li><strong>Intención:</strong> opcional, la categoría a la que pertenece</li>
+            </ul>
+          </div>
+        </div>
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h4 class="h6 mb-0 fw-bold">Sinónimos (${sinonimos.length})</h4>
           <button id="crearSinBtn" class="btn btn-admin-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Nuevo Sinónimo</button>
@@ -3153,18 +3323,50 @@ if (isAdminSPA) {
     
     const html = `
       <h3><i class="fa-solid fa-language me-2 text-danger"></i>${id ? 'Editar' : 'Nuevo'} Sinónimo</h3>
-      <div class="form-row mb-3"><label class="fw-semibold">Palabra base *</label>
-        <input id="sin_base" class="form-control" value="${sin.palabraBase || ''}" placeholder="Ej: evento"/></div>
-      <div class="form-row mb-3"><label class="fw-semibold">Sinónimo *</label>
-        <input id="sin_sinonimo" class="form-control" value="${sin.sinonimo || ''}" placeholder="Ej: acto, feriado"/></div>
-      <div class="form-row mb-3"><label class="fw-semibold">Intención asociada (opcional)</label>
+      
+      <div class="chatbot-help-banner" style="padding:12px 16px;margin-bottom:16px;">
+        <div class="help-icon" style="width:32px;height:32px;font-size:0.9rem;"><i class="fa-solid fa-info"></i></div>
+        <div class="help-content">
+          <p style="font-size:0.82rem;">Los sinónimos permiten que el chatbot entienda diferentes formas de decir lo mismo. Por ejemplo, si dices "acto", el chatbot sabrá que te refieres a "evento".</p>
+        </div>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold">
+          Palabra base *
+          <span class="help-tooltip" data-tip="La palabra principal o canónica. Generalmente es la que ya existe en las palabras clave.">?</span>
+        </label>
+        <input id="sin_base" class="form-control" value="${sin.palabraBase || ''}" placeholder="Ej: evento"/>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold">
+          Sinónimo *
+          <span class="help-tooltip" data-tip="La variación o palabra alternativa que el usuario podría escribir.">?</span>
+        </label>
+        <input id="sin_sinonimo" class="form-control" value="${sin.sinonimo || ''}" placeholder="Ej: acto, feriado, encuentro"/>
+        <div class="modal-example">
+          💡 <strong>Ejemplo completo:</strong> "evento" → "acto", "feriado", "encuentro"
+        </div>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold">
+          Intención asociada
+          <span class="help-tooltip" data-tip="Opcional. Si lo asocias a una intención, el sinónimo ayudará a detectarla mejor.">?</span>
+        </label>
         <select id="sin_intencion" class="form-control">
           <option value="">-- Ninguna --</option>
           ${intenciones.map(i => `<option value="${i.id}" ${i.id === sin.intencionId ? 'selected' : ''}>${i.nombre}</option>`).join('')}
-        </select></div>
-      <div class="form-row mb-3"><label class="fw-semibold d-block">
-        <input id="sin_activa" type="checkbox" ${sin.activa !== false ? 'checked' : ''}/> Activa
-      </label></div>
+        </select>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold d-block">
+          <input id="sin_activa" type="checkbox" ${sin.activa !== false ? 'checked' : ''}/> Activa
+        </label>
+      </div>
+      
       <div class="modal-actions">
         <button id="sin_cancel" class="btn btn-admin-outline">Cancelar</button>
         <button id="sin_submit" class="btn btn-admin-primary">${id ? 'Guardar' : 'Crear'}</button>
@@ -3200,6 +3402,18 @@ if (isAdminSPA) {
     try {
       const frases = await apiFetch('/admin/chatbot/frases');
       inner.innerHTML = `
+        <div class="chatbot-help-banner">
+          <div class="help-icon"><i class="fa-solid fa-quote-left"></i></div>
+          <div class="help-content">
+            <h4>¿Qué es una frase específica?</h4>
+            <p>Una <strong>frase específica</strong> es una coincidencia exacta. Si el usuario escribe <em>literalmente</em> esa frase, se activa la intención sin importar las palabras clave.</p>
+            <ul>
+              <li><strong>Frase:</strong> texto exacto (ej: <code>qué hay de comer</code>)</li>
+              <li><strong>Peso:</strong> mayor número = se verifica primero (10 = prioridad alta)</li>
+              <li>Útil para frases compuestas o modismos</li>
+            </ul>
+          </div>
+        </div>
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h4 class="h6 mb-0 fw-bold">Frases específicas (${frases.length})</h4>
           <button id="crearFraseBtn" class="btn btn-admin-primary btn-sm"><i class="fa-solid fa-plus me-1"></i> Nueva Frase</button>
@@ -3257,18 +3471,53 @@ if (isAdminSPA) {
     
     const html = `
       <h3><i class="fa-solid fa-quote-left me-2 text-danger"></i>${id ? 'Editar' : 'Nueva'} Frase</h3>
-      <div class="form-row mb-3"><label class="fw-semibold">Frase *</label>
-        <input id="frase_texto" class="form-control" value="${frase.frase || ''}" placeholder="Ej: qué hay de comer"/></div>
-      <div class="form-row mb-3"><label class="fw-semibold">Intención *</label>
+      
+      <div class="chatbot-help-banner" style="padding:12px 16px;margin-bottom:16px;">
+        <div class="help-icon" style="width:32px;height:32px;font-size:0.9rem;"><i class="fa-solid fa-info"></i></div>
+        <div class="help-content">
+          <p style="font-size:0.82rem;">Las frases específicas son <strong>coincidencias exactas</strong>. Si el usuario escribe esta frase literalmente, se activa la intención sin importar las palabras clave.</p>
+        </div>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold">
+          Frase exacta *
+          <span class="help-tooltip" data-tip="El texto exacto que el usuario debe escribir. Se normalizan tildes y mayúsculas.">?</span>
+        </label>
+        <input id="frase_texto" class="form-control" value="${frase.frase || ''}" placeholder="Ej: qué hay de comer"/>
+        <div class="modal-example">
+          💡 <strong>Ejemplos:</strong> "qué hay de comer", "teléfono de la institución", "necesito el manual"
+        </div>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold">
+          Intención *
+          <span class="help-tooltip" data-tip="La intención que se activará cuando el usuario escriba esta frase.">?</span>
+        </label>
         <select id="frase_intencion" class="form-control">
           <option value="">-- Seleccionar --</option>
           ${intenciones.map(i => `<option value="${i.id}" ${i.id === frase.intencionId ? 'selected' : ''}>${i.nombre}</option>`).join('')}
-        </select></div>
-      <div class="form-row mb-3"><label class="fw-semibold">Peso (mayor = más prioridad)</label>
-        <input id="frase_peso" type="number" class="form-control" value="${frase.peso || 10}" min="1" max="100"/></div>
-      <div class="form-row mb-3"><label class="fw-semibold d-block">
-        <input id="frase_activa" type="checkbox" ${frase.activa !== false ? 'checked' : ''}/> Activa
-      </label></div>
+        </select>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold">
+          Peso
+          <span class="help-tooltip" data-tip="A mayor peso, mayor prioridad sobre otras frases. Usa 10 para frases importantes y 5 para las normales.">?</span>
+        </label>
+        <input id="frase_peso" type="number" class="form-control" value="${frase.peso || 10}" min="1" max="100" style="max-width:120px;"/>
+        <div class="modal-example">
+          💡 <strong>Guía:</strong> 20+ = Crítica | 10-19 = Importante | 1-9 = Normal
+        </div>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold d-block">
+          <input id="frase_activa" type="checkbox" ${frase.activa !== false ? 'checked' : ''}/> Activa
+        </label>
+      </div>
+      
       <div class="modal-actions">
         <button id="frase_cancel" class="btn btn-admin-outline">Cancelar</button>
         <button id="frase_submit" class="btn btn-admin-primary">${id ? 'Guardar' : 'Crear'}</button>
@@ -3315,6 +3564,18 @@ if (isAdminSPA) {
       }
       
       inner.innerHTML = `
+        <div class="chatbot-help-banner">
+          <div class="help-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div class="help-content">
+            <h4>Preguntas sin respuesta</h4>
+            <p>Aquí se guardan las preguntas que el chatbot <strong>no pudo responder</strong>. Revísalas periódicamente y conviértelas en FAQs para mejorar el chatbot.</p>
+            <ul>
+              <li>🎯 <strong>Convertir a FAQ:</strong> crea una respuesta para esa pregunta</li>
+              <li>✅ <strong>Marcar resuelta:</strong> si ya la resolviste manualmente</li>
+              <li>🗑 <strong>Eliminar:</strong> si no es relevante</li>
+            </ul>
+          </div>
+        </div>
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h4 class="h6 mb-0 fw-bold">Preguntas sin respuesta (${pendientes.length})</h4>
         </div>
@@ -3372,11 +3633,32 @@ if (isAdminSPA) {
   const openConvertirFaqModal = async (id, pregunta) => {
     const html = `
       <h3><i class="fa-solid fa-arrow-right me-2 text-danger"></i>Convertir a FAQ</h3>
-      <div class="alert alert-info">
-        <strong>Pregunta:</strong> ${pregunta}
+      
+      <div class="chatbot-help-banner" style="padding:12px 16px;margin-bottom:16px;">
+        <div class="help-icon" style="width:32px;height:32px;font-size:0.9rem;"><i class="fa-solid fa-lightbulb"></i></div>
+        <div class="help-content">
+          <p style="font-size:0.82rem;">Vas a crear una FAQ con esta pregunta. Escribe una respuesta clara y completa para que el chatbot pueda responder en el futuro.</p>
+        </div>
       </div>
-      <div class="form-row mb-3"><label class="fw-semibold">Respuesta *</label>
-        <textarea id="conv_respuesta" class="form-control" rows="5" placeholder="Escribe la respuesta que quieres que dé el chatbot..."></textarea></div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold">Pregunta (del usuario)</label>
+        <div class="form-control" style="background:#f9fafb;color:#6b7280;font-style:italic;">
+          "${pregunta}"
+        </div>
+      </div>
+      
+      <div class="form-row mb-3">
+        <label class="fw-semibold">
+          Respuesta *
+          <span class="help-tooltip" data-tip="Escribe una respuesta completa. Incluye toda la información que el usuario necesita saber.">?</span>
+        </label>
+        <textarea id="conv_respuesta" class="form-control" rows="6" placeholder="Escribe la respuesta que quieres que dé el chatbot..."></textarea>
+        <div class="modal-example">
+          💡 <strong>Tip:</strong> Sé específico. Si aplica, incluye teléfonos, correos, horarios o pasos a seguir.
+        </div>
+      </div>
+      
       <div class="modal-actions">
         <button id="conv_cancel" class="btn btn-admin-outline">Cancelar</button>
         <button id="conv_submit" class="btn btn-admin-primary"><i class="fa-solid fa-check me-1"></i> Convertir a FAQ</button>
