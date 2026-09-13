@@ -26,7 +26,7 @@ public class IntencionService {
     private final NormalizadorTexto normalizador;
     private final LenguajeUtil lenguajeUtil;
 
-    private static final double UMBRAL_COINCIDENCIA = 0.10;
+    private static final double UMBRAL_COINCIDENCIA = 0.03;  // FIX: bajado de 0.10 para mejor detección
 
     public List<Intencion> obtenerTodasActivas() {
         return intencionRepository.findByActivaTrueOrderByPrioridadDesc();
@@ -156,11 +156,13 @@ public class IntencionService {
 
         if (totalPeso == 0) return 0.0;
         
-        double resultado = Math.min(puntuacionTotal / totalPeso, 1.0);
+        // FIX: dividir por una constante baja (3.0) en lugar de totalPeso
+        // Esto hace que 1-2 coincidencias ya den puntuación suficiente
+        double resultado = Math.min(puntuacionTotal / 3.0, 1.0);
         
         for (PalabraClaveIntencion pc : intencion.getPalabrasClave()) {
             int peso = pc.getPeso() != null ? pc.getPeso() : 1;
-            if (peso >= 4 && (texto.contains(pc.getPalabra().toLowerCase()) || 
+            if (peso >= 3 && (texto.contains(pc.getPalabra().toLowerCase()) || 
                               textoExpandido.contains(pc.getPalabra().toLowerCase()))) {
                 resultado = Math.max(resultado, 0.6);
                 break;

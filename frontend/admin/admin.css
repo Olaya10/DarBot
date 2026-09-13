@@ -547,3 +547,54 @@ body {
     display: inline-flex;
   }
 }
+
+/* ============================================================
+   FIX UX: Overlay para cerrar sidebar en móvil
+   ============================================================ */
+.admin-sidebar {
+  transition: transform 0.3s ease;
+  z-index: 1050;
+}
+
+.admin-sidebar.open {
+  transform: translateX(0);
+}
+
+@media (max-width: 991.98px) {
+  .admin-sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+  
+  /* Overlay cuando el sidebar está abierto */
+  .admin-sidebar.open::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 260px; /* ancho del sidebar */
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+  }
+}
+
+/* Botón toggle siempre visible */
+.btn-sidebar-toggle {
+  background: transparent;
+  border: none;
+  color: #1a1a1a;
+  font-size: 1.25rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-sidebar-toggle:hover {
+  background: rgba(200, 16, 46, 0.1);
+  color: #c8102e;
+}

@@ -71,6 +71,50 @@ function formatearFecha(fecha) {
 // ============================================
 // INICIALIZADORES DE UI
 // ============================================
+// ============================================
+// CERRAR MENÚ MÓVIL AL CLICK AFUERA / ENLACE / ESCAPE
+// ============================================
+function inicializarCierreMenuMovil() {
+  const navMenu = document.getElementById('navMenu');
+  const navbar = document.getElementById('navbarPrincipal');
+  if (!navMenu || !navbar) return;
+
+  const cerrarMenu = () => {
+    if (navMenu.classList.contains('show')) {
+      if (window.bootstrap && bootstrap.Collapse) {
+        const instance = bootstrap.Collapse.getInstance(navMenu) 
+          || new bootstrap.Collapse(navMenu, { toggle: false });
+        instance.hide();
+      }
+    }
+  };
+
+  // 1. Click afuera del navbar → cerrar
+  document.addEventListener('click', (e) => {
+    if (navMenu.classList.contains('show')) {
+      // Si el click NO es dentro del menú NI en el toggler
+      if (!navMenu.contains(e.target) && !navbar.querySelector('.navbar-toggler').contains(e.target)) {
+        cerrarMenu();
+      }
+    }
+  });
+
+  // 2. Click en un enlace del menú → cerrar
+  navMenu.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      // Pequeño delay para que el navegador siga el enlace primero
+      setTimeout(cerrarMenu, 100);
+    });
+  });
+
+  // 3. Presionar Escape → cerrar
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      cerrarMenu();
+    }
+  });
+}
+
 function inicializarNavbarScroll() {
   const navbar = document.getElementById('navbarPrincipal');
   const heroSection = document.querySelector('.hero');
@@ -295,29 +339,40 @@ function inicializarChatbot() {
   widget.innerHTML = `
     <button id="darbotChatToggle" class="darbot-chat-toggle" type="button" aria-label="Abrir chat de ayuda">
       <i class="fa-solid fa-comment-dots"></i>
+      <span class="darbot-chat-badge">1</span>
     </button>
     <div id="darbotChatPanel" class="darbot-chat-panel" aria-live="polite">
       <div class="darbot-chat-header">
         <div class="darbot-chat-title-wrap">
-          <span class="darbot-chat-avatar"><i class="fa-solid fa-robot"></i></span>
-          <div>
+          <span class="darbot-chat-avatar">
+            <i class="fa-solid fa-robot"></i>
+          </span>
+          <div class="darbot-chat-title-text">
             <strong>DarBot</strong>
-            <small>Asistente escolar</small>
+            <small>
+              <span class="darbot-status-dot"></span>
+              En línea
+            </small>
           </div>
         </div>
         <button type="button" id="darbotChatClose" class="darbot-chat-close" aria-label="Cerrar chat">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
-      <div id="darbotChatMessages" class="darbot-chat-messages">
-        <div class="darbot-message darbot-message-bot">
-          <p>¡Hola! Soy DarBot. Puedo ayudarte con matrícula, oferta académica, horarios, contacto y más.</p>
-        </div>
-      </div>
-      <div class="darbot-chat-suggestions">
-        <button type="button" class="darbot-chat-suggestion">Oferta académica</button>
-        <button type="button" class="darbot-chat-suggestion">Matrícula</button>
-        <button type="button" class="darbot-chat-suggestion">Contacto</button>
+      <div id="darbotChatMessages" class="darbot-chat-messages"></div>
+      <div class="darbot-chat-suggestions" id="darbotChatSuggestions">
+        <button type="button" class="darbot-chat-suggestion" data-msg="¿Cuál es la oferta académica?">
+          <i class="fa-solid fa-graduation-cap"></i> Oferta académica
+        </button>
+        <button type="button" class="darbot-chat-suggestion" data-msg="¿Cómo puedo matricularme?">
+          <i class="fa-solid fa-user-plus"></i> Matrícula
+        </button>
+        <button type="button" class="darbot-chat-suggestion" data-msg="¿Cuáles son los horarios de atención?">
+          <i class="fa-solid fa-clock"></i> Horarios
+        </button>
+        <button type="button" class="darbot-chat-suggestion" data-msg="¿Cómo puedo contactarlos?">
+          <i class="fa-solid fa-phone"></i> Contacto
+        </button>
       </div>
       <form id="darbotChatForm" class="darbot-chat-form">
         <input id="darbotChatInput" type="text" maxlength="2000" placeholder="Escribe tu pregunta..." aria-label="Escribe tu pregunta" required>
@@ -336,26 +391,87 @@ function inicializarChatbot() {
   const chatForm = document.getElementById('darbotChatForm');
   const chatInput = document.getElementById('darbotChatInput');
   const chatMessages = document.getElementById('darbotChatMessages');
-  const suggestionButtons = document.querySelectorAll('.darbot-chat-suggestion');
+  const chatSuggestions = document.getElementById('darbotChatSuggestions');
+
+  // ═══════════════════════════════════════════════════════
+  // UTILIDADES DE MENSAJES
+  // ═══════════════════════════════════════════════════════
+  const getHoraActual = () => {
+    const now = new Date();
+    return now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+  };
 
   const addMessage = (text, isUser = false) => {
-    const messageEl = document.createElement('div');
-    const wrapper = document.createElement('div');
-    wrapper.className = `darbot-message ${isUser ? 'darbot-message-user' : 'darbot-message-bot'}`;
+    const messageWrapper = document.createElement('div');
+    messageWrapper.className = `darbot-message ${isUser ? 'darbot-message-user' : 'darbot-message-bot'}`;
 
+    const avatar = document.createElement('div');
+    avatar.className = 'darbot-msg-avatar';
+    avatar.innerHTML = isUser 
+      ? '<i class="fa-solid fa-user"></i>' 
+      : '<i class="fa-solid fa-robot"></i>';
+
+    const content = document.createElement('div');
+    content.className = 'darbot-msg-content';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'darbot-msg-bubble';
     const p = document.createElement('p');
     const textoNormalizado = normalizarTextoChat(text);
     p.textContent = textoNormalizado || 'Sin respuesta.';
-    wrapper.appendChild(p);
-    messageEl.appendChild(wrapper);
-    chatMessages.appendChild(messageEl);
+    bubble.appendChild(p);
+
+    const time = document.createElement('span');
+    time.className = 'darbot-msg-time';
+    time.textContent = getHoraActual();
+
+    content.appendChild(bubble);
+    content.appendChild(time);
+
+    messageWrapper.appendChild(avatar);
+    messageWrapper.appendChild(content);
+    chatMessages.appendChild(messageWrapper);
     chatMessages.scrollTop = chatMessages.scrollHeight;
   };
 
+  const showTyping = () => {
+    const typing = document.createElement('div');
+    typing.id = 'darbotTypingIndicator';
+    typing.className = 'darbot-message darbot-message-bot';
+    typing.innerHTML = `
+      <div class="darbot-msg-avatar"><i class="fa-solid fa-robot"></i></div>
+      <div class="darbot-msg-content">
+        <div class="darbot-msg-bubble darbot-typing">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    `;
+    chatMessages.appendChild(typing);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  };
+
+  const hideTyping = () => {
+    const typing = document.getElementById('darbotTypingIndicator');
+    if (typing) typing.remove();
+  };
+
+  // ═══════════════════════════════════════════════════════
+  // MENSAJE DE BIENVENIDA
+  // ═══════════════════════════════════════════════════════
+  setTimeout(() => {
+    addMessage('¡Hola! 👋 Soy DarBot, el asistente virtual de la institución. ¿En qué puedo ayudarte hoy?', false);
+  }, 300);
+
+  // ═══════════════════════════════════════════════════════
+  // ABRIR / CERRAR
+  // ═══════════════════════════════════════════════════════
   const openChat = () => {
     chatPanel.classList.add('open');
     chatToggle.classList.add('hidden');
     setTimeout(() => chatInput.focus(), 150);
+    // Quitar badge
+    const badge = chatToggle.querySelector('.darbot-chat-badge');
+    if (badge) badge.style.display = 'none';
   };
 
   const closeChat = () => {
@@ -366,22 +482,32 @@ function inicializarChatbot() {
   chatToggle.addEventListener('click', openChat);
   chatClose.addEventListener('click', closeChat);
 
-  suggestionButtons.forEach(button => {
+  // ═══════════════════════════════════════════════════════
+  // SUGERENCIAS RÁPIDAS
+  // ═══════════════════════════════════════════════════════
+  chatSuggestions.querySelectorAll('.darbot-chat-suggestion').forEach(button => {
     button.addEventListener('click', () => {
-      chatInput.value = button.textContent.trim();
-      openChat();
+      const msg = button.dataset.msg || button.textContent.trim();
+      chatInput.value = msg;
       chatInput.focus();
+      // Auto-enviar
+      chatForm.dispatchEvent(new Event('submit'));
     });
   });
 
+  // ═══════════════════════════════════════════════════════
+  // ENVÍO DE MENSAJES
+  // ═══════════════════════════════════════════════════════
   chatForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const mensaje = chatInput.value.trim();
-
     if (!mensaje) return;
 
     addMessage(mensaje, true);
     chatInput.value = '';
+    chatSuggestions.style.display = 'none';
+
+    showTyping();
 
     try {
       const response = await fetch(`${API_BASE_HOST}/api/chatbot/pregunta`, {
@@ -396,15 +522,17 @@ function inicializarChatbot() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('No se pudo obtener respuesta del bot');
-      }
+      if (!response.ok) throw new Error('Error del servidor');
 
       const data = await response.json();
       const respuesta = data?.respuesta || 'No tengo una respuesta clara para eso en este momento.';
-      addMessage(respuesta, false);
+      
+      hideTyping();
+      // Pequeño delay para simular "escribiendo"
+      setTimeout(() => addMessage(respuesta, false), 200);
     } catch (error) {
-      addMessage('No pude responder en este momento. Intenta nuevamente más tarde.', false);
+      hideTyping();
+      addMessage('Lo siento, no pude responder en este momento. Intenta nuevamente más tarde.', false);
       console.error('Error chatbot:', error);
     }
   });
@@ -1096,6 +1224,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Inicializadores de UI (síncronos)
   inicializarNavbarScroll();
+  inicializarCierreMenuMovil();
   inicializarBotonVolverArriba();
   inicializarContadores();
   inicializarContactoForm();

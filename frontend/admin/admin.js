@@ -170,8 +170,26 @@ if (isAdminSPA) {
   }
 
   if (sidebarToggleBtn && adminSidebar) {
-    sidebarToggleBtn.addEventListener('click', () => {
+    sidebarToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       adminSidebar.classList.toggle('open');
+    });
+    
+    // Cerrar sidebar al hacer click fuera
+    document.addEventListener('click', (e) => {
+      if (adminSidebar.classList.contains('open')) {
+        // Si el click NO es dentro del sidebar NI en el botón toggle
+        if (!adminSidebar.contains(e.target) && !sidebarToggleBtn.contains(e.target)) {
+          adminSidebar.classList.remove('open');
+        }
+      }
+    });
+    
+    // Cerrar sidebar al presionar Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && adminSidebar.classList.contains('open')) {
+        adminSidebar.classList.remove('open');
+      }
     });
   }
 
