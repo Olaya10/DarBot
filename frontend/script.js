@@ -732,6 +732,66 @@ function inicializarPreinscripcion() {
 }
 
 // ============================================
+// SEDES INSTITUCIONALES
+// ============================================
+async function cargarSedes() {
+  const target = document.getElementById('sedesList');
+  if (!target) return;
+
+  try {
+    const res = await fetch(`${API_BASE_HOST}/api/institucional/sedes`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const sedes = await res.json();
+    
+    if (!Array.isArray(sedes) || sedes.length === 0) {
+      target.innerHTML = '<p class="text-center text-muted">No hay sedes registradas.</p>';
+      return;
+    }
+
+    target.innerHTML = sedes.map((s, i) => `
+      <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="${i * 100}">
+        <div class="card tarjeta-nosotros h-100 border-0 shadow-sm rounded-4 p-4">
+          <div class="d-flex align-items-center mb-3">
+            <div class="icono-contenedor me-3" style="width:50px;height:50px;font-size:1.2rem;">
+              <i class="fa-solid fa-building"></i>
+            </div>
+            <h3 class="h5 fw-bold text-dark mb-0">${escapeHtml(s.nombre)}</h3>
+          </div>
+          ${s.descripcion ? `<p class="text-secondary small mb-3">${escapeHtml(s.descripcion)}</p>` : ''}
+          <ul class="list-unstyled mb-0 small">
+            <li class="mb-2">
+              <i class="fa-solid fa-location-dot text-danger me-2"></i>
+              ${escapeHtml(s.direccion || '')}
+            </li>
+            ${s.telefono ? `
+              <li class="mb-2">
+                <i class="fa-solid fa-phone text-danger me-2"></i>
+                ${escapeHtml(s.telefono)}
+              </li>
+            ` : ''}
+            ${s.jornada ? `
+              <li class="mb-2">
+                <i class="fa-solid fa-clock text-danger me-2"></i>
+                Jornada ${escapeHtml(s.jornada)}
+              </li>
+            ` : ''}
+            ${s.horarioAtencion ? `
+              <li class="mb-0">
+                <i class="fa-regular fa-calendar text-danger me-2"></i>
+                ${escapeHtml(s.horarioAtencion)}
+              </li>
+            ` : ''}
+          </ul>
+        </div>
+      </div>
+    `).join('');
+  } catch (error) {
+    console.warn('No se pudieron cargar las sedes:', error);
+    target.innerHTML = '<p class="text-center text-muted">Error al cargar sedes.</p>';
+  }
+}
+
+// ============================================
 // INICIALIZACIÓN
 // ============================================
 
@@ -982,6 +1042,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarNoticiasPagina();
   await cargarEstadisticas();
   await cargarInfoInstitucional();
+  await cargarSedes();
   await cargarFaqs();
   await cargarEquipo();
   await cargarValores();
