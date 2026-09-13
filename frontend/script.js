@@ -448,15 +448,27 @@ async function cargarConfiguracion() {
       mapElement.src = config.mapa_embed;
     }
 
-    const socialLinks = {
-      facebook: document.querySelector('a[href*="facebook"]'),
-      instagram: document.querySelector('a[href*="instagram"]'),
-      youtube: document.querySelector('a[href*="youtube"]'),
+    // ═══════════════════════════════════════════════════
+    // REDES SOCIALES (con soporte para ocultar si están vacías)
+    // ═══════════════════════════════════════════════════
+    const redesConfig = {
+      facebook: config.facebook,
+      instagram: config.instagram,
+      youtube: config.youtube,
+      blogger: config.blogger || 'https://ieeldariotorregroza.blogspot.com/',  // Fallback
     };
 
-    Object.entries(socialLinks).forEach(([key, el]) => {
-      if (el && config[key]) {
-        el.href = config[key];
+    document.querySelectorAll('[data-social]').forEach(el => {
+      const red = el.dataset.social;
+      const url = (redesConfig[red] || '').trim();
+      
+      if (url) {
+        // Hay URL → mostrar y actualizar
+        el.href = url;
+        el.style.display = '';
+      } else {
+        // Sin URL → ocultar el ícono
+        el.style.display = 'none';
       }
     });
 
