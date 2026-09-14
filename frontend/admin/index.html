@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Administrativo - DarBot</title>
 
-  <link rel="icon" href="../imagenes/Logo IEDTP.jpeg" type="image/svg+xml">
+  <link rel="icon" href="../imagenes/Logo IEDTP.jpeg" type="image/svg+xml" class="institucion-favicon">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -17,102 +17,181 @@
 
 <body>
   <div id="adminApp" class="admin-app">
-    <!-- Sidebar -->
+    
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- SIDEBAR -->
+    <!-- ═══════════════════════════════════════════════════ -->
     <aside class="admin-sidebar" id="adminSidebar">
+      <!-- Brand -->
       <div class="sidebar-brand">
-        <img src="../imagenes/Logo IEDTP.jpeg" alt="Logo IEDTP" class="sidebar-logo">
+        <img src="../imagenes/Logo IEDTP.jpeg" alt="Logo IEDTP" class="sidebar-logo institucion-logo">
         <div class="sidebar-brand-text">
-          <strong>Dario Torregroza Pérez</strong>
+          <strong class="institucion-nombre">Dario Torregroza Pérez</strong>
           <small>Gestión Escolar</small>
         </div>
       </div>
 
-      <nav class="sidebar-nav">
-        <div class="nav-section-label">Menú Principal</div>
-        <a href="#" data-route="dashboard" class="nav-link active">
-          <i class="fa-solid fa-gauge-high icon"></i> <span>Dashboard</span>
-        </a>
-        <a href="#" data-route="usuarios" class="nav-link">
-          <i class="fa-solid fa-users-gear icon"></i> <span>Usuarios</span>
-        </a>
-        <a href="#" data-route="contenidos" class="nav-link">
-          <i class="fa-solid fa-newspaper icon"></i> <span>Contenidos</span>
-        </a>
-        <a href="#" data-route="institucional" class="nav-link">
-          <i class="fa-solid fa-building-columns icon"></i> <span>Institucional</span>
-        </a>
-          <a href="#" data-route="galeria" class="nav-link">
-            <i class="fa-solid fa-image icon"></i> <span>Galería</span>
+      <!-- Búsqueda -->
+      <div class="sidebar-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="sidebarSearch" placeholder="Buscar sección..."/>
+      </div>
+
+      <!-- Navegación -->
+      <nav class="sidebar-nav" id="sidebarNav">
+        
+        <!-- PRINCIPAL -->
+        <div class="nav-section">
+          <div class="nav-section-label">
+            <i class="fa-solid fa-compass"></i> Principal
+          </div>
+          <a href="#" data-route="dashboard" class="nav-link active">
+            <i class="fa-solid fa-gauge-high icon"></i> 
+            <span>Dashboard</span>
           </a>
+          <a href="#" data-route="estadisticas-chatbot" class="nav-link">
+            <i class="fa-solid fa-chart-line icon"></i> 
+            <span>Estadísticas</span>
+            <span class="nav-badge" id="badgePendientesNav" style="display:none;">0</span>
+          </a>
+        </div>
+
+        <!-- CONTENIDO -->
+        <div class="nav-section">
+          <div class="nav-section-label">
+            <i class="fa-solid fa-newspaper"></i> Contenido
+          </div>
+          <a href="#" data-route="contenidos" class="nav-link">
+            <i class="fa-solid fa-pen-to-square icon"></i> 
+            <span>Noticias y Eventos</span>
+          </a>
+          <a href="#" data-route="galeria" class="nav-link">
+            <i class="fa-solid fa-image icon"></i> 
+            <span>Galería</span>
+          </a>
+          <a href="#" data-route="institucional" class="nav-link">
+            <i class="fa-solid fa-building-columns icon"></i> 
+            <span>Institucional</span>
+          </a>
+        </div>
+
+        <!-- INSTITUCIÓN -->
+        <div class="nav-section">
+          <div class="nav-section-label">
+            <i class="fa-solid fa-school"></i> Institución
+          </div>
           <a href="#" data-route="estadisticas" class="nav-link">
-            <i class="fa-solid fa-chart-line icon"></i> <span>Estadísticas</span>
+            <i class="fa-solid fa-chart-simple icon"></i> 
+            <span>Estadísticas Home</span>
           </a>
           <a href="#" data-route="equipo" class="nav-link">
-            <i class="fa-solid fa-user-tie icon"></i> <span>Equipo Directivo</span>
+            <i class="fa-solid fa-user-tie icon"></i> 
+            <span>Equipo Directivo</span>
           </a>
           <a href="#" data-route="valores" class="nav-link">
-            <i class="fa-solid fa-hand-holding-heart icon"></i> <span>Valores</span>
+            <i class="fa-solid fa-hand-holding-heart icon"></i> 
+            <span>Valores</span>
           </a>
           <a href="#" data-route="servicios" class="nav-link">
-            <i class="fa-solid fa-bell-concierge icon"></i> <span>Servicios</span>
+            <i class="fa-solid fa-bell-concierge icon"></i> 
+            <span>Servicios</span>
           </a>
           <a href="#" data-route="configuracion" class="nav-link">
-            <i class="fa-solid fa-gear icon"></i> <span>Configuración</span>
+            <i class="fa-solid fa-gear icon"></i> 
+            <span>Configuración</span>
           </a>
+        </div>
 
-        <div class="nav-section-label mt-3">IA & Sistema</div>
-        <a href="#" data-route="chatbot" class="nav-link">
-          <i class="fa-solid fa-robot icon"></i> <span>Chatbot</span>
-        </a>
-        <a href="#" data-route="estadisticas-chatbot" class="nav-link">
-          <i class="fa-solid fa-chart-line icon"></i> <span>Estadísticas Chatbot</span>
-        </a>
-        <a href="#" data-route="cache" class="nav-link">
-          <i class="fa-solid fa-memory icon"></i> <span>Gestión Caché</span>
-        </a>
+        <!-- CHATBOT -->
+        <div class="nav-section">
+          <div class="nav-section-label">
+            <i class="fa-solid fa-robot"></i> Chatbot
+          </div>
+          <a href="#" data-route="chatbot" class="nav-link">
+            <i class="fa-solid fa-brain icon"></i> 
+            <span>Entrenamiento</span>
+          </a>
+          <a href="#" data-route="cache" class="nav-link">
+            <i class="fa-solid fa-memory icon"></i> 
+            <span>Gestión Caché</span>
+          </a>
+        </div>
 
-        <div class="sidebar-footer">
-          <a href="#" id="logoutBtn" class="nav-link logout-link">
-            <i class="fa-solid fa-right-from-bracket icon"></i> <span>Cerrar Sesión</span>
+        <!-- SISTEMA -->
+        <div class="nav-section">
+          <div class="nav-section-label">
+            <i class="fa-solid fa-cog"></i> Sistema
+          </div>
+          <a href="#" data-route="perfil" class="nav-link">
+            <i class="fa-solid fa-user-circle icon"></i> 
+            <span>Mi Perfil</span>
+          </a>
+          <a href="#" data-route="usuarios" class="nav-link">
+            <i class="fa-solid fa-users-gear icon"></i> 
+            <span>Usuarios</span>
           </a>
         </div>
       </nav>
+
+      <!-- Footer -->
+      <div class="sidebar-footer">
+        <a href="#" id="logoutBtn" class="nav-link logout-link">
+          <i class="fa-solid fa-right-from-bracket icon"></i> 
+          <span>Cerrar Sesión</span>
+        </a>
+      </div>
     </aside>
 
-    <!-- Content Area -->
-    <div class="admin-content-wrapper">
-      <!-- Top Header -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- CONTENT WRAPPER -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <div class="admin-content-wrapper" id="adminContentWrapper">
+      
+      <!-- TOPBAR -->
       <header class="admin-topbar">
         <div class="d-flex align-items-center gap-3">
           <button id="sidebarToggleBtn" class="btn-sidebar-toggle" aria-label="Abrir o cerrar menú lateral">
             <i class="fa-solid fa-bars"></i>
           </button>
-          <div>
+          <div class="topbar-title">
+            <div class="topbar-breadcrumb">
+              <span class="text-muted small">Admin</span>
+              <i class="fa-solid fa-chevron-right mx-1 text-muted" style="font-size:0.65rem;"></i>
+              <span id="breadcrumbCurrent" class="text-muted small">Dashboard</span>
+            </div>
             <h1 id="pageTitle" class="admin-page-title mb-0">Dashboard</h1>
-            <span class="admin-breadcrumb">Plataforma Administrativa &bull; I.E. Darío Torregroza Pérez</span>
           </div>
         </div>
 
-        <div class="admin-user-profile">
-          <div class="user-avatar">
-            <i class="fa-solid fa-user-shield"></i>
-          </div>
-          <div class="user-info d-none d-sm-block">
-            <span class="user-name" id="currentUsername">Admin</span>
-            <span class="badge badge-admin-role">Administrador</span>
-          </div>
-          <a href="../index.html" class="btn-public-site-link ms-2" title="Ir al sitio público" target="_blank">
+        <div class="admin-topbar-right">
+          <button class="topbar-icon-btn" id="notifBtn" title="Notificaciones">
+            <i class="fa-solid fa-bell"></i>
+            <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+          </button>
+
+          <a href="../index.html" class="topbar-icon-btn" title="Ir al sitio público" target="_blank">
             <i class="fa-solid fa-arrow-up-right-from-square"></i>
           </a>
+
+          <div class="topbar-profile" id="topbarProfile">
+            <div class="user-avatar">
+              <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div class="user-info d-none d-sm-block">
+              <span class="user-name" id="currentUsername">Admin</span>
+              <span class="badge badge-admin-role">Administrador</span>
+            </div>
+            <i class="fa-solid fa-chevron-down ms-1 text-muted" style="font-size:0.7rem;"></i>
+          </div>
         </div>
       </header>
 
-      <!-- Main View Container -->
+      <!-- MAIN VIEW -->
       <main class="admin-main-view">
         <div id="viewContainer">
           <div class="text-center py-5">
             <div class="spinner-border text-danger" role="status">
-              <span class="visually-hidden">Cargando módulo...</span>
+              <span class="visually-hidden">Cargando...</span>
             </div>
           </div>
         </div>

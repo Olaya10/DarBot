@@ -194,7 +194,337 @@ if (isAdminSPA) {
   }
 
   // --- Router handler ---
-  function navigate(route) {
+  // ═══════════════════════════════════════════════════════
+// SIDEBAR MEJORADA - Colapsar, buscar, overlay
+// ═══════════════════════════════════════════════════════
+function inicializarSidebarMejorada() {
+  const sidebar = document.getElementById('adminSidebar');
+  const searchInput = document.getElementById('sidebarSearch');
+  const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+  
+  if (!sidebar) return;
+  
+  // 1. Búsqueda
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      const navLinks = sidebar.querySelectorAll('.nav-link[data-route]');
+      const sections = sidebar.querySelectorAll('.nav-section');
+      
+      if (!query) {
+        navLinks.forEach(link => link.classList.remove('hidden'));
+        sections.forEach(sec => sec.classList.remove('hidden'));
+        return;
+      }
+      
+      navLinks.forEach(link => {
+        const text = link.textContent.toLowerCase();
+        const route = link.getAttribute('data-route').toLowerCase();
+        if (text.includes(query) || route.includes(query)) {
+          link.classList.remove('hidden');
+        } else {
+          link.classList.add('hidden');
+        }
+      });
+      
+      sections.forEach(sec => {
+        const visibleLinks = sec.querySelectorAll('.nav-link:not(.hidden)');
+        if (visibleLinks.length === 0) {
+          sec.classList.add('hidden');
+        } else {
+          sec.classList.remove('hidden');
+        }
+      });
+    });
+  }
+  
+  // 4. Overlay en móvil
+  let overlay = document.getElementById('sidebarOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.className = 'sidebar-overlay';
+    overlay.id = 'sidebarOverlay';
+    document.body.appendChild(overlay);
+  }
+  
+  const cerrarSidebar = () => {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+  };
+  
+  if (sidebarToggleBtn) {
+    const nuevoToggle = sidebarToggleBtn.cloneNode(true);
+    sidebarToggleBtn.parentNode.replaceChild(nuevoToggle, sidebarToggleBtn);
+    
+    nuevoToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (sidebar.classList.contains('open')) {
+        cerrarSidebar();
+      } else {
+        sidebar.classList.add('open');
+        overlay.classList.add('active');
+      }
+    });
+  }
+  
+  overlay.addEventListener('click', cerrarSidebar);
+  
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+      cerrarSidebar();
+    }
+  });
+  
+  sidebar.querySelectorAll('.nav-link[data-route]').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth < 992) {
+        setTimeout(cerrarSidebar, 150);
+      }
+    });
+  });
+  
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 992) {
+      cerrarSidebar();
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// TOPBAR - Notificaciones y perfil
+// ═══════════════════════════════════════════════════════
+function inicializarTopbarListeners() {
+  const notifBtn = document.getElementById('notifBtn');
+  const topbarProfile = document.getElementById('topbarProfile');
+  
+  // ─────────────────────────────────────────────────────
+  // 1. Notificaciones - Mostrar panel de pendientes
+  // ─────────────────────────────────────────────────────
+  if (notifBtn) {
+    notifBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      
+      // Si ya hay un dropdown, cerrarlo
+      const existingDropdown = document.getElementById('notifDropdown');
+      if (existingDropdown) {
+        existingDropdown.remove();
+        return;
+      }
+      
+      // Crear dropdown
+      const dropdown = document.createElement('div');
+      dropdown.id = 'notifDropdown';
+      dropdown.className = 'topbar-dropdown notif-dropdown';
+      dropdown.innerHTML = `
+        <div class="dropdown-header">
+          <strong>Notificaciones</strong>
+          <button class="dropdown-close" onclick="document.getElementById('notifDropdown').remove()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="dropdown-body" id="notifDropdownBody">
+          <div class="text-center py-3 text-muted">
+            <div class="spinner-border spinner-border-sm text-danger"></div>
+          </div>
+        </div>
+      `;
+      
+      notifBtn.parentElement.appendChild(dropdown);
+      
+      // Cargar pendientes
+      try {
+        const pendientes = await apiFetch('/admin/chatbot/preguntas?resuelta=false');
+        
+        const body = document.getElementById('notifDropdownBody');
+        if (body) {
+          if (pendientes.length === 0) {
+            body.innerHTML = `
+              <div class="text-center py-4">
+                <i class="fa-solid fa-check-circle fa-2x text-success mb-2"></i>
+                <p class="text-muted small mb-0">¡Sin notificaciones pendientes!</p>
+              </div>
+            `;
+          } else {
+            body.innerHTML = `
+              <div class="notif-list">
+                ${pendientes.slice(0, 5).map(p => `
+                  <div class="notif-item">
+                    <div class="notif-item-icon">
+                      <i class="fa-solid fa-circle-question"></i>
+                    </div>
+                    <div class="notif-item-content">
+                      <div class="notif-item-text">"${p.pregunta}"</div>
+                      <div class="notif-item-date">${p.fecha ? new Date(p.fecha).toLocaleDateString('es-CO') : ''}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+              <button class="btn btn-admin-primary btn-sm w-100 mt-2" onclick="document.querySelector('[data-route=estadisticas-chatbot]').click(); document.getElementById('notifDropdown')?.remove();">
+                Ver todas las ${pendientes.length} preguntas
+              </button>
+            `;
+          }
+        }
+      } catch (err) {
+        const body = document.getElementById('notifDropdownBody');
+        if (body) {
+          body.innerHTML = `<div class="text-center py-3 text-danger small">Error al cargar</div>`;
+        }
+      }
+      
+      // Cerrar al click afuera
+      setTimeout(() => {
+        const closeHandler = (ev) => {
+          if (!dropdown.contains(ev.target) && !notifBtn.contains(ev.target)) {
+            dropdown.remove();
+            document.removeEventListener('click', closeHandler);
+          }
+        };
+        document.addEventListener('click', closeHandler);
+      }, 100);
+    });
+  }
+  
+  // ─────────────────────────────────────────────────────
+  // 2. Perfil - Mostrar menú de usuario
+  // ─────────────────────────────────────────────────────
+  if (topbarProfile) {
+    topbarProfile.addEventListener('click', (e) => {
+      e.stopPropagation();
+      
+      // Si ya hay un dropdown, cerrarlo
+      const existingDropdown = document.getElementById('profileDropdown');
+      if (existingDropdown) {
+        existingDropdown.remove();
+        return;
+      }
+      
+      // Obtener nombre del usuario
+      const userName = document.getElementById('currentUsername')?.textContent || 'Admin';
+      
+      // Crear dropdown
+      const dropdown = document.createElement('div');
+      dropdown.id = 'profileDropdown';
+      dropdown.className = 'topbar-dropdown profile-dropdown';
+      dropdown.innerHTML = `
+        <div class="profile-dropdown-header">
+          <div class="user-avatar-lg">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <div>
+            <strong class="d-block">${userName}</strong>
+            <small class="text-muted">Administrador</small>
+          </div>
+        </div>
+        <div class="profile-dropdown-body">
+          <a href="#" class="dropdown-item" id="dropdownProfile">
+            <i class="fa-solid fa-user"></i> Mi Perfil
+          </a>
+          <a href="#" class="dropdown-item" id="dropdownConfig">
+            <i class="fa-solid fa-gear"></i> Configuración
+          </a>
+          <a href="../index.html" target="_blank" class="dropdown-item">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver Sitio Público
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item dropdown-item-danger" id="dropdownLogout">
+            <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+          </a>
+        </div>
+      `;
+      
+      topbarProfile.parentElement.appendChild(dropdown);
+      
+      // Listeners
+      document.getElementById('dropdownLogout')?.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        setToken(null);
+        location.href = 'login.html';
+      });
+      
+      document.getElementById('dropdownProfile')?.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        document.querySelector('[data-route=perfil]')?.click();
+        dropdown.remove();
+      });
+      
+      document.getElementById('dropdownConfig')?.addEventListener('click', (ev) => {
+        ev.preventDefault();
+        document.querySelector('[data-route=configuracion]')?.click();
+        dropdown.remove();
+      });
+      
+      // Cerrar al click afuera
+      setTimeout(() => {
+        const closeHandler = (ev) => {
+          if (!dropdown.contains(ev.target) && !topbarProfile.contains(ev.target)) {
+            dropdown.remove();
+            document.removeEventListener('click', closeHandler);
+          }
+        };
+        document.addEventListener('click', closeHandler);
+      }, 100);
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// BREADCRUMB
+// ═══════════════════════════════════════════════════════
+const ROUTE_TITLES = {
+  'dashboard': 'Dashboard',
+  'usuarios': 'Gestión de Usuarios',
+  'contenidos': 'Contenidos',
+  'institucional': 'Información Institucional',
+  'galeria': 'Galería',
+  'estadisticas': 'Estadísticas Home',
+  'equipo': 'Equipo Directivo',
+  'valores': 'Valores Institucionales',
+  'servicios': 'Servicios',
+  'configuracion': 'Configuración General',
+  'chatbot': 'Entrenamiento del Chatbot',
+  'estadisticas-chatbot': 'Estadísticas del Chatbot',
+  'cache': 'Gestión de Caché'
+};
+
+function actualizarBreadcrumb(route) {
+  const el = document.getElementById('breadcrumbCurrent');
+  if (el) el.textContent = ROUTE_TITLES[route] || route;
+}
+
+// ═══════════════════════════════════════════════════════
+// NOTIFICACIONES
+// ═══════════════════════════════════════════════════════
+async function cargarNotificaciones() {
+  try {
+    const pendientes = await apiFetch('/admin/chatbot/preguntas?resuelta=false');
+    const total = pendientes.length;
+    
+    const badgeNav = document.getElementById('badgePendientesNav');
+    if (badgeNav) {
+      if (total > 0) {
+        badgeNav.textContent = total;
+        badgeNav.style.display = 'inline-flex';
+      } else {
+        badgeNav.style.display = 'none';
+      }
+    }
+    
+    const badgeTop = document.getElementById('notifBadge');
+    if (badgeTop) {
+      if (total > 0) {
+        badgeTop.textContent = total;
+        badgeTop.style.display = 'flex';
+      } else {
+        badgeTop.style.display = 'none';
+      }
+    }
+  } catch (e) {
+    console.warn('No se pudieron cargar notificaciones:', e);
+  }
+}
+
+function navigate(route) {
     routes.forEach(r => {
       if (r.getAttribute('data-route') === route) {
         r.classList.add('active');
@@ -207,6 +537,7 @@ if (isAdminSPA) {
 
     switch (route) {
       case 'dashboard': renderDashboard(); break;
+      case 'perfil': renderPerfil(); break;
       case 'usuarios': renderUsuarios(); break;
       case 'contenidos': renderContenidos(); break;
       case 'institucional': renderInstitucional(); break;
@@ -234,137 +565,1015 @@ if (isAdminSPA) {
   // ==================== VIEWS ====================
 
   async function renderDashboard() {
-    pageTitle.textContent = 'Dashboard';
-    viewContainer.innerHTML = `
-      <div class="row g-4 mb-4">
-        <div class="col-sm-6 col-xl-3">
-          <div class="kpi-card">
-            <div class="kpi-icon primary"><i class="fa-solid fa-users"></i></div>
-            <div>
-              <div class="kpi-number" id="dashUsersCount">-</div>
-              <div class="kpi-label">Usuarios Registrados</div>
+  pageTitle.textContent = 'Dashboard';
+  viewContainer.innerHTML = `
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- KPIs PRINCIPALES -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-3">
+        <div class="kpi-card">
+          <div class="kpi-icon primary"><i class="fa-solid fa-users"></i></div>
+          <div>
+            <div class="kpi-number" id="dashUsersCount">-</div>
+            <div class="kpi-label">Usuarios</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="kpi-card">
+          <div class="kpi-icon success"><i class="fa-solid fa-newspaper"></i></div>
+          <div>
+            <div class="kpi-number" id="dashNewsCount">-</div>
+            <div class="kpi-label">Noticias</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="kpi-card">
+          <div class="kpi-icon warning"><i class="fa-solid fa-calendar-check"></i></div>
+          <div>
+            <div class="kpi-number" id="dashEventsCount">-</div>
+            <div class="kpi-label">Eventos</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="kpi-card">
+          <div class="kpi-icon info"><i class="fa-solid fa-image"></i></div>
+          <div>
+            <div class="kpi-number" id="dashGalleryCount">-</div>
+            <div class="kpi-label">Imágenes</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- MÉTRICAS DEL CHATBOT -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <div class="row g-3 mb-4">
+      <div class="col-12">
+        <div class="card-admin">
+          <div class="card-admin-header d-flex justify-content-between align-items-center">
+            <h2 class="card-admin-title mb-0">
+              <i class="fa-solid fa-robot me-2 text-danger"></i>Rendimiento del Chatbot
+            </h2>
+            <button class="btn btn-admin-outline btn-sm" onclick="document.querySelector('[data-route=estadisticas-chatbot]').click()">
+              Ver detalle <i class="fa-solid fa-arrow-right ms-1"></i>
+            </button>
+          </div>
+          <div class="card-admin-body">
+            <div class="row g-3">
+              <div class="col-6 col-md-3">
+                <div class="chatbot-metric">
+                  <div class="metric-icon" style="background: rgba(200,16,46,0.1); color: #c8102e;">
+                    <i class="fa-solid fa-comments"></i>
+                  </div>
+                  <div class="metric-value" id="dashChatConversaciones">-</div>
+                  <div class="metric-label">Conversaciones</div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="chatbot-metric">
+                  <div class="metric-icon" style="background: rgba(37,99,235,0.1); color: #2563eb;">
+                    <i class="fa-solid fa-envelope"></i>
+                  </div>
+                  <div class="metric-value" id="dashChatMensajes">-</div>
+                  <div class="metric-label">Mensajes</div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="chatbot-metric">
+                  <div class="metric-icon" style="background: rgba(34,197,94,0.1); color: #22c55e;">
+                    <i class="fa-solid fa-circle-check"></i>
+                  </div>
+                  <div class="metric-value" id="dashChatPrecision">-</div>
+                  <div class="metric-label">Precisión</div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="chatbot-metric">
+                  <div class="metric-icon" style="background: rgba(245,158,11,0.1); color: #f59e0b;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                  </div>
+                  <div class="metric-value" id="dashChatPendientes">-</div>
+                  <div class="metric-label">Sin Respuesta</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="col-sm-6 col-xl-3">
-          <div class="kpi-card">
-            <div class="kpi-icon success"><i class="fa-solid fa-newspaper"></i></div>
-            <div>
-              <div class="kpi-number" id="dashNewsCount">-</div>
-              <div class="kpi-label">Noticias Publicadas</div>
-            </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- ACCESOS RÁPIDOS + ESTADO DEL SISTEMA -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-7">
+        <div class="card-admin h-100">
+          <div class="card-admin-header">
+            <h2 class="card-admin-title">
+              <i class="fa-solid fa-rocket me-2 text-danger"></i>Accesos Rápidos
+            </h2>
           </div>
-        </div>
-        <div class="col-sm-6 col-xl-3">
-          <div class="kpi-card">
-            <div class="kpi-icon warning"><i class="fa-solid fa-calendar-check"></i></div>
-            <div>
-              <div class="kpi-number" id="dashEventsCount">-</div>
-              <div class="kpi-label">Eventos Registrados</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-sm-6 col-xl-3">
-          <div class="kpi-card">
-            <div class="kpi-icon info"><i class="fa-solid fa-robot"></i></div>
-            <div>
-              <div class="kpi-number" id="dashFaqsCount">-</div>
-              <div class="kpi-label">FAQs del Chatbot</div>
+          <div class="card-admin-body">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <button class="btn btn-admin-outline w-100 p-3 text-start d-flex align-items-center gap-3" onclick="document.querySelector('[data-route=usuarios]').click()">
+                  <i class="fa-solid fa-user-plus text-danger fs-4"></i>
+                  <div>
+                    <strong class="d-block">Gestión de Usuarios</strong>
+                    <small class="text-muted">Crear y administrar cuentas</small>
+                  </div>
+                </button>
+              </div>
+              <div class="col-sm-6">
+                <button class="btn btn-admin-outline w-100 p-3 text-start d-flex align-items-center gap-3" onclick="document.querySelector('[data-route=contenidos]').click()">
+                  <i class="fa-solid fa-pen-to-square text-danger fs-4"></i>
+                  <div>
+                    <strong class="d-block">Publicar Contenidos</strong>
+                    <small class="text-muted">Noticias, eventos, documentos</small>
+                  </div>
+                </button>
+              </div>
+              <div class="col-sm-6">
+                <button class="btn btn-admin-outline w-100 p-3 text-start d-flex align-items-center gap-3" onclick="document.querySelector('[data-route=chatbot]').click()">
+                  <i class="fa-solid fa-comments text-danger fs-4"></i>
+                  <div>
+                    <strong class="d-block">Entrenar Chatbot</strong>
+                    <small class="text-muted">Intenciones y FAQs</small>
+                  </div>
+                </button>
+              </div>
+              <div class="col-sm-6">
+                <button class="btn btn-admin-outline w-100 p-3 text-start d-flex align-items-center gap-3" onclick="document.querySelector('[data-route=galeria]').click()">
+                  <i class="fa-solid fa-image text-danger fs-4"></i>
+                  <div>
+                    <strong class="d-block">Galería Institucional</strong>
+                    <small class="text-muted">Subir y organizar imágenes</small>
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="row g-4">
-        <div class="col-lg-8">
-          <div class="card-admin">
-            <div class="card-admin-header">
-              <h2 class="card-admin-title"><i class="fa-solid fa-rocket me-2 text-danger"></i>Accesos Rápidos</h2>
+      <div class="col-lg-5">
+        <div class="card-admin h-100">
+          <div class="card-admin-header d-flex justify-content-between align-items-center">
+            <h2 class="card-admin-title mb-0">
+              <i class="fa-solid fa-shield-heart me-2 text-success"></i>Estado del Sistema
+            </h2>
+            <button id="refreshStatusBtn" class="btn btn-admin-outline btn-sm" title="Actualizar">
+              <i class="fa-solid fa-rotate"></i>
+            </button>
+          </div>
+          <div class="card-admin-body">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+              <div>
+                <span class="text-muted small d-block">Servidor API</span>
+                <span class="text-muted" style="font-size:0.7rem;" id="statusApiTime">Verificando...</span>
+              </div>
+              <span class="status-pill" id="statusApi">
+                <i class="fa-solid fa-spinner fa-spin me-1"></i>Verificando
+              </span>
             </div>
-            <div class="card-admin-body">
-              <div class="row g-3">
-                <div class="col-sm-6">
-                  <button class="btn btn-admin-outline w-100 p-3 text-start d-flex align-items-center gap-3" onclick="document.querySelector('[data-route=usuarios]').click()">
-                    <i class="fa-solid fa-user-plus text-danger fs-4"></i>
-                    <div>
-                      <strong class="d-block">Gestión de Usuarios</strong>
-                      <small class="text-muted">Crear y administrar cuentas y roles</small>
-                    </div>
-                  </button>
-                </div>
-                <div class="col-sm-6">
-                  <button class="btn btn-admin-outline w-100 p-3 text-start d-flex align-items-center gap-3" onclick="document.querySelector('[data-route=contenidos]').click()">
-                    <i class="fa-solid fa-pen-to-square text-danger fs-4"></i>
-                    <div>
-                      <strong class="d-block">Publicar Contenidos</strong>
-                      <small class="text-muted">Noticias, eventos y documentos</small>
-                    </div>
-                  </button>
-                </div>
-                <div class="col-sm-6">
-                  <button class="btn btn-admin-outline w-100 p-3 text-start d-flex align-items-center gap-3" onclick="document.querySelector('[data-route=chatbot]').click()">
-                    <i class="fa-solid fa-comments text-danger fs-4"></i>
-                    <div>
-                      <strong class="d-block">Entrenar Chatbot</strong>
-                      <small class="text-muted">Ajustar intenciones y preguntas</small>
-                    </div>
-                  </button>
-                </div>
-                <div class="col-sm-6">
-                  <button class="btn btn-admin-outline w-100 p-3 text-start d-flex align-items-center gap-3" onclick="document.querySelector('[data-route=galeria]').click()">
-                    <i class="fa-solid fa-image text-danger fs-4"></i>
-                    <div>
-                      <strong class="d-block">Galería Institucional</strong>
-                      <small class="text-muted">Subir y organizar imágenes</small>
-                    </div>
-                  </button>
-                </div>
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+              <div>
+                <span class="text-muted small d-block">Base de Datos</span>
+                <span class="text-muted" style="font-size:0.7rem;" id="statusDbInfo">Cargando...</span>
+              </div>
+              <span class="status-pill" id="statusDb">
+                <i class="fa-solid fa-spinner fa-spin me-1"></i>Verificando
+              </span>
+            </div>
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+              <div>
+                <span class="text-muted small d-block">Motor de Chatbot</span>
+                <span class="text-muted" style="font-size:0.7rem;" id="statusChatInfo">Cargando...</span>
+              </div>
+              <span class="status-pill" id="statusChat">
+                <i class="fa-solid fa-spinner fa-spin me-1"></i>Verificando
+              </span>
+            </div>
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <span class="text-muted small d-block">Almacenamiento</span>
+                <span class="text-muted" style="font-size:0.7rem;" id="statusStorageInfo">Cargando...</span>
+              </div>
+              <span class="status-pill" id="statusStorage">
+                <i class="fa-solid fa-spinner fa-spin me-1"></i>Verificando
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════ -->
+    <!-- ACTIVIDAD + PENDIENTES -->
+    <!-- ═══════════════════════════════════════════════════ -->
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="card-admin h-100">
+          <div class="card-admin-header">
+            <h2 class="card-admin-title">
+              <i class="fa-solid fa-chart-line me-2 text-danger"></i>Actividad de Mensajes (Últimos 7 días)
+            </h2>
+          </div>
+          <div class="card-admin-body">
+            <div id="dashActividad" class="dash-actividad">
+              <div class="text-center py-4 text-muted">
+                <div class="spinner-border spinner-border-sm text-danger"></div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="col-lg-4">
-          <div class="card-admin">
-            <div class="card-admin-header">
-              <h2 class="card-admin-title"><i class="fa-solid fa-shield-heart me-2 text-success"></i>Estado del Sistema</h2>
+      <div class="col-lg-5">
+        <div class="card-admin h-100">
+          <div class="card-admin-header d-flex justify-content-between align-items-center">
+            <h2 class="card-admin-title mb-0">
+              <i class="fa-solid fa-circle-question me-2 text-warning"></i>Preguntas Pendientes
+            </h2>
+            <span class="badge bg-warning" id="dashPendientesBadge">0</span>
+          </div>
+          <div class="card-admin-body" id="dashPendientes">
+            <div class="text-center py-4 text-muted">
+              <div class="spinner-border spinner-border-sm text-danger"></div>
             </div>
-            <div class="card-admin-body">
-              <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                <span class="text-muted small">Servidor API</span>
-                <span class="status-pill active">Operacional</span>
-              </div>
-              <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                <span class="text-muted small">Base de Datos</span>
-                <span class="status-pill active">Conectada</span>
-              </div>
-              <div class="d-flex align-items-center justify-content-between">
-                <span class="text-muted small">Motor de Chatbot</span>
-                <span class="status-pill active">Activo</span>
-              </div>
-            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // ═══════════════════════════════════════════════════════
+  // CARGAR MÉTRICAS
+  // ═══════════════════════════════════════════════════════
+  try {
+    const [users, news, events, gallery, stats] = await Promise.all([
+      apiFetch('/admin/usuarios').catch(() => []),
+      apiFetch('/admin/contenidos/noticias').catch(() => []),
+      apiFetch('/admin/contenidos/eventos').catch(() => []),
+      apiFetch('/admin/galeria').catch(() => []),
+      apiFetch('/admin/chatbot/estadisticas').catch(() => null)
+    ]);
+
+    // KPIs principales
+    const uEl = document.getElementById('dashUsersCount'); if (uEl) uEl.textContent = users.length;
+    const nEl = document.getElementById('dashNewsCount'); if (nEl) nEl.textContent = news.length;
+    const eEl = document.getElementById('dashEventsCount'); if (eEl) eEl.textContent = events.length;
+    const gEl = document.getElementById('dashGalleryCount'); if (gEl) gEl.textContent = gallery.length;
+
+    // Métricas del chatbot
+    if (stats) {
+      const cEl = document.getElementById('dashChatConversaciones'); 
+      if (cEl) cEl.textContent = (stats.totalConversaciones || 0).toLocaleString();
+      
+      const mEl = document.getElementById('dashChatMensajes'); 
+      if (mEl) mEl.textContent = (stats.totalMensajes || 0).toLocaleString();
+      
+      const pEl = document.getElementById('dashChatPrecision'); 
+      if (pEl) pEl.textContent = (stats.porcentajeExito || 0).toFixed(1) + '%';
+      
+      const pendEl = document.getElementById('dashChatPendientes'); 
+      if (pendEl) pendEl.textContent = stats.preguntasSinRespuesta || 0;
+
+      // Actividad
+      renderActividadDashboard(stats.actividadUltimos7Dias || []);
+
+      // Preguntas pendientes
+      renderPendientesDashboard(stats.preguntasPendientes || [], stats.preguntasSinRespuesta || 0);
+    }
+
+  } catch (e) {
+    console.warn('Metrics failed', e);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // VERIFICAR ESTADO DEL SISTEMA (REAL)
+  // ═══════════════════════════════════════════════════════
+  verificarEstadoSistema();
+
+  // Botón de refresh
+  document.getElementById('refreshStatusBtn')?.addEventListener('click', verificarEstadoSistema);
+}
+
+// ═══════════════════════════════════════════════════════
+// FUNCIONES AUXILIARES
+// ═══════════════════════════════════════════════════════
+
+function renderActividadDashboard(actividad) {
+  const target = document.getElementById('dashActividad');
+  if (!target) return;
+
+  if (!actividad || actividad.length === 0) {
+    target.innerHTML = '<p class="text-center text-muted py-4">No hay datos de actividad recientes.</p>';
+    return;
+  }
+
+  const max = Math.max(...actividad.map(a => a.mensajes), 1);
+
+  target.innerHTML = actividad.map(a => {
+    const fecha = a.dia.split('-').reverse().slice(0, 2).join('/');
+    const porcentaje = Math.max((a.mensajes * 100 / max), 5);
+    return `
+      <div class="dash-actividad-row">
+        <div class="dash-actividad-fecha">${fecha}</div>
+        <div class="dash-actividad-bar-wrap">
+          <div class="dash-actividad-bar" style="width: ${porcentaje}%;">
+            <span>${a.mensajes}</span>
           </div>
         </div>
       </div>
     `;
+  }).join('');
+}
 
-    // Load Metrics
-    try {
-      const [users, news, events, faqs] = await Promise.all([
-        apiFetch('/admin/usuarios').catch(() => []),
-        apiFetch('/admin/contenidos/noticias').catch(() => []),
-        apiFetch('/admin/contenidos/eventos').catch(() => []),
-        apiFetch('/admin/chatbot/faqs').catch(() => [])
-      ]);
+function renderPendientesDashboard(pendientes, total) {
+  const target = document.getElementById('dashPendientes');
+  const badge = document.getElementById('dashPendientesBadge');
+  if (!target) return;
 
-      const uEl = document.getElementById('dashUsersCount'); if (uEl) uEl.textContent = users.length;
-      const nEl = document.getElementById('dashNewsCount'); if (nEl) nEl.textContent = news.length;
-      const eEl = document.getElementById('dashEventsCount'); if (eEl) eEl.textContent = events.length;
-      const fEl = document.getElementById('dashFaqsCount'); if (fEl) fEl.textContent = faqs.length;
-    } catch (e) {
-      console.warn('Metrics failed', e);
+  if (badge) badge.textContent = total;
+
+  if (!pendientes || pendientes.length === 0) {
+    target.innerHTML = `
+      <div class="text-center py-4">
+        <i class="fa-solid fa-check-circle fa-2x text-success mb-2"></i>
+        <p class="text-muted small mb-0">¡No hay preguntas pendientes!</p>
+      </div>
+    `;
+    return;
+  }
+
+  target.innerHTML = `
+    <div class="list-pendientes">
+      ${pendientes.slice(0, 5).map(p => `
+        <div class="pendiente-item">
+          <div class="pendiente-pregunta">"${p.pregunta}"</div>
+          <div class="pendiente-fecha">${p.fecha}</div>
+        </div>
+      `).join('')}
+    </div>
+    <button class="btn btn-admin-outline btn-sm w-100 mt-3" onclick="document.querySelector('[data-route=estadisticas-chatbot]').click()">
+      Ver todas las ${total} preguntas
+    </button>
+  `;
+}
+
+async function verificarEstadoSistema() {
+  const setStatus = (id, ok, texto) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (ok) {
+      el.className = 'status-pill active';
+      el.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i>${texto}`;
+    } else {
+      el.className = 'status-pill';
+      el.style.background = '#fee2e2';
+      el.style.color = '#dc2626';
+      el.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i>${texto}`;
+    }
+  };
+
+  const now = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+
+  // 1. Servidor API (usando endpoint público)
+  try {
+    const start = Date.now();
+    const res = await fetch(`${API_BASE_HOST}/api/public/configuracion`, { 
+      method: 'GET',
+      cache: 'no-cache'
+    });
+    const time = Date.now() - start;
+    
+    if (res.ok) {
+      setStatus('statusApi', true, `OK (${time}ms)`);
+    } else {
+      setStatus('statusApi', false, `HTTP ${res.status}`);
+    }
+    
+    const timeEl = document.getElementById('statusApiTime');
+    if (timeEl) timeEl.textContent = `Verificado a las ${now}`;
+  } catch (e) {
+    setStatus('statusApi', false, 'Sin conexión');
+  }
+
+  // 2. Base de Datos
+  try {
+    const users = await apiFetch('/admin/usuarios');
+    setStatus('statusDb', true, 'Conectada');
+    const infoEl = document.getElementById('statusDbInfo');
+    if (infoEl) infoEl.textContent = `${users.length} usuarios registrados`;
+  } catch (e) {
+    setStatus('statusDb', false, 'Error');
+  }
+
+  // 3. Motor de Chatbot
+  try {
+    const intents = await apiFetch('/admin/chatbot/intenciones');
+    setStatus('statusChat', true, 'Activo');
+    const infoEl = document.getElementById('statusChatInfo');
+    if (infoEl) infoEl.textContent = `${intents.length} intenciones activas`;
+  } catch (e) {
+    setStatus('statusChat', false, 'Error');
+  }
+
+  // 4. Almacenamiento
+  try {
+    const [galeria, documentos] = await Promise.all([
+      apiFetch('/admin/galeria').catch(() => []),
+      apiFetch('/admin/contenidos/documentos').catch(() => [])
+    ]);
+    setStatus('statusStorage', true, 'OK');
+    const infoEl = document.getElementById('statusStorageInfo');
+    if (infoEl) infoEl.textContent = `${galeria.length} imágenes + ${documentos.length} PDFs`;
+  } catch (e) {
+    setStatus('statusStorage', false, 'Error');
+  }
+}
+
+
+
+  // ---------- MI PERFIL ----------
+  async function renderPerfil() {
+  pageTitle.textContent = 'Mi Perfil';
+  viewContainer.innerHTML = `
+    <div class="admin-section">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+          <h3 class="section-title mb-1">
+            <i class="fa-solid fa-user-circle me-2 text-danger"></i>Mi Perfil
+          </h3>
+          <p class="text-muted small mb-0">Administra tu información personal, foto y contraseña.</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+
+        <!-- FOTO DE PERFIL -->
+        <div class="col-12">
+          <div class="card-admin">
+            <div class="card-admin-header">
+              <h2 class="card-admin-title">
+                <i class="fa-solid fa-camera me-2 text-danger"></i>Foto de Perfil
+              </h2>
+            </div>
+            <div class="card-admin-body">
+              <div class="row align-items-center g-4">
+                <div class="col-auto">
+                  <div class="perfil-avatar-wrapper">
+                    <img id="perfilAvatarPreview" src="" alt="Foto de perfil" class="perfil-avatar-img" style="display:none;"/>
+                    <div id="perfilAvatarPlaceholder" class="perfil-avatar-placeholder">
+                      <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                  </div>
+                </div>
+                <div class="col">
+                  <input type="file" id="perfilFotoInput" accept="image/*" style="display:none;"/>
+                  <div class="d-flex gap-2 flex-wrap">
+                    <button type="button" id="perfilSubirFotoBtn" class="btn btn-admin-primary">
+                      <i class="fa-solid fa-upload me-1"></i> Subir Foto
+                    </button>
+                    <button type="button" id="perfilEliminarFotoBtn" class="btn btn-admin-outline d-none">
+                      <i class="fa-solid fa-trash me-1"></i> Eliminar Foto
+                    </button>
+                  </div>
+                  <small class="text-muted d-block mt-2">
+                    <i class="fa-solid fa-info-circle me-1"></i>
+                    JPG, PNG, WEBP. Máximo 2MB. Opcional.
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- INFORMACIÓN PERSONAL -->
+        <div class="col-lg-6">
+          <div class="card-admin">
+            <div class="card-admin-header">
+              <h2 class="card-admin-title">
+                <i class="fa-solid fa-id-card me-2 text-danger"></i>Información Personal
+              </h2>
+            </div>
+            <div class="card-admin-body">
+              <div id="perfilLoading" class="text-center py-4">
+                <div class="spinner-border text-danger" role="status"></div>
+                <p class="text-muted mt-2 small">Cargando perfil...</p>
+              </div>
+
+              <form id="perfilForm" class="d-none">
+                <div class="form-row mb-3">
+                  <label class="fw-semibold">Nombre de usuario</label>
+                  <input id="perfil_username" class="form-control" disabled/>
+                  <small class="text-muted">El nombre de usuario no se puede cambiar</small>
+                </div>
+                <div class="form-row mb-3">
+                  <label class="fw-semibold">Nombre *</label>
+                  <input id="perfil_nombre" class="form-control" placeholder="Ej: Juan"/>
+                </div>
+                <div class="form-row mb-3">
+                  <label class="fw-semibold">Apellido</label>
+                  <input id="perfil_apellido" class="form-control" placeholder="Ej: Pérez"/>
+                </div>
+                <div class="form-row mb-3">
+                  <label class="fw-semibold">Correo electrónico *</label>
+                  <input id="perfil_correo" type="email" class="form-control" placeholder="correo@ejemplo.com"/>
+                </div>
+                <button type="submit" class="btn btn-admin-primary">
+                  <i class="fa-solid fa-save me-1"></i> Guardar Cambios
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- CAMBIAR CONTRASEÑA -->
+        <div class="col-lg-6">
+          <div class="card-admin">
+            <div class="card-admin-header">
+              <h2 class="card-admin-title">
+                <i class="fa-solid fa-lock me-2 text-danger"></i>Cambiar Contraseña
+              </h2>
+            </div>
+            <div class="card-admin-body">
+              <!-- Guía de contraseña -->
+              <div class="password-guide mb-3">
+                <div class="password-guide-title">
+                  <i class="fa-solid fa-shield-halved me-1"></i>
+                  Requisitos de seguridad:
+                </div>
+                <ul class="password-requirements">
+                  <li id="req-length"><i class="fa-solid fa-circle-xmark"></i> Mínimo 8 caracteres</li>
+                  <li id="req-upper"><i class="fa-solid fa-circle-xmark"></i> Al menos una mayúscula (A-Z)</li>
+                  <li id="req-lower"><i class="fa-solid fa-circle-xmark"></i> Al menos una minúscula (a-z)</li>
+                  <li id="req-number"><i class="fa-solid fa-circle-xmark"></i> Al menos un número (0-9)</li>
+                  <li id="req-special"><i class="fa-solid fa-circle-xmark"></i> Al menos un símbolo (!@#$%)</li>
+                </ul>
+                <div class="password-example">
+                  <strong>Ejemplo seguro:</strong> <code>MiClave2026!</code> o <code>Colegio#Seguro24</code>
+                </div>
+              </div>
+
+              <form id="passwordForm">
+                <div class="form-row mb-3">
+                  <label class="fw-semibold">Contraseña actual *</label>
+                  <div class="input-group">
+                    <input id="pwd_actual" type="password" class="form-control" placeholder="••••••••"/>
+                    <button type="button" class="btn btn-outline-secondary toggle-pwd" data-target="pwd_actual">
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="form-row mb-3">
+                  <label class="fw-semibold">Nueva contraseña *</label>
+                  <div class="input-group">
+                    <input id="pwd_nueva" type="password" class="form-control" placeholder="Mínimo 8 caracteres con símbolos"/>
+                    <button type="button" class="btn btn-outline-secondary toggle-pwd" data-target="pwd_nueva">
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="form-row mb-3">
+                  <label class="fw-semibold">Confirmar nueva contraseña *</label>
+                  <div class="input-group">
+                    <input id="pwd_confirmar" type="password" class="form-control" placeholder="Repite la contraseña"/>
+                    <button type="button" class="btn btn-outline-secondary toggle-pwd" data-target="pwd_confirmar">
+                      <i class="fa-solid fa-eye"></i>
+                    </button>
+                  </div>
+                </div>
+                <div id="passwordStatus" class="alert d-none mb-3"></div>
+                <button type="submit" class="btn btn-admin-primary">
+                  <i class="fa-solid fa-key me-1"></i> Cambiar Contraseña
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- INFO DE LA CUENTA -->
+        <div class="col-12">
+          <div class="card-admin">
+            <div class="card-admin-header">
+              <h2 class="card-admin-title">
+                <i class="fa-solid fa-circle-info me-2 text-danger"></i>Información de la Cuenta
+              </h2>
+            </div>
+            <div class="card-admin-body">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <div class="perfil-info-item">
+                    <div class="perfil-info-icon">
+                      <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                      <div class="perfil-info-label">Rol</div>
+                      <div class="perfil-info-value">Administrador</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="perfil-info-item">
+                    <div class="perfil-info-icon">
+                      <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                      <div class="perfil-info-label">ID de Usuario</div>
+                      <div class="perfil-info-value" id="perfil_id">-</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="perfil-info-item">
+                    <div class="perfil-info-icon">
+                      <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <div>
+                      <div class="perfil-info-label">Email</div>
+                      <div class="perfil-info-value" id="perfil_email_info">-</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // ═══════════════════════════════════════════════════════
+  // CARGAR PERFIL
+  // ═══════════════════════════════════════════════════════
+  try {
+    const perfil = await apiFetch('/admin/perfil');
+    
+    document.getElementById('perfilLoading').classList.add('d-none');
+    document.getElementById('perfilForm').classList.remove('d-none');
+    
+    document.getElementById('perfil_username').value = perfil.username || '';
+    document.getElementById('perfil_nombre').value = perfil.nombre || '';
+    document.getElementById('perfil_apellido').value = perfil.apellido || '';
+    document.getElementById('perfil_correo').value = perfil.correo || '';
+    
+    document.getElementById('perfil_id').textContent = '#' + (perfil.id || '-');
+    document.getElementById('perfil_email_info').textContent = perfil.correo || '-';
+    
+    // Cargar avatar
+    actualizarAvatar(perfil.fotoPerfil);
+    
+  } catch (err) {
+    document.getElementById('perfilLoading').innerHTML = `
+      <div class="alert alert-danger">Error al cargar perfil: ${err.message}</div>
+    `;
+    return;
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // ACTUALIZAR AVATAR
+  // ═══════════════════════════════════════════════════════
+  function actualizarAvatar(rutaFoto) {
+    const preview = document.getElementById('perfilAvatarPreview');
+    const placeholder = document.getElementById('perfilAvatarPlaceholder');
+    const btnEliminar = document.getElementById('perfilEliminarFotoBtn');
+    
+    if (!preview || !placeholder) return;
+    
+    if (rutaFoto) {
+      let src = rutaFoto;
+      if (!src.startsWith('/') && !src.startsWith('http')) {
+        src = '/' + src;
+      }
+      
+      preview.src = src + '?t=' + Date.now();
+      preview.style.display = 'block';
+      placeholder.style.display = 'none';
+      if (btnEliminar) btnEliminar.classList.remove('d-none');
+      
+      // Actualizar avatar del topbar
+      const topbarAvatar = document.querySelector('.user-avatar');
+      if (topbarAvatar) {
+        topbarAvatar.innerHTML = `<img src="${src}" alt="Perfil" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;
+      }
+    } else {
+      preview.style.display = 'none';
+      placeholder.style.display = 'flex';
+      if (btnEliminar) btnEliminar.classList.add('d-none');
+      
+      // Resetear avatar del topbar
+      const topbarAvatar = document.querySelector('.user-avatar');
+      if (topbarAvatar) {
+        topbarAvatar.innerHTML = '<i class="fa-solid fa-user-shield"></i>';
+      }
     }
   }
+
+  // ═══════════════════════════════════════════════════════
+  // FOTO DE PERFIL - LISTENERS
+  // ═══════════════════════════════════════════════════════
+  const fotoInput = document.getElementById('perfilFotoInput');
+  const subirFotoBtn = document.getElementById('perfilSubirFotoBtn');
+  const eliminarFotoBtn = document.getElementById('perfilEliminarFotoBtn');
+  
+  if (subirFotoBtn && fotoInput) {
+    subirFotoBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      fotoInput.click();
+    });
+  }
+  
+  if (fotoInput) {
+    fotoInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      // Validar tipo
+      if (!file.type.startsWith('image/')) {
+        alert('❌ Debes seleccionar una imagen');
+        return;
+      }
+      
+      // Validar tamaño (2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('❌ La imagen no debe superar 2MB');
+        return;
+      }
+      
+      // Preview local
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const preview = document.getElementById('perfilAvatarPreview');
+        preview.src = ev.target.result;
+        preview.style.display = 'block';
+        document.getElementById('perfilAvatarPlaceholder').style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+      
+      // Subir al servidor
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      try {
+        const res = await apiFetch('/admin/perfil/foto', {
+          method: 'POST',
+          body: formData
+        });
+        
+        showToast('✅ Foto de perfil actualizada');
+        actualizarAvatar(res.fotoPerfil);
+      } catch (err) {
+        alert('❌ Error al subir foto: ' + err.message);
+      }
+      
+      // Resetear input para permitir subir la misma imagen de nuevo
+      fotoInput.value = '';
+    });
+  }
+  
+  if (eliminarFotoBtn) {
+    eliminarFotoBtn.addEventListener('click', async () => {
+      if (!confirm('¿Eliminar tu foto de perfil?')) return;
+      
+      try {
+        await apiFetch('/admin/perfil/foto', { method: 'DELETE' });
+        showToast('Foto eliminada');
+        actualizarAvatar(null);
+      } catch (err) {
+        alert('❌ Error: ' + err.message);
+      }
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // FORMULARIO DE INFORMACIÓN PERSONAL
+  // ═══════════════════════════════════════════════════════
+  const perfilForm = document.getElementById('perfilForm');
+  if (perfilForm) {
+    perfilForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const payload = {
+        nombre: document.getElementById('perfil_nombre').value.trim(),
+        apellido: document.getElementById('perfil_apellido').value.trim(),
+        correo: document.getElementById('perfil_correo').value.trim()
+      };
+      
+      if (!payload.nombre) return alert('El nombre es obligatorio');
+      if (!payload.correo) return alert('El correo es obligatorio');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.correo)) {
+        return alert('El correo no es válido');
+      }
+      
+      try {
+        const res = await apiFetch('/admin/perfil', {
+          method: 'PUT',
+          body: JSON.stringify(payload)
+        });
+        showToast('✅ Perfil actualizado correctamente');
+        
+        const userNameEl = document.getElementById('currentUsername');
+        if (userNameEl) {
+          userNameEl.textContent = `${res.nombre} ${res.apellido || ''}`.trim();
+        }
+        
+        document.getElementById('perfil_email_info').textContent = res.correo;
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // VERIFICACIÓN DE CONTRASEÑA EN TIEMPO REAL
+  // ═══════════════════════════════════════════════════════
+  const pwdNueva = document.getElementById('pwd_nueva');
+  
+  function validarPassword(pwd) {
+    return {
+      length: pwd.length >= 8,
+      upper: /[A-Z]/.test(pwd),
+      lower: /[a-z]/.test(pwd),
+      number: /[0-9]/.test(pwd),
+      special: /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\/~`;']/.test(pwd)
+    };
+  }
+  
+  function actualizarRequisitos(pwd) {
+    const validaciones = validarPassword(pwd);
+    const items = {
+      'req-length': validaciones.length,
+      'req-upper': validaciones.upper,
+      'req-lower': validaciones.lower,
+      'req-number': validaciones.number,
+      'req-special': validaciones.special
+    };
+    
+    Object.entries(items).forEach(([id, valido]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      
+      const icon = el.querySelector('i');
+      if (valido) {
+        el.classList.add('valid');
+        el.classList.remove('invalid');
+        if (icon) icon.className = 'fa-solid fa-circle-check';
+      } else {
+        el.classList.remove('valid');
+        el.classList.add('invalid');
+        if (icon) icon.className = 'fa-solid fa-circle-xmark';
+      }
+    });
+    
+    return Object.values(validaciones).every(v => v);
+  }
+  
+  // Verificar si las contraseñas coinciden en tiempo real
+  function verificarCoincidencia() {
+    const nueva = document.getElementById('pwd_nueva')?.value || '';
+    const confirmar = document.getElementById('pwd_confirmar')?.value || '';
+    const status = document.getElementById('passwordStatus');
+    
+    if (confirmar && nueva !== confirmar) {
+      status.innerHTML = '⚠️ Las contraseñas <strong>no coinciden</strong>';
+      status.className = 'alert alert-warning mb-3';
+      status.classList.remove('d-none');
+    } else if (confirmar && nueva === confirmar) {
+      status.classList.add('d-none');
+    }
+  }
+  
+  // Validar en tiempo real MIENTRAS se escribe en "Nueva contraseña"
+  if (pwdNueva) {
+    pwdNueva.addEventListener('input', (e) => {
+      actualizarRequisitos(e.target.value);
+      verificarCoincidencia();
+      // Limpiar mensaje de error previo
+      const status = document.getElementById('passwordStatus');
+      if (status && status.classList.contains('alert-danger')) {
+        status.classList.add('d-none');
+      }
+    });
+  }
+  
+  // También validar cuando se escribe en "Confirmar" (por si el usuario escribe ahí primero)
+  const pwdConfirmar = document.getElementById('pwd_confirmar');
+  if (pwdConfirmar) {
+    pwdConfirmar.addEventListener('input', (e) => {
+      const nueva = document.getElementById('pwd_nueva').value;
+      if (nueva) {
+        actualizarRequisitos(nueva);
+      }
+      verificarCoincidencia();
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // FORMULARIO DE CAMBIO DE CONTRASEÑA
+  // ═══════════════════════════════════════════════════════
+  const passwordForm = document.getElementById('passwordForm');
+  if (passwordForm) {
+    passwordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const actual = document.getElementById('pwd_actual').value;
+      const nueva = document.getElementById('pwd_nueva').value;
+      const confirmar = document.getElementById('pwd_confirmar').value;
+      const status = document.getElementById('passwordStatus');
+      
+      status.classList.add('d-none');
+      
+      // Validaciones
+      if (!actual || !nueva || !confirmar) {
+        status.textContent = '⚠️ Todos los campos son obligatorios';
+        status.className = 'alert alert-warning mb-3';
+        status.classList.remove('d-none');
+        return;
+      }
+      
+      // Validar requisitos de seguridad
+      const validaciones = validarPassword(nueva);
+      const faltantes = [];
+      if (!validaciones.length) faltantes.push('mínimo 8 caracteres');
+      if (!validaciones.upper) faltantes.push('una mayúscula');
+      if (!validaciones.lower) faltantes.push('una minúscula');
+      if (!validaciones.number) faltantes.push('un número');
+      if (!validaciones.special) faltantes.push('un símbolo (!@#$%)');
+      
+      if (faltantes.length > 0) {
+        status.innerHTML = `⚠️ La contraseña debe incluir: <strong>${faltantes.join(', ')}</strong>`;
+        status.className = 'alert alert-warning mb-3';
+        status.classList.remove('d-none');
+        return;
+      }
+      
+      if (nueva !== confirmar) {
+        status.innerHTML = '⚠️ Las contraseñas <strong>no coinciden</strong>';
+        status.className = 'alert alert-warning mb-3';
+        status.classList.remove('d-none');
+        return;
+      }
+      
+      if (nueva === actual) {
+        status.innerHTML = '⚠️ La nueva contraseña debe ser <strong>diferente</strong> a la actual';
+        status.className = 'alert alert-warning mb-3';
+        status.classList.remove('d-none');
+        return;
+      }
+      
+      try {
+        await apiFetch('/admin/perfil/cambiar-password', {
+          method: 'POST',
+          body: JSON.stringify({ passwordActual: actual, passwordNueva: nueva })
+        });
+        
+        status.textContent = '✅ Contraseña actualizada correctamente';
+        status.className = 'alert alert-success mb-3';
+        status.classList.remove('d-none');
+        
+        passwordForm.reset();
+        actualizarRequisitos('');
+        
+        setTimeout(() => status.classList.add('d-none'), 5000);
+      } catch (err) {
+        status.textContent = '❌ ' + (err.message || 'Error al cambiar contraseña');
+        status.className = 'alert alert-danger mb-3';
+        status.classList.remove('d-none');
+      }
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // TOGGLE VISIBILIDAD DE CONTRASEÑAS
+  // ═══════════════════════════════════════════════════════
+  document.querySelectorAll('.toggle-pwd').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetId = btn.dataset.target;
+      const input = document.getElementById(targetId);
+      const icon = btn.querySelector('i');
+      
+      if (!input || !icon) return;
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-solid fa-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'fa-solid fa-eye';
+      }
+    });
+  });
+}
+
+
 
   // ---------- USUARIOS ----------
   async function renderUsuarios() {
@@ -3988,6 +5197,24 @@ async function renderChatbot() {
 
   // Init
   loadCurrentUser().then(() => {
+    // Inicializar sidebar mejorada
+    if (typeof inicializarSidebarMejorada === 'function') {
+      inicializarSidebarMejorada();
+    }
+    
+    // Cargar notificaciones
+    if (typeof cargarNotificaciones === 'function') {
+      cargarNotificaciones();
+      setInterval(cargarNotificaciones, 60000);
+    }
+    
+    // Inicializar listeners del topbar
+    if (typeof inicializarTopbarListeners === 'function') {
+      inicializarTopbarListeners();
+    }
+    
     navigate('dashboard');
   });
 }
+
+

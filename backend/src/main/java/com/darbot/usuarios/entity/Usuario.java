@@ -39,6 +39,9 @@ public class Usuario implements UserDetails {
     @Column(nullable = false)
     private Boolean activo = true;
 
+    @Column(name = "foto_perfil", length = 255)
+    private String fotoPerfil;
+
     @Column(name = "fecha_creacion", updatable = false)
     private LocalDateTime fechaCreacion;
 
