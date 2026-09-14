@@ -23,3 +23,52 @@ frontend/documentos/*
 frontend/imagenes/uploads/*
 !frontend/imagenes/uploads/.gitkeep
 uploads/
+
+# Backups y temporales
+*.bak
+*.bak-*
+*.bak2-*
+*.bak3-*
+*.bak4-*
+*.bak5-*
+*.bak6-*
+*.bak7-*
+*.bak8-*
+*.bak9-*
+*.bak10-*
+*.tmp
+*.swp
+
+# Logs y PIDs
+*.log
+*.pid
+logs/
+
+# Archivos subidos por usuarios (no versionar)
+uploads/
+frontend/imagenes/uploads/*
+!frontend/imagenes/uploads/.gitkeep
+frontend/documentos/*
+!frontend/documentos/.gitkeep
+
+# Base de datos local
+*.sql.gz
+backup_*.sql
+
+# IDE
+.idea/
+*.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+package-lock.json
+
+# Maven
+target/
