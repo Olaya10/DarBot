@@ -1297,13 +1297,13 @@ async function verificarEstadoSistema() {
       
       // Validar tipo
       if (!file.type.startsWith('image/')) {
-        alert('❌ Debes seleccionar una imagen');
+        alert('Debes seleccionar una imagen');
         return;
       }
       
       // Validar tamaño (2MB)
       if (file.size > 2 * 1024 * 1024) {
-        alert('❌ La imagen no debe superar 2MB');
+        alert('La imagen no debe superar 2MB');
         return;
       }
       
@@ -1327,10 +1327,10 @@ async function verificarEstadoSistema() {
           body: formData
         });
         
-        showToast('✅ Foto de perfil actualizada');
+        showToast('Foto de perfil actualizada');
         actualizarAvatar(res.fotoPerfil);
       } catch (err) {
-        alert('❌ Error al subir foto: ' + err.message);
+        alert('Error al subir foto: ' + err.message);
       }
       
       // Resetear input para permitir subir la misma imagen de nuevo
@@ -1347,7 +1347,7 @@ async function verificarEstadoSistema() {
         showToast('Foto eliminada');
         actualizarAvatar(null);
       } catch (err) {
-        alert('❌ Error: ' + err.message);
+        alert('Error: ' + err.message);
       }
     });
   }
@@ -1377,7 +1377,7 @@ async function verificarEstadoSistema() {
           method: 'PUT',
           body: JSON.stringify(payload)
         });
-        showToast('✅ Perfil actualizado correctamente');
+        showToast('Perfil actualizado correctamente');
         
         const userNameEl = document.getElementById('currentUsername');
         if (userNameEl) {
@@ -1534,7 +1534,7 @@ async function verificarEstadoSistema() {
           body: JSON.stringify({ passwordActual: actual, passwordNueva: nueva })
         });
         
-        status.textContent = '✅ Contraseña actualizada correctamente';
+        status.textContent = 'Contraseña actualizada correctamente';
         status.className = 'alert alert-success mb-3';
         status.classList.remove('d-none');
         
@@ -1543,7 +1543,7 @@ async function verificarEstadoSistema() {
         
         setTimeout(() => status.classList.add('d-none'), 5000);
       } catch (err) {
-        status.textContent = '❌ ' + (err.message || 'Error al cambiar contraseña');
+        status.textContent = 'Error: ' + (err.message || 'Error al cambiar contraseña');
         status.className = 'alert alert-danger mb-3';
         status.classList.remove('d-none');
       }

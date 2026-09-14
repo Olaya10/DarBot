@@ -1,17 +1,11 @@
 /* ======================================================================
    INSTITUCIÓN EDUCATIVA DARÍO TORREGROZA PÉREZ
-   Hoja de estilos principal
-   ----------------------------------------------------------------------
-   Sistema de diseño:
-   - Color:  rojo institucional (--rojo-ie), blanco, carbón para texto,
-     hueso cálido para fondos alternos, dorado como acento de logro.
-   - Tipografía: "Fraunces" (display, con carácter editorial/oficial)
-     + "Inter" (texto, alta legibilidad).
-   - Elemento firma: el "Sello" — insignia circular de doble anillo que
-     se repite en logo, valores, estadísticas y equipo directivo, evocando
-     el sello oficial de una institución educativa.
+   Hoja de estilos principal — versión limpia y unificada
    ====================================================================== */
 
+/* ============================================================
+   1. VARIABLES Y RESET
+   ============================================================ */
 :root {
   /* Color */
   --rojo-ie: #c8102e;
@@ -25,8 +19,8 @@
   --linea: rgba(32, 26, 26, 0.09);
 
   /* Tipografía */
-  --font-display: "Roboto", "Open Sans";
-  --font-body: "Inter", "Segoe UI";
+  --font-display: "Fraunces", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* Layout */
   --radio: 14px;
@@ -37,13 +31,15 @@
   --nav-alto: 84px;
 }
 
-/* ---------- Reset base ---------- */
 * {
   box-sizing: border-box;
 }
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 body {
@@ -52,13 +48,10 @@ body {
   background-color: var(--blanco);
   line-height: 1.65;
   overflow-x: hidden;
+  width: 100%;
 }
 
-h1,
-h2,
-h3,
-h4,
-.display-serif {
+h1, h2, h3, h4, h5, h6, .display-serif {
   font-family: var(--font-display);
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -68,8 +61,9 @@ a {
   text-decoration: none;
 }
 
-img {
+img, video, iframe, svg {
   max-width: 100%;
+  height: auto;
   display: block;
 }
 
@@ -78,7 +72,7 @@ img {
   color: var(--blanco);
 }
 
-/* Foco visible para accesibilidad (WCAG) */
+/* Foco visible para accesibilidad */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -98,19 +92,11 @@ select:focus-visible {
   z-index: 2000;
   border-radius: 0 0 8px 0;
 }
-
-.skip-link:focus {
-  left: 0;
-}
+.skip-link:focus { left: 0; }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
-  *,
-  *::before,
-  *::after {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
@@ -118,6 +104,9 @@ select:focus-visible {
   }
 }
 
+/* ============================================================
+   2. UTILIDADES GENERALES
+   ============================================================ */
 .eyebrow {
   display: inline-flex;
   align-items: center;
@@ -130,7 +119,6 @@ select:focus-visible {
   color: var(--rojo-ie);
   margin-bottom: 14px;
 }
-
 .eyebrow::before {
   content: "";
   width: 26px;
@@ -151,18 +139,11 @@ select:focus-visible {
   font-size: 1.05rem;
 }
 
-.section-pad {
-  padding: 96px 0;
-}
+.section-pad { padding: 96px 0; }
+.bg-hueso { background-color: var(--hueso); }
+.bg-rojo { background-color: var(--rojo-ie); }
 
-.bg-hueso {
-  background-color: var(--hueso);
-}
-
-.bg-rojo {
-  background-color: var(--rojo-ie);
-}
-
+/* Botones institucionales */
 .btn-institucional {
   background: var(--rojo-ie);
   border: 2px solid var(--rojo-ie);
@@ -173,7 +154,6 @@ select:focus-visible {
   transition: all 0.25s ease;
   letter-spacing: 0.01em;
 }
-
 .btn-institucional:hover {
   background: var(--rojo-ie-oscuro);
   border-color: var(--rojo-ie-oscuro);
@@ -190,14 +170,15 @@ select:focus-visible {
   border-radius: 999px;
   transition: all 0.25s ease;
 }
-
 .btn-outline-institucional:hover {
   background: #fff;
   color: var(--rojo-ie);
   transform: translateY(-2px);
 }
 
-/* ---------- Loader ---------- */
+/* ============================================================
+   3. LOADER
+   ============================================================ */
 #loader {
   position: fixed;
   inset: 0;
@@ -208,11 +189,7 @@ select:focus-visible {
   justify-content: center;
   transition: opacity 0.5s ease, visibility 0.5s ease;
 }
-
-#loader.oculto {
-  opacity: 0;
-  visibility: hidden;
-}
+#loader.oculto { opacity: 0; visibility: hidden; }
 
 .sello-loader {
   width: 84px;
@@ -222,18 +199,18 @@ select:focus-visible {
   border-top-color: var(--rojo-ie);
   animation: girar 0.9s linear infinite;
 }
+@keyframes girar { to { transform: rotate(360deg); } }
 
-@keyframes girar {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ---------- Navbar ---------- */
+/* ============================================================
+   4. NAVBAR
+   ============================================================ */
 .navbar-ie {
   position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   width: 100%;
+  max-width: 100vw;
   z-index: 1500;
   padding: 14px 0;
   background: transparent;
@@ -269,7 +246,6 @@ select:focus-visible {
   font-size: 1rem;
   color: var(--carbon);
 }
-
 .marca-lema {
   font-size: 0.68rem;
   color: var(--rojo-ie);
@@ -291,10 +267,7 @@ select:focus-visible {
   position: relative;
   padding: 8px 4px !important;
 }
-
-.navbar-ie:not(.scrolled) .nav-link {
-  color: #fff !important;
-}
+.navbar-ie:not(.scrolled) .nav-link { color: #fff !important; }
 
 .navbar-ie .nav-link::after {
   content: "";
@@ -308,15 +281,9 @@ select:focus-visible {
   transform-origin: left;
   transition: transform 0.25s ease;
 }
-
-.navbar-ie:not(.scrolled) .nav-link::after {
-  background: #fff;
-}
-
+.navbar-ie:not(.scrolled) .nav-link::after { background: #fff; }
 .navbar-ie .nav-link:hover::after,
-.navbar-ie .nav-link.active::after {
-  transform: scaleX(1);
-}
+.navbar-ie .nav-link.active::after { transform: scaleX(1); }
 
 .navbar-ie .nav-cta {
   background: var(--rojo-ie);
@@ -325,15 +292,10 @@ select:focus-visible {
   border-radius: 999px;
   margin-left: 8px;
 }
+.navbar-ie .nav-cta::after { display: none; }
+.navbar-ie .nav-cta:hover { background: var(--rojo-ie-oscuro); }
 
-.navbar-ie .nav-cta::after {
-  display: none;
-}
-
-.navbar-ie .nav-cta:hover {
-  background: var(--rojo-ie-oscuro);
-}
-
+/* Botón "Acceso Inst." */
 .navbar-ie .nav-acceso-inst {
   border: 1px solid rgba(200, 16, 46, 0.4);
   background: rgba(200, 16, 46, 0.08);
@@ -341,19 +303,15 @@ select:focus-visible {
   padding: 6px 16px !important;
   color: var(--rojo-ie) !important;
   font-size: 0.88rem;
+  font-weight: 600;
   transition: all 0.25s ease;
 }
-
 .navbar-ie:not(.scrolled) .nav-acceso-inst {
   border-color: rgba(255, 255, 255, 0.5);
   background: rgba(255, 255, 255, 0.15);
   color: #fff !important;
 }
-
-.navbar-ie .nav-acceso-inst::after {
-  display: none;
-}
-
+.navbar-ie .nav-acceso-inst::after { display: none; }
 .navbar-ie .nav-acceso-inst:hover {
   background: var(--rojo-ie);
   color: #fff !important;
@@ -361,6 +319,7 @@ select:focus-visible {
   transform: translateY(-1px);
 }
 
+/* Botón hero (login) */
 .btn-acceso-hero {
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(8px);
@@ -371,7 +330,6 @@ select:focus-visible {
   border-radius: 999px;
   transition: all 0.25s ease;
 }
-
 .btn-acceso-hero:hover {
   background: #fff;
   color: var(--rojo-ie);
@@ -379,32 +337,107 @@ select:focus-visible {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
+/* ---------- Toggler (hamburguesa) — SIEMPRE visible ---------- */
 .navbar-toggler {
-  border: none;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 46px !important;
+  height: 42px !important;
+  padding: 0 !important;
+  border: 2px solid #c8102e !important;
+  border-radius: 8px !important;
+  background-color: #ffffff !important;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+.navbar-toggler:hover,
+.navbar-toggler:focus {
+  background-color: #c8102e !important;
+  box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.2) !important;
+  outline: none;
 }
 
-.navbar-ie:not(.scrolled) .navbar-toggler-icon {
-  filter: invert(1) brightness(2);
+/* Icono por defecto: rayas ROJAS sobre fondo BLANCO */
+.navbar-toggler-icon {
+  display: inline-block !important;
+  width: 24px !important;
+  height: 24px !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23c8102e' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: 100% !important;
+  filter: none !important;
 }
 
-/* ---------- Hero ---------- */
+/* Al hover/focus del botón rojo: rayas BLANCAS */
+.navbar-toggler:hover .navbar-toggler-icon,
+.navbar-toggler:focus .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+  filter: none !important;
+}
+
+/* Variante navbar transparente (hero): borde blanco, fondo oscuro */
+.navbar-ie:not(.scrolled):not(.navbar-paginas) .navbar-toggler {
+  border-color: #ffffff !important;
+  background-color: rgba(0, 0, 0, 0.3) !important;
+}
+.navbar-ie:not(.scrolled):not(.navbar-paginas) .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+/* ---------- Navbar en páginas internas (fondo blanco) ---------- */
+.navbar-ie.navbar-paginas {
+  background-color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08) !important;
+  padding-top: 0.6rem !important;
+  padding-bottom: 0.6rem !important;
+  min-height: auto !important;
+}
+
+.navbar-ie.navbar-paginas .container {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.navbar-ie.navbar-paginas .navbar-nav .nav-link {
+  color: #1a1a1a !important;
+  font-weight: 600;
+}
+.navbar-ie.navbar-paginas .navbar-nav .nav-link:hover,
+.navbar-ie.navbar-paginas .navbar-nav .nav-link.active {
+  color: #c8102e !important;
+}
+.navbar-ie.navbar-paginas .marca-nombre,
+.navbar-ie.navbar-paginas .navbar-brand span {
+  color: #1a1a1a !important;
+}
+.navbar-ie.navbar-paginas .marca-lema {
+  color: #666666 !important;
+}
+
+/* ============================================================
+   5. HERO
+   ============================================================ */
 .hero {
   position: relative;
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  background-image: linear-gradient(180deg, rgba(32, 10, 14, 0.55), rgba(140, 11, 32, 0.72)), url("img/hero-bg.svg");
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  /* efecto parallax */
-  color: #fff;
   text-align: center;
+  color: #fff;
+  width: 100%;
+  max-width: 100vw;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(32, 10, 14, 0.55), rgba(140, 11, 32, 0.72)),
+    url("imagenes/estudiantes2.jpg") no-repeat center center/cover;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 991.98px) {
   .hero {
-    background-attachment: scroll;
+    background-attachment: scroll !important;
   }
 }
 
@@ -413,28 +446,19 @@ select:focus-visible {
   margin: 0 auto;
   padding: 0 20px;
 }
-
-.hero .eyebrow {
-  color: #ffd9de;
-}
-
-.hero .eyebrow::before {
-  background: #ffd9de;
-}
-
+.hero .eyebrow { color: #ffd9de; }
+.hero .eyebrow::before { background: #ffd9de; }
 .hero h1 {
   font-size: clamp(2.2rem, 5.5vw, 4rem);
   line-height: 1.12;
   margin-bottom: 18px;
 }
-
 .hero p.frase {
   font-size: clamp(1.05rem, 2vw, 1.3rem);
   font-weight: 300;
   opacity: 0.94;
   margin-bottom: 34px;
 }
-
 .hero .hero-botones {
   display: flex;
   gap: 16px;
@@ -452,20 +476,28 @@ select:focus-visible {
   animation: rebote 2s infinite;
   font-size: 1.4rem;
 }
-
 @keyframes rebote {
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, 10px); }
+}
 
-  0%,
-  100% {
-    transform: translate(-50%, 0);
-  }
+/* ============================================================
+   6. PÁGINAS INTERNAS — offset del navbar fijo
+   ============================================================ */
+.pagina-interna {
+  padding-top: 110px !important;   /* navbar fijo ~84px + margen */
+  padding-bottom: 3rem;
+}
 
-  50% {
-    transform: translate(-50%, 10px);
+@media (max-width: 991.98px) {
+  .pagina-interna {
+    padding-top: 90px !important;
   }
 }
 
-/* ---------- Sello (elemento firma) ---------- */
+/* ============================================================
+   7. SELLO (elemento firma)
+   ============================================================ */
 .sello {
   --sello-color: var(--rojo-ie);
   width: 84px;
@@ -479,7 +511,6 @@ select:focus-visible {
   margin: 0 auto 20px;
   background: var(--blanco);
 }
-
 .sello::before {
   content: "";
   position: absolute;
@@ -488,18 +519,16 @@ select:focus-visible {
   border-radius: 50%;
   opacity: 0.55;
 }
-
 .sello i,
 .sello span.sello-num {
   font-size: 1.5rem;
   color: var(--sello-color);
 }
+.sello-dorado { --sello-color: var(--dorado); }
 
-.sello-dorado {
-  --sello-color: var(--dorado);
-}
-
-/* ---------- Tarjetas Nosotros ---------- */
+/* ============================================================
+   8. TARJETAS — Nosotros, Valores, Oferta, Servicios, Noticias
+   ============================================================ */
 .tarjeta-nosotros {
   background: #fff;
   border-radius: var(--radio);
@@ -509,66 +538,13 @@ select:focus-visible {
   border-top: 4px solid var(--rojo-ie);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-
 .tarjeta-nosotros:hover {
   transform: translateY(-8px);
   box-shadow: var(--sombra-fuerte);
 }
+.tarjeta-nosotros h3 { font-size: 1.25rem; margin-bottom: 12px; }
+.tarjeta-nosotros p { color: var(--gris-texto); font-size: 0.96rem; margin-bottom: 0; }
 
-.tarjeta-nosotros h3 {
-  font-size: 1.25rem;
-  margin-bottom: 12px;
-}
-
-.tarjeta-nosotros p {
-  color: var(--gris-texto);
-  font-size: 0.96rem;
-  margin-bottom: 0;
-}
-
-/* ---------- Misión / Visión ---------- */
-.panel-mv {
-  border-radius: var(--radio);
-  overflow: hidden;
-  box-shadow: var(--sombra);
-  height: 100%;
-}
-
-.panel-mv .mv-img {
-  height: 260px;
-  overflow: hidden;
-}
-
-.panel-mv .mv-img img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
-}
-
-.panel-mv:hover .mv-img img {
-  transform: scale(1.06);
-}
-
-.panel-mv .mv-cuerpo {
-  background: #fff;
-  padding: 30px;
-}
-
-.panel-mv.mv-invertido {
-  background: var(--rojo-ie);
-  color: #fff;
-}
-
-.panel-mv.mv-invertido .mv-cuerpo {
-  background: var(--rojo-ie);
-}
-
-.panel-mv.mv-invertido p {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-/* ---------- Valores ---------- */
 .tarjeta-valor {
   text-align: center;
   padding: 30px 18px;
@@ -578,25 +554,14 @@ select:focus-visible {
   height: 100%;
   transition: all 0.3s ease;
 }
-
 .tarjeta-valor:hover {
   border-color: var(--rojo-ie);
   transform: translateY(-6px);
   box-shadow: var(--sombra);
 }
+.tarjeta-valor h4 { font-size: 1.05rem; margin: 4px 0 8px; }
+.tarjeta-valor p { font-size: 0.88rem; color: var(--gris-texto); margin-bottom: 0; }
 
-.tarjeta-valor h4 {
-  font-size: 1.05rem;
-  margin: 4px 0 8px;
-}
-
-.tarjeta-valor p {
-  font-size: 0.88rem;
-  color: var(--gris-texto);
-  margin-bottom: 0;
-}
-
-/* ---------- Oferta académica ---------- */
 .tarjeta-oferta {
   border-radius: var(--radio);
   padding: 36px 28px;
@@ -607,27 +572,10 @@ select:focus-visible {
   background: linear-gradient(160deg, var(--rojo-ie), var(--rojo-ie-oscuro));
   transition: transform 0.3s ease;
 }
-
-.tarjeta-oferta:hover {
-  transform: translateY(-8px);
-}
-
-.tarjeta-oferta i.icono-oferta {
-  font-size: 2.3rem;
-  margin-bottom: 18px;
-  opacity: 0.95;
-}
-
-.tarjeta-oferta h3 {
-  font-size: 1.3rem;
-  margin-bottom: 10px;
-}
-
-.tarjeta-oferta p {
-  color: rgba(255, 255, 255, 0.88);
-  font-size: 0.94rem;
-}
-
+.tarjeta-oferta:hover { transform: translateY(-8px); }
+.tarjeta-oferta i.icono-oferta { font-size: 2.3rem; margin-bottom: 18px; opacity: 0.95; }
+.tarjeta-oferta h3 { font-size: 1.3rem; margin-bottom: 10px; }
+.tarjeta-oferta p { color: rgba(255, 255, 255, 0.88); font-size: 0.94rem; }
 .tarjeta-oferta::after {
   content: "";
   position: absolute;
@@ -639,7 +587,6 @@ select:focus-visible {
   bottom: -50px;
 }
 
-/* ---------- Servicios ---------- */
 .tarjeta-servicio {
   display: flex;
   gap: 18px;
@@ -649,7 +596,6 @@ select:focus-visible {
   background: var(--hueso);
   height: 100%;
 }
-
 .tarjeta-servicio .icono-servicio {
   width: 54px;
   height: 54px;
@@ -662,50 +608,34 @@ select:focus-visible {
   flex-shrink: 0;
   font-size: 1.3rem;
 }
+.tarjeta-servicio h4 { font-size: 1.05rem; margin-bottom: 6px; }
+.tarjeta-servicio p { font-size: 0.9rem; color: var(--gris-texto); margin-bottom: 0; }
 
-.tarjeta-servicio h4 {
-  font-size: 1.05rem;
-  margin-bottom: 6px;
-}
-
-.tarjeta-servicio p {
-  font-size: 0.9rem;
-  color: var(--gris-texto);
-  margin-bottom: 0;
-}
-
-/* ---------- Noticias ---------- */
 .tarjeta-noticia {
   border-radius: var(--radio);
   overflow: hidden;
   background: #fff;
   box-shadow: var(--sombra);
   height: 100%;
+  border-top: 3px solid var(--rojo-ie);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-
 .tarjeta-noticia:hover {
   transform: translateY(-6px);
   box-shadow: var(--sombra-fuerte);
 }
-
 .tarjeta-noticia .noticia-img {
   height: 200px;
   overflow: hidden;
   position: relative;
 }
-
 .tarjeta-noticia .noticia-img img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.5s ease;
 }
-
-.tarjeta-noticia:hover .noticia-img img {
-  transform: scale(1.08);
-}
-
+.tarjeta-noticia:hover .noticia-img img { transform: scale(1.08); }
 .noticia-fecha {
   position: absolute;
   top: 14px;
@@ -717,20 +647,9 @@ select:focus-visible {
   padding: 5px 12px;
   border-radius: 999px;
 }
-
-.tarjeta-noticia .noticia-cuerpo {
-  padding: 22px;
-}
-
-.tarjeta-noticia h3 {
-  font-size: 1.1rem;
-  margin-bottom: 10px;
-}
-
-.tarjeta-noticia p {
-  font-size: 0.9rem;
-  color: var(--gris-texto);
-}
+.tarjeta-noticia .noticia-cuerpo { padding: 22px; }
+.tarjeta-noticia h3 { font-size: 1.1rem; margin-bottom: 10px; }
+.tarjeta-noticia p { font-size: 0.9rem; color: var(--gris-texto); }
 
 .enlace-leer-mas {
   color: var(--rojo-ie);
@@ -740,20 +659,45 @@ select:focus-visible {
   align-items: center;
   gap: 6px;
 }
+.enlace-leer-mas i { transition: transform 0.25s ease; }
+.enlace-leer-mas:hover i { transform: translateX(4px); }
+.enlace-leer-mas:hover { color: var(--rojo-ie-oscuro); }
 
-.enlace-leer-mas i {
-  transition: transform 0.25s ease;
+/* ============================================================
+   9. PANELES MISIÓN / VISIÓN
+   ============================================================ */
+.panel-mv {
+  border-radius: var(--radio);
+  overflow: hidden;
+  box-shadow: var(--sombra);
+  height: 100%;
+}
+.panel-mv .mv-img {
+  height: 260px;
+  overflow: hidden;
+}
+.panel-mv .mv-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+.panel-mv:hover .mv-img img { transform: scale(1.06); }
+.panel-mv .mv-cuerpo { background: #fff; padding: 30px; }
+.panel-mv.mv-invertido { background: var(--rojo-ie); color: #fff; }
+.panel-mv.mv-invertido .mv-cuerpo { background: var(--rojo-ie); }
+.panel-mv.mv-invertido p { color: rgba(255, 255, 255, 0.9); }
+
+.mision-vision-texto p,
+#mision p,
+#vision p {
+  text-align: justify;
+  hyphens: auto;
 }
 
-.enlace-leer-mas:hover i {
-  transform: translateX(4px);
-}
-
-.enlace-leer-mas:hover {
-  color: var(--rojo-ie-oscuro);
-}
-
-/* ---------- Galería ---------- */
+/* ============================================================
+   10. GALERÍA + LIGHTBOX
+   ============================================================ */
 .galeria-item {
   position: relative;
   overflow: hidden;
@@ -761,18 +705,13 @@ select:focus-visible {
   aspect-ratio: 1 / 1;
   cursor: pointer;
 }
-
 .galeria-item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.5s ease;
 }
-
-.galeria-item:hover img {
-  transform: scale(1.12);
-}
-
+.galeria-item:hover img { transform: scale(1.12); }
 .galeria-overlay {
   position: absolute;
   inset: 0;
@@ -786,12 +725,8 @@ select:focus-visible {
   font-weight: 600;
   font-size: 0.9rem;
 }
+.galeria-item:hover .galeria-overlay { opacity: 1; }
 
-.galeria-item:hover .galeria-overlay {
-  opacity: 1;
-}
-
-/* Lightbox */
 #lightbox {
   position: fixed;
   inset: 0;
@@ -802,18 +737,13 @@ select:focus-visible {
   justify-content: center;
   padding: 20px;
 }
-
-#lightbox.activo {
-  display: flex;
-}
-
+#lightbox.activo { display: flex; }
 #lightbox img {
   max-width: 90vw;
   max-height: 82vh;
   border-radius: 10px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
-
 .lightbox-cerrar,
 .lightbox-nav {
   position: absolute;
@@ -830,46 +760,31 @@ select:focus-visible {
   cursor: pointer;
   transition: background 0.2s ease;
 }
-
 .lightbox-cerrar:hover,
-.lightbox-nav:hover {
-  background: var(--rojo-ie);
+.lightbox-nav:hover { background: var(--rojo-ie); }
+.lightbox-cerrar { top: 24px; right: 24px; }
+.lightbox-nav.prev { left: 20px; top: 50%; transform: translateY(-50%); }
+.lightbox-nav.next { right: 20px; top: 50%; transform: translateY(-50%); }
+
+.gallery-thumb {
+  width: 80px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-.lightbox-cerrar {
-  top: 24px;
-  right: 24px;
-}
-
-.lightbox-nav.prev {
-  left: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.lightbox-nav.next {
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-/* ---------- Estadísticas ---------- */
-.franja-stats {
-  background: var(--rojo-ie);
-  color: #fff;
-}
-
-.stat-item {
-  text-align: center;
-}
-
+/* ============================================================
+   11. ESTADÍSTICAS
+   ============================================================ */
+.franja-stats { background: var(--rojo-ie); color: #fff; }
+.stat-item { text-align: center; }
 .stat-numero {
   font-family: var(--font-display);
   font-size: clamp(2.4rem, 5vw, 3.4rem);
   font-weight: 700;
   line-height: 1;
 }
-
 .stat-label {
   font-size: 0.85rem;
   text-transform: uppercase;
@@ -878,7 +793,9 @@ select:focus-visible {
   margin-top: 8px;
 }
 
-/* ---------- Equipo directivo ---------- */
+/* ============================================================
+   12. EQUIPO DIRECTIVO
+   ============================================================ */
 .tarjeta-equipo {
   text-align: center;
   background: #fff;
@@ -887,7 +804,6 @@ select:focus-visible {
   box-shadow: var(--sombra);
   height: 100%;
 }
-
 .tarjeta-equipo .foto-wrap {
   width: 128px;
   height: 128px;
@@ -897,19 +813,13 @@ select:focus-visible {
   padding: 4px;
   overflow: hidden;
 }
-
 .tarjeta-equipo .foto-wrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
 }
-
-.tarjeta-equipo h3 {
-  font-size: 1.05rem;
-  margin-bottom: 4px;
-}
-
+.tarjeta-equipo h3 { font-size: 1.05rem; margin-bottom: 4px; }
 .tarjeta-equipo .cargo {
   color: var(--rojo-ie);
   font-weight: 700;
@@ -918,7 +828,9 @@ select:focus-visible {
   letter-spacing: 0.04em;
 }
 
-/* ---------- Eventos (calendario) ---------- */
+/* ============================================================
+   13. EVENTOS
+   ============================================================ */
 .evento-fila {
   display: flex;
   align-items: center;
@@ -930,11 +842,7 @@ select:focus-visible {
   margin-bottom: 14px;
   transition: border-color 0.25s ease;
 }
-
-.evento-fila:hover {
-  border-color: var(--rojo-ie);
-}
-
+.evento-fila:hover { border-color: var(--rojo-ie); }
 .evento-fecha {
   flex-shrink: 0;
   width: 70px;
@@ -947,38 +855,28 @@ select:focus-visible {
   align-items: center;
   justify-content: center;
 }
-
 .evento-fecha .dia {
   font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 700;
   line-height: 1;
 }
-
 .evento-fecha .mes {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+.evento-fila h4 { font-size: 1rem; margin-bottom: 4px; }
+.evento-fila p { font-size: 0.86rem; color: var(--gris-texto); margin-bottom: 0; }
 
-.evento-fila h4 {
-  font-size: 1rem;
-  margin-bottom: 4px;
-}
-
-.evento-fila p {
-  font-size: 0.86rem;
-  color: var(--gris-texto);
-  margin-bottom: 0;
-}
-
-/* ---------- Matrícula ---------- */
+/* ============================================================
+   14. MATRÍCULA / DOCUMENTOS
+   ============================================================ */
 .paso-matricula {
   display: flex;
   gap: 18px;
   margin-bottom: 26px;
 }
-
 .paso-matricula .paso-num {
   flex-shrink: 0;
   width: 46px;
@@ -992,13 +890,15 @@ select:focus-visible {
   font-family: var(--font-display);
   font-weight: 700;
 }
-
 .paso-matricula h4 {
+  font-family: var(--font-body) !important;
+  font-weight: 700;
   font-size: 1.02rem;
   margin-bottom: 6px;
+  color: #1a1a1a;
 }
-
 .paso-matricula p {
+  font-family: var(--font-body) !important;
   color: var(--gris-texto);
   font-size: 0.92rem;
   margin-bottom: 0;
@@ -1011,13 +911,7 @@ select:focus-visible {
   box-shadow: var(--sombra);
   height: 100%;
 }
-
-.tarjeta-documentos ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
+.tarjeta-documentos ul { list-style: none; padding: 0; margin: 0; }
 .tarjeta-documentos li {
   display: flex;
   align-items: center;
@@ -1026,32 +920,25 @@ select:focus-visible {
   border-bottom: 1px dashed var(--linea);
   font-size: 0.94rem;
 }
+.tarjeta-documentos li:last-child { border-bottom: none; }
+.tarjeta-documentos li i { color: var(--rojo-ie); }
 
-.tarjeta-documentos li:last-child {
-  border-bottom: none;
-}
-
-.tarjeta-documentos li i {
-  color: var(--rojo-ie);
-}
-
-/* ---------- FAQ ---------- */
+/* ============================================================
+   15. FAQ / CONTACTO
+   ============================================================ */
 .accordion-ie .accordion-button {
   font-weight: 700;
   color: var(--carbon);
   background: #fff;
 }
-
 .accordion-ie .accordion-button:not(.collapsed) {
   color: var(--rojo-ie);
   background: var(--rojo-ie-suave);
   box-shadow: none;
 }
-
 .accordion-ie .accordion-button:focus {
   box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.2);
 }
-
 .accordion-ie .accordion-item {
   border: 1px solid var(--linea);
   border-radius: var(--radio-chico) !important;
@@ -1059,13 +946,7 @@ select:focus-visible {
   margin-bottom: 12px;
 }
 
-/* ---------- Contacto ---------- */
-.info-contacto-item {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 22px;
-}
-
+.info-contacto-item { display: flex; gap: 16px; margin-bottom: 22px; }
 .info-contacto-item .icono {
   width: 50px;
   height: 50px;
@@ -1077,38 +958,33 @@ select:focus-visible {
   justify-content: center;
   flex-shrink: 0;
 }
+.info-contacto-item h4 { font-size: 0.98rem; margin-bottom: 3px; }
+.info-contacto-item p { font-size: 0.9rem; color: var(--gris-texto); margin-bottom: 0; }
 
-.info-contacto-item h4 {
-  font-size: 0.98rem;
-  margin-bottom: 3px;
+.icono-contacto {
+  width: 48px;
+  height: 48px;
+  background-color: rgba(200, 16, 46, 0.1);
+  color: #c8102e;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
 }
 
-.info-contacto-item p {
-  font-size: 0.9rem;
-  color: var(--gris-texto);
-  margin-bottom: 0;
-}
-
-.form-ie label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  margin-bottom: 6px;
-}
-
+.form-ie label { font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; }
 .form-ie .form-control {
   border-radius: var(--radio-chico);
   border: 1px solid var(--linea);
   padding: 12px 14px;
 }
-
 .form-ie .form-control:focus {
   border-color: var(--rojo-ie);
   box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.14);
 }
-
-.form-ie .invalid-feedback {
-  font-size: 0.8rem;
-}
+.form-ie .invalid-feedback { font-size: 0.8rem; }
 
 .mapa-wrap {
   border-radius: var(--radio);
@@ -1117,7 +993,6 @@ select:focus-visible {
   height: 100%;
   min-height: 320px;
 }
-
 .mapa-wrap iframe {
   width: 100%;
   height: 100%;
@@ -1125,35 +1000,24 @@ select:focus-visible {
   border: 0;
 }
 
-/* ---------- Footer ---------- */
+/* ============================================================
+   16. FOOTER
+   ============================================================ */
 footer.footer-ie {
   background: var(--carbon);
   color: rgba(255, 255, 255, 0.75);
   padding: 70px 0 0;
+  border-top: 3px solid #c8102e;
 }
-
 .footer-ie h5 {
-  color: #fff;
+  color: var(--rojo-ie);
   font-family: var(--font-display);
   margin-bottom: 18px;
 }
-
-.footer-ie a {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.footer-ie a:hover {
-  color: var(--dorado);
-}
-
-.footer-ie ul {
-  list-style: none;
-  padding: 0;
-}
-
-.footer-ie ul li {
-  margin-bottom: 10px;
-}
+.footer-ie a { color: rgba(255, 255, 255, 0.7); }
+.footer-ie a:hover { color: var(--dorado); }
+.footer-ie ul { list-style: none; padding: 0; }
+.footer-ie ul li { margin-bottom: 10px; }
 
 .footer-marca {
   display: flex;
@@ -1161,7 +1025,6 @@ footer.footer-ie {
   gap: 12px;
   margin-bottom: 16px;
 }
-
 .footer-marca .logo-img {
   width: 50px;
   height: 50px;
@@ -1171,12 +1034,7 @@ footer.footer-ie {
   background: #fff;
 }
 
-.redes-sociales {
-  display: flex;
-  gap: 12px;
-  margin-top: 18px;
-}
-
+.redes-sociales { display: flex; gap: 12px; margin-top: 18px; }
 .redes-sociales a {
   width: 40px;
   height: 40px;
@@ -1187,7 +1045,6 @@ footer.footer-ie {
   justify-content: center;
   transition: background 0.25s ease, transform 0.25s ease;
 }
-
 .redes-sociales a:hover {
   background: var(--rojo-ie);
   transform: translateY(-3px);
@@ -1202,7 +1059,9 @@ footer.footer-ie {
   font-size: 0.85rem;
 }
 
-/* ---------- Botón volver arriba ---------- */
+/* ============================================================
+   17. BOTÓN VOLVER ARRIBA
+   ============================================================ */
 #volver-arriba {
   position: fixed;
   right: 22px;
@@ -1224,23 +1083,16 @@ footer.footer-ie {
   transition: all 0.3s ease;
   z-index: 1200;
 }
-
 #volver-arriba.visible {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
 }
+#volver-arriba:hover { background: var(--rojo-ie-oscuro); }
 
-#volver-arriba:hover {
-  background: var(--rojo-ie-oscuro);
-}
-
-/* ---------- Chatbot flotante ---------- */
 /* ============================================================
-   CHATBOT MODERNO - DarBot
+   18. CHATBOT — DarBot
    ============================================================ */
-
-/* ---------- Botón flotante ---------- */
 .darbot-chat-toggle {
   position: fixed;
   right: 26px;
@@ -1261,13 +1113,11 @@ footer.footer-ie {
   justify-content: center;
   animation: pulse-chat 2s infinite;
 }
-
 .darbot-chat-toggle:hover {
   transform: translateY(-4px) scale(1.05);
   box-shadow: 0 12px 32px rgba(200, 16, 46, 0.45);
   animation: none;
 }
-
 .darbot-chat-toggle.hidden {
   opacity: 0;
   visibility: hidden;
@@ -1275,7 +1125,6 @@ footer.footer-ie {
   transform: scale(0.8);
 }
 
-/* Badge de notificación */
 .darbot-chat-badge {
   position: absolute;
   top: -2px;
@@ -1298,13 +1147,11 @@ footer.footer-ie {
   0%, 100% { box-shadow: 0 8px 24px rgba(200, 16, 46, 0.35), 0 0 0 0 rgba(200, 16, 46, 0.5); }
   50% { box-shadow: 0 8px 24px rgba(200, 16, 46, 0.35), 0 0 0 12px rgba(200, 16, 46, 0); }
 }
-
 @keyframes bounce-badge {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.15); }
 }
 
-/* ---------- Panel del chat ---------- */
 .darbot-chat-panel {
   position: fixed;
   right: 24px;
@@ -1323,14 +1170,12 @@ footer.footer-ie {
   display: flex;
   flex-direction: column;
 }
-
 .darbot-chat-panel.open {
   opacity: 1;
   visibility: visible;
   transform: translateY(0) scale(1);
 }
 
-/* ---------- Header ---------- */
 .darbot-chat-header {
   display: flex;
   align-items: center;
@@ -1341,7 +1186,6 @@ footer.footer-ie {
   position: relative;
   overflow: hidden;
 }
-
 .darbot-chat-header::before {
   content: '';
   position: absolute;
@@ -1360,7 +1204,6 @@ footer.footer-ie {
   position: relative;
   z-index: 1;
 }
-
 .darbot-chat-avatar {
   width: 42px;
   height: 42px;
@@ -1373,20 +1216,10 @@ footer.footer-ie {
   border: 2px solid rgba(255, 255, 255, 0.4);
   flex-shrink: 0;
 }
+.darbot-chat-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.darbot-chat-avatar i { font-size: 1.1rem; color: #fff; }
 
-.darbot-chat-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.darbot-chat-title-text strong {
-  display: block;
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
+.darbot-chat-title-text strong { display: block; font-size: 1rem; font-weight: 700; line-height: 1.2; }
 .darbot-chat-title-text small {
   display: flex;
   align-items: center;
@@ -1403,7 +1236,6 @@ footer.footer-ie {
   box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
   animation: pulse-status 2s infinite;
 }
-
 @keyframes pulse-status {
   0%, 100% { box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3); }
   50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1); }
@@ -1425,12 +1257,8 @@ footer.footer-ie {
   position: relative;
   z-index: 1;
 }
+.darbot-chat-close:hover { background: rgba(255, 255, 255, 0.25); }
 
-.darbot-chat-close:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-/* ---------- Mensajes ---------- */
 .darbot-chat-messages {
   flex: 1;
   max-height: 380px;
@@ -1442,15 +1270,8 @@ footer.footer-ie {
   gap: 14px;
   scroll-behavior: smooth;
 }
-
-.darbot-chat-messages::-webkit-scrollbar {
-  width: 6px;
-}
-
-.darbot-chat-messages::-webkit-scrollbar-track {
-  background: transparent;
-}
-
+.darbot-chat-messages::-webkit-scrollbar { width: 6px; }
+.darbot-chat-messages::-webkit-scrollbar-track { background: transparent; }
 .darbot-chat-messages::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.12);
   border-radius: 3px;
@@ -1462,7 +1283,6 @@ footer.footer-ie {
   align-items: flex-end;
   animation: fadeInUp 0.3s ease;
 }
-
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -1481,40 +1301,26 @@ footer.footer-ie {
   color: #6b7280;
   font-size: 0.85rem;
 }
+.darbot-msg-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.darbot-msg-avatar i { font-size: 0.9rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
 
-.darbot-msg-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.darbot-message-user { flex-direction: row-reverse; }
+.darbot-message-user .darbot-msg-avatar { background: #c8102e; color: #fff; }
+.darbot-message-bot .darbot-msg-avatar { background: rgba(200, 16, 46, 0.1); color: #c8102e; }
 
-.darbot-message-user {
-  flex-direction: row-reverse;
-}
-
-.darbot-message-user .darbot-msg-avatar {
-  background: #c8102e;
-  color: #fff;
-}
-
-.darbot-msg-content {
-  max-width: 78%;
-  display: flex;
-  flex-direction: column;
-}
-
-.darbot-message-user .darbot-msg-content {
-  align-items: flex-end;
-}
+.darbot-msg-content { max-width: 78%; display: flex; flex-direction: column; }
+.darbot-message-user .darbot-msg-content { align-items: flex-end; }
 
 .darbot-msg-bubble {
   padding: 10px 14px;
   border-radius: 16px;
   font-size: 0.9rem;
-  line-height: 1.5;
+  line-height: 1.6;
   word-wrap: break-word;
   white-space: pre-wrap;
 }
+.darbot-msg-bubble p { margin: 0; white-space: pre-wrap; word-wrap: break-word; line-height: 1.6; }
+.darbot-msg-bubble strong { font-weight: 700; color: #1a1a1a; }
 
 .darbot-message-bot .darbot-msg-bubble {
   background: #fff;
@@ -1522,32 +1328,15 @@ footer.footer-ie {
   border-bottom-left-radius: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
-
 .darbot-message-user .darbot-msg-bubble {
   background: linear-gradient(135deg, #c8102e, #dd3255);
   color: #fff;
   border-bottom-right-radius: 4px;
   box-shadow: 0 2px 8px rgba(200, 16, 46, 0.2);
 }
+.darbot-msg-time { font-size: 0.68rem; color: #9ca3af; margin-top: 4px; padding: 0 4px; }
 
-.darbot-msg-bubble p {
-  margin: 0;
-}
-
-.darbot-msg-time {
-  font-size: 0.68rem;
-  color: #9ca3af;
-  margin-top: 4px;
-  padding: 0 4px;
-}
-
-/* ---------- Indicador de escritura ---------- */
-.darbot-typing {
-  display: flex;
-  gap: 4px;
-  padding: 12px 16px;
-}
-
+.darbot-typing { display: flex; gap: 4px; padding: 12px 16px; }
 .darbot-typing span {
   width: 8px;
   height: 8px;
@@ -1556,16 +1345,13 @@ footer.footer-ie {
   opacity: 0.4;
   animation: typing 1.4s infinite;
 }
-
 .darbot-typing span:nth-child(2) { animation-delay: 0.2s; }
 .darbot-typing span:nth-child(3) { animation-delay: 0.4s; }
-
 @keyframes typing {
   0%, 60%, 100% { opacity: 0.4; transform: translateY(0); }
   30% { opacity: 1; transform: translateY(-4px); }
 }
 
-/* ---------- Sugerencias ---------- */
 .darbot-chat-suggestions {
   display: flex;
   flex-wrap: wrap;
@@ -1574,7 +1360,6 @@ footer.footer-ie {
   background: #fff;
   border-top: 1px solid #f3f4f6;
 }
-
 .darbot-chat-suggestion {
   border: 1px solid rgba(200, 16, 46, 0.2);
   background: rgba(200, 16, 46, 0.04);
@@ -1590,7 +1375,6 @@ footer.footer-ie {
   gap: 5px;
   font-family: inherit;
 }
-
 .darbot-chat-suggestion:hover {
   background: #c8102e;
   color: #fff;
@@ -1598,7 +1382,6 @@ footer.footer-ie {
   box-shadow: 0 4px 12px rgba(200, 16, 46, 0.25);
 }
 
-/* ---------- Formulario ---------- */
 .darbot-chat-form {
   display: flex;
   align-items: center;
@@ -1607,7 +1390,6 @@ footer.footer-ie {
   background: #fff;
   border-top: 1px solid #f3f4f6;
 }
-
 .darbot-chat-form input {
   flex: 1;
   border: 1.5px solid #e5e7eb;
@@ -1619,13 +1401,11 @@ footer.footer-ie {
   font-family: inherit;
   background: #f9fafb;
 }
-
 .darbot-chat-form input:focus {
   border-color: #c8102e;
   background: #fff;
   box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.1);
 }
-
 .darbot-chat-form button {
   width: 42px;
   height: 42px;
@@ -1642,421 +1422,12 @@ footer.footer-ie {
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(200, 16, 46, 0.25);
 }
-
-.darbot-chat-form button:hover {
-  transform: scale(1.08);
-  box-shadow: 0 6px 16px rgba(200, 16, 46, 0.35);
-}
-
-.darbot-chat-form button:active {
-  transform: scale(0.95);
-}
-
-/* ---------- Responsive ---------- */
-/* ---------- RESPONSIVE CHATBOT ---------- */
-
-/* TABLET grande (768px - 991px): panel mediano */
-@media (min-width: 768px) and (max-width: 991.98px) {
-  .darbot-chat-panel {
-    width: min(400px, calc(100vw - 32px));
-    max-height: 560px;
-    right: 20px;
-    bottom: 150px;
-  }
-}
-
-/* TABLET pequeña (576px - 767px): panel mediano-pequeño */
-@media (min-width: 576px) and (max-width: 767.98px) {
-  .darbot-chat-panel {
-    width: min(380px, calc(100vw - 24px));
-    max-height: 520px;
-    right: 16px;
-    bottom: 140px;
-  }
-  
-  .darbot-chat-messages {
-    max-height: 320px;
-  }
-}
-
-/* MÓVIL (menos de 576px): pantalla completa */
-@media (max-width: 575.98px) {
-  .darbot-chat-panel {
-    position: fixed;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    top: 0;
-    width: 100vw;
-    max-width: 100vw;
-    max-height: 100vh;
-    height: 100vh;
-    border-radius: 0;
-    margin: 0;
-  }
-
-  .darbot-chat-messages {
-    max-height: none;
-    flex: 1;
-    padding: 14px 12px;
-    gap: 12px;
-  }
-
-  .darbot-chat-header {
-    padding: 14px 16px;
-    padding-top: max(14px, env(safe-area-inset-top));
-  }
-
-  .darbot-chat-form {
-    padding: 10px 12px;
-    padding-bottom: max(10px, env(safe-area-inset-bottom));
-  }
-
-  .darbot-chat-toggle {
-    right: 16px;
-    bottom: 80px;
-    width: 56px;
-    height: 56px;
-    font-size: 1.35rem;
-  }
-
-  .darbot-chat-suggestion {
-    font-size: 0.72rem;
-    padding: 5px 10px;
-  }
-
-  .darbot-msg-bubble {
-    font-size: 0.86rem;
-    padding: 9px 13px;
-  }
-}
-
-/* MÓVIL muy pequeño (menos de 360px) */
-@media (max-width: 359.98px) {
-  .darbot-chat-toggle {
-    width: 52px;
-    height: 52px;
-    right: 12px;
-    bottom: 72px;
-  }
-
-  .darbot-chat-suggestions {
-    padding: 10px 10px 6px;
-  }
-
-  .darbot-chat-suggestion {
-    font-size: 0.7rem;
-    padding: 4px 8px;
-  }
-}
-
-/* MÓVIL en horizontal (landscape) */
-@media (max-width: 767.98px) and (orientation: landscape) {
-  .darbot-chat-panel {
-    max-height: 100vh;
-    height: 100vh;
-  }
-
-  .darbot-chat-messages {
-    max-height: calc(100vh - 200px);
-  }
-
-  .darbot-chat-toggle {
-    bottom: 20px;
-    right: 16px;
-  }
-}
-
-/* DESKTOP grande: ancho cómodo */
-@media (min-width: 1200px) {
-  .darbot-chat-panel {
-    width: 400px;
-    max-height: 620px;
-  }
-
-  .darbot-chat-messages {
-    max-height: 400px;
-  }
-}
-
-
-.darbot-chat-form input:focus {
-  border-color: rgba(200, 16, 46, 0.8);
-}
-
-.darbot-chat-form button {
-  width: 42px;
-  height: 42px;
-  border: none;
-  border-radius: 50%;
-  background: var(--rojo-ie);
-  color: #fff;
-}
-
-@media (max-width: 575.98px) {
-  .darbot-chat-toggle {
-    right: 18px;
-    bottom: 78px;
-  }
-
-  .darbot-chat-panel {
-    right: 10px;
-    bottom: 150px;
-  }
-}
-
-/* ---------- Utilidades responsive ---------- */
-@media (max-width: 991.98px) {
-  .section-pad {
-    padding: 70px 0;
-  }
-
-  .navbar-ie .navbar-collapse {
-    background: #fff;
-    margin-top: 12px;
-    border-radius: var(--radio-chico);
-    padding: 12px 16px;
-    box-shadow: var(--sombra);
-  }
-
-  .navbar-ie .nav-link,
-  .navbar-ie:not(.scrolled) .nav-link {
-    color: var(--carbon) !important;
-  }
-
-  .navbar-ie .nav-cta {
-    display: inline-block;
-    margin-top: 8px;
-  }
-}
-
-@media (max-width: 575.98px) {
-  .hero .hero-botones {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
-
-
-/* Estilos aplicados ÚNICAMENTE cuando la navbar tiene la clase navbar-paginas */
-.navbar-ie.navbar-paginas {
-  background-color: #ffffff !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.navbar-ie.navbar-paginas .nav-link {
-  color: #2b2b2b !important;
-  /* Letras oscuras */
-}
-
-.navbar-ie.navbar-paginas .nav-link:hover,
-.navbar-ie.navbar-paginas .nav-link.active {
-  color: #c8102e !important;
-  /* Rojo al pasar el mouse */
-}
-
-.navbar-ie.navbar-paginas .marca-nombre {
-  color: #1a1a1a !important;
-}
-
-.navbar-ie.navbar-paginas .marca-lema {
-  color: #666666 !important;
-}
-
-.hero {
-
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-
-
-  background:
-    linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
-    url('imagenes/estudiantes2.jpg') no-repeat center center/cover;
-}
-
-
-/* --- ESTILOS PARA NAVBAR EN PÁGINAS SECUNDARIAS (FONDO BLANCO) --- */
-
-/* 1. Fondo blanco y sombra para la barra */
-.navbar-ie.navbar-paginas {
-  background-color: #ffffff !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-}
-
-/* 2. Forzar texto oscuro en los enlaces del menú */
-.navbar-ie.navbar-paginas .navbar-nav .nav-link {
-  color: #1a1a1a !important;
-  /* Gris casi negro */
-  font-weight: 600;
-}
-
-/* 3. Hover en enlaces (Rojo institucional) */
-.navbar-ie.navbar-paginas .navbar-nav .nav-link:hover,
-.navbar-ie.navbar-paginas .navbar-nav .nav-link.active {
-  color: #c8102e !important;
-}
-
-/* 4. Nombre de la institución y lema en oscuro */
-.navbar-ie.navbar-paginas .marca-nombre,
-.navbar-ie.navbar-paginas .navbar-brand span {
-  color: #1a1a1a !important;
-}
-
-.navbar-ie.navbar-paginas .marca-lema {
-  color: #666666 !important;
-}
-
-/* --- BARRA TRANSPARENTE AL INICIO (HERO) --- */
-.navbar-ie {
-  background-color: transparent;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.navbar-ie .nav-link,
-.navbar-ie .marca-nombre {
-  color: #ffffff !important;
-  transition: color 0.3s ease;
-}
-
-.navbar-ie .marca-lema {
-  color: rgba(255, 255, 255, 0.8) !important;
-}
-
-/* --- ESTADO AL HACER SCROLL (CUANDO PASA A FONDO BLANCO) --- */
-.navbar-ie.navbar-scrolled {
-  background-color: #ffffff !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-/* Cambia las letras a oscuro cuando se activa navbar-scrolled */
-.navbar-ie.navbar-scrolled .nav-link {
-  color: #1a1a1a !important;
-}
-
-.navbar-ie.navbar-scrolled .nav-link:hover,
-.navbar-ie.navbar-scrolled .nav-link.active {
-  color: #c8102e !important;
-}
-
-.navbar-ie.navbar-scrolled .marca-nombre {
-  color: #1a1a1a !important;
-}
-
-.navbar-ie.navbar-scrolled .marca-lema {
-  color: #666666 !important;
-}
-
-
-/* Botón principal */
-.btn-danger,
-.nav-cta {
-  background-color: #c8102e !important;
-  border-color: #c8102e !important;
-  color: #ffffff !important;
-  box-shadow: 0 4px 12px rgba(200, 16, 46, 0.25);
-  /* Sombra roja sutil */
-}
-
-.btn-danger:hover,
-.nav-cta:hover {
-  background-color: #a00c24 !important;
-  /* Rojo un poco más oscuro al pasar el ratón */
-  border-color: #a00c24 !important;
-}
-
-/* Enlaces tipo 'Leer más' o flechas */
-.enlace-leer-mas {
-  color: #c8102e !important;
-  font-weight: 600;
-}
-
-
-/* Borde superior en las tarjetas de noticias o secciones */
-.tarjeta-noticia,
-.card {
-  border-top: 3px solid #c8102e !important;
-}
-
-/* Badges o etiquetas de fecha */
-.badge.bg-danger {
-  background-color: #c8102e !important;
-}
-
-
-.footer-ie {
-  border-top: 3px solid #c8102e;
-}
-
-.footer-ie h5 {
-  color: #c8102e;
-}
-
-/* Estilo para los iconos de contacto */
-.icono-contacto {
-  width: 48px;
-  height: 48px;
-  background-color: rgba(200, 16, 46, 0.1);
-  /* Fondo rosado/rojo claro */
-  color: #c8102e;
-  /* Icono rojo institucional */
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  flex-shrink: 0;
-}
-
-:root {
-  /* Forzamos que la fuente principal y de títulos sea Inter */
-  --font-base: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
-}
-
-/* Aplicar la tipografía Inter a todo el documento */
-body,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p,
-span,
-a,
-li {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-}
-
-/* Títulos de los pasos en el módulo de matrícula */
-.paso-matricula h4 {
-  font-family: 'Inter', sans-serif !important;
-  font-weight: 700;
-  /* Negrita similar al menú */
-  color: #1a1a1a;
-}
-
-/* Texto descriptivo de los pasos */
-.paso-matricula p {
-  font-family: 'Inter', sans-serif !important;
-  font-weight: 400;
-  color: #6c757d;
-}
-
-/* Justificar únicamente los textos de Misión y Visión */
-.mision-vision-texto p,
-#mision p,
-#vision p {
-  text-align: justify;
-  hyphens: auto;
-  /* Corta palabras con guion si es necesario para evitar espacios vacíos muy grandes */
-}
-
-/* ---------- Modal Login (estilo coherente) ---------- */
+.darbot-chat-form button:hover { transform: scale(1.08); box-shadow: 0 6px 16px rgba(200, 16, 46, 0.35); }
+.darbot-chat-form button:active { transform: scale(0.95); }
+
+/* ============================================================
+   19. MODAL LOGIN
+   ============================================================ */
 .modal-login {
   position: fixed;
   inset: 0;
@@ -2068,18 +1439,8 @@ li {
   opacity: 0;
   transition: opacity 0.25s ease, visibility 0.25s ease;
 }
-
-.modal-login.open {
-  visibility: visible;
-  opacity: 1;
-}
-
-.modal-login-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-}
-
+.modal-login.open { visibility: visible; opacity: 1; }
+.modal-login-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5); }
 .modal-login-panel {
   position: relative;
   background: #fff;
@@ -2089,36 +1450,15 @@ li {
   padding: 22px;
   box-shadow: var(--sombra-fuerte);
   z-index: 4100;
+  transform: translateY(-6px);
+  transition: transform 0.25s ease;
 }
-
-.modal-login-header {
-  text-align: center;
-  margin-bottom: 18px;
-}
-
-.modal-login-header h3 {
-  margin: 6px 0 6px;
-  font-size: 1.4rem;
-}
-
-.modal-login-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.modal-login-form .form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.modal-login-form label {
-  font-weight: 700;
-  color: var(--carbon);
-  font-size: 0.95rem;
-}
-
+.modal-login.open .modal-login-panel { transform: translateY(0); }
+.modal-login-header { text-align: center; margin-bottom: 18px; }
+.modal-login-header h3 { margin: 6px 0 6px; font-size: 1.4rem; }
+.modal-login-form { display: flex; flex-direction: column; gap: 10px; }
+.modal-login-form .form-group { display: flex; flex-direction: column; gap: 6px; }
+.modal-login-form label { font-weight: 700; color: var(--carbon); font-size: 0.95rem; }
 .modal-login-form input {
   width: 100%;
   padding: 12px 14px;
@@ -2127,14 +1467,7 @@ li {
   font-size: 1rem;
   box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.02);
 }
-
-.modal-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 14px;
-}
-
+.modal-actions { display: flex; gap: 12px; justify-content: center; margin-top: 14px; }
 .modal-close {
   position: absolute;
   right: 10px;
@@ -2150,7 +1483,6 @@ li {
   font-size: 18px;
   color: var(--gris-texto);
 }
-
 .form-error {
   color: #b00020;
   min-height: 1.2em;
@@ -2158,183 +1490,119 @@ li {
   text-align: center;
   margin-top: 6px;
 }
+.modal-actions .btn-institucional { padding: 12px 30px; border-radius: 999px; }
+.modal-actions .btn-outline-institucional { padding: 12px 26px; border-radius: 999px; }
 
-/* Make primary action more prominent */
-.modal-actions .btn-institucional {
-  padding: 12px 30px;
-  border-radius: 999px;
-}
-
-.modal-actions .btn-outline-institucional {
-  padding: 12px 26px;
-  border-radius: 999px;
-}
-
-/* Center the modal content visually */
-.modal-login-panel {
-  transform: translateY(-6px);
-}
-
-.modal-login.open .modal-login-panel {
-  transform: translateY(0);
-}
-
-@media (max-width:480px) {
-  .modal-login-panel {
-    width: 92%;
-    padding: 16px;
-  }
-
-  .modal-login-header .sello {
-    width: 64px;
-    height: 64px;
-  }
-}
-
-.gallery-thumb {
-  width: 80px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-/* ============================================================
-   FIX UX: Navbar toggler (hamburger) siempre visible
-   ============================================================ */
-.navbar-toggler {
-  border: 2px solid #c8102e !important;
-  border-radius: 8px;
-  padding: 6px 10px;
-  background-color: rgba(255, 255, 255, 0.95);
-  transition: all 0.2s ease;
-}
-
-.navbar-toggler:hover,
-.navbar-toggler:focus {
-  background-color: #c8102e;
-  box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.2);
-}
-
-.navbar-toggler:hover .navbar-toggler-icon,
-.navbar-toggler:focus .navbar-toggler-icon {
-  filter: brightness(0) invert(1);  /* Icono blanco */
-}
-
-.navbar-toggler:focus {
-  outline: none;
-}
-
-/* El icono del hamburger siempre visible en rojo o negro */
-.navbar-toggler-icon {
-  filter: none !important;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23c8102e' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
-  width: 24px;
-  height: 24px;
-}
-
-/* Cuando la navbar es transparente (hero), borde blanco */
-.navbar-ie:not(.scrolled):not(.navbar-paginas) .navbar-toggler {
-  border-color: #ffffff !important;
-  background-color: rgba(0, 0, 0, 0.3);
-}
-
-.navbar-ie:not(.scrolled):not(.navbar-paginas) .navbar-toggler-icon {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+@media (max-width: 480px) {
+  .modal-login-panel { width: 92%; padding: 16px; }
+  .modal-login-header .sello { width: 64px; height: 64px; }
 }
 
 /* ============================================================
-   FIX: Eliminar espacio blanco en la derecha (móvil)
+   20. RESPONSIVE GENERAL
    ============================================================ */
-
-/* 1. Asegurar que html también tenga overflow-x hidden */
-html {
-  overflow-x: hidden;
-  width: 100%;
-  max-width: 100%;
-}
-
-/* 2. Navbar: usar 100% del ancho correctamente */
-.navbar-ie {
-  width: 100%;
-  max-width: 100vw;
-  left: 0;
-  right: 0;
-}
-
-/* 3. Hero: evitar problemas con background-attachment fixed */
-.hero {
-  width: 100%;
-  max-width: 100vw;
-  overflow: hidden;
-}
-
-/* 4. Todas las secciones: evitar desbordamiento */
-section {
-  width: 100%;
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-/* 5. Contenedores: no exceder el ancho */
-.container,
-.container-fluid {
-  max-width: 100%;
-  padding-left: 15px;
-  padding-right: 15px;
-}
-
-/* 6. El chatbot: no exceder el ancho */
-#darbotChatWidget {
-  max-width: 100vw;
-}
-
-/* 7. Eliminar scroll horizontal en cualquier elemento */
-* {
-  max-width: 100%;
-}
-
-/* Excepción: el propio body puede tener hijos que necesiten más ancho */
-img, video, iframe, svg {
-  max-width: 100%;
-  height: auto;
-}
-
-/* 8. Fix específico: background-attachment fixed en móvil */
 @media (max-width: 991.98px) {
-  .hero {
-    background-attachment: scroll !important;
+  .section-pad { padding: 70px 0; }
+
+  .navbar-ie .navbar-collapse {
+    background: #fff;
+    margin-top: 12px;
+    border-radius: var(--radio-chico);
+    padding: 12px 16px;
+    box-shadow: var(--sombra);
   }
+  .navbar-ie .nav-link,
+  .navbar-ie:not(.scrolled) .nav-link {
+    color: var(--carbon) !important;
+  }
+  .navbar-ie .nav-cta { display: inline-block; margin-top: 8px; }
+
+  .navbar-ie.navbar-paginas .navbar-collapse {
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    margin-top: 0.75rem;
+  }
+  .navbar-ie.navbar-paginas .nav-acceso-inst { margin-top: 0.5rem; }
+}
+
+@media (max-width: 575.98px) {
+  .hero .hero-botones { flex-direction: column; align-items: stretch; }
 }
 
 /* ============================================================
-   AVATAR DEL CHATBOT - Icono de robot
+   21. RESPONSIVE CHATBOT
    ============================================================ */
-.darbot-chat-avatar i,
-.darbot-msg-avatar i {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .darbot-chat-panel {
+    width: min(400px, calc(100vw - 32px));
+    max-height: 560px;
+    right: 20px;
+    bottom: 150px;
+  }
 }
 
-.darbot-chat-avatar i {
-  font-size: 1.1rem;
-  color: #fff;
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .darbot-chat-panel {
+    width: min(380px, calc(100vw - 24px));
+    max-height: 520px;
+    right: 16px;
+    bottom: 140px;
+  }
+  .darbot-chat-messages { max-height: 320px; }
 }
 
-.darbot-msg-avatar i {
-  font-size: 0.9rem;
+@media (max-width: 575.98px) {
+  .darbot-chat-panel {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
+    margin: 0;
+  }
+  .darbot-chat-messages {
+    max-height: none;
+    flex: 1;
+    padding: 14px 12px;
+    gap: 12px;
+  }
+  .darbot-chat-header {
+    padding: 14px 16px;
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
+  .darbot-chat-form {
+    padding: 10px 12px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+  .darbot-chat-toggle {
+    right: 16px;
+    bottom: 80px;
+    width: 56px;
+    height: 56px;
+    font-size: 1.35rem;
+  }
+  .darbot-chat-suggestion { font-size: 0.72rem; padding: 5px 10px; }
+  .darbot-msg-bubble { font-size: 0.86rem; padding: 9px 13px; }
 }
 
-/* El avatar del bot en los mensajes: fondo rojo claro con icono rojo */
-.darbot-message-bot .darbot-msg-avatar {
-  background: rgba(200, 16, 46, 0.1);
-  color: #c8102e;
+@media (max-width: 359.98px) {
+  .darbot-chat-toggle { width: 52px; height: 52px; right: 12px; bottom: 72px; }
+  .darbot-chat-suggestions { padding: 10px 10px 6px; }
+  .darbot-chat-suggestion { font-size: 0.7rem; padding: 4px 8px; }
 }
 
-/* El avatar del usuario: fondo rojo con icono blanco */
-.darbot-message-user .darbot-msg-avatar {
-  background: #c8102e;
-  color: #fff;
+@media (max-width: 767.98px) and (orientation: landscape) {
+  .darbot-chat-panel { max-height: 100vh; height: 100vh; }
+  .darbot-chat-messages { max-height: calc(100vh - 200px); }
+  .darbot-chat-toggle { bottom: 20px; right: 16px; }
+}
+
+@media (min-width: 1200px) {
+  .darbot-chat-panel { width: 400px; max-height: 620px; }
+  .darbot-chat-messages { max-height: 400px; }
 }

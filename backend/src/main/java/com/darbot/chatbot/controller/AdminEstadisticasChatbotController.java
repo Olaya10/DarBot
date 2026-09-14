@@ -103,7 +103,6 @@ public class AdminEstadisticasChatbotController {
                 "FROM mensajes WHERE fecha >= NOW() - INTERVAL '7 days' " +
                 "GROUP BY DATE(fecha) ORDER BY dia ASC"
             );
-            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM");
             for (Map<String, Object> row : rows) {
                 String dia = row.get("dia").toString();
                 long total = ((Number) row.get("total")).longValue();

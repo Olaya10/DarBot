@@ -33,7 +33,6 @@ public class EquipoHandler implements IntencionHandler {
         
         for (EquipoDirectivo miembro : equipo) {
             String cargo = miembro.getCargo() != null ? miembro.getCargo().toLowerCase() : "";
-            String nombre = miembro.getNombre() != null ? miembro.getNombre().toLowerCase() : "";
             
             // Si la pregunta menciona el cargo o el nombre, priorizar
             if (textoLower.contains("rector") && cargo.contains("rector")) {

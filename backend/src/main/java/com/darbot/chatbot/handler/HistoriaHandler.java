@@ -38,21 +38,16 @@ public class HistoriaHandler implements IntencionHandler {
         // Si la pregunta pide específicamente misión, visión o filosofía
         String textoLower = texto.toLowerCase();
         String mensaje;
-        String tipo = "HISTORIA";
         
         if (textoLower.contains("mision") || textoLower.contains("misión")) {
             mensaje = "🎯 Nuestra misión:\n\n" + info.getMision();
-            tipo = "MISION";
         } else if (textoLower.contains("vision") || textoLower.contains("visión")) {
             mensaje = "🔭 Nuestra visión:\n\n" + info.getVision();
-            tipo = "VISION";
         } else if (textoLower.contains("filosofia") || textoLower.contains("filosofía")) {
             mensaje = "💭 Nuestra filosofía:\n\n" + info.getFilosofia();
-            tipo = "FILOSOFIA";
         } else if (textoLower.contains("quienes somos") || textoLower.contains("quiénes somos")) {
             mensaje = "🏫 Sobre la " + (info.getNombreInstitucion() != null ? info.getNombreInstitucion() : "institución") + ":\n\n" + 
                 (info.getDescripcion() != null ? info.getDescripcion() : historia);
-            tipo = "INSTITUCION";
         } else {
             mensaje = "📖 Historia de la " + (info.getNombreInstitucion() != null ? info.getNombreInstitucion() : "institución") + ":\n\n" + historia;
         }

@@ -401,6 +401,91 @@ function inicializarChatbot() {
     return now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
   };
 
+  // ═══════════════════════════════════════════════════════
+  // FORMATEAR RESPUESTA CON RESULTADOS
+  // ═══════════════════════════════════════════════════════
+  const formatearRespuesta = (data) => {
+    if (!data) return 'Sin respuesta.';
+    
+    let texto = data.respuesta || 'Sin respuesta.';
+    
+    // Si hay resultados, agregarlos
+    if (Array.isArray(data.resultados) && data.resultados.length > 0) {
+      texto += '\n\n';
+      
+      data.resultados.forEach((item) => {
+        // Sedes (tiene nombre + direccion, no tiene cargo)
+        if (item.nombre && item.direccion && !item.cargo) {
+          texto += `📍 ${item.nombre}\n`;
+          texto += `   Dirección: ${item.direccion}\n`;
+          if (item.telefono) texto += `   Teléfono: ${item.telefono}\n`;
+          if (item.horarioAtencion) texto += `   Horario: ${item.horarioAtencion}\n`;
+          texto += '\n';
+        }
+        // Equipo directivo (tiene nombre + cargo)
+        else if (item.nombre && item.cargo) {
+          texto += `👤 ${item.nombre}\n`;
+          texto += `   Cargo: ${item.cargo}\n\n`;
+        }
+        // Noticias (tiene titulo + resumen/fecha)
+        else if (item.titulo && (item.fecha || item.fechaPublicacion)) {
+          texto += `📰 ${item.titulo}\n`;
+          if (item.resumen) texto += `   ${item.resumen}\n`;
+          if (item.contenido) texto += `   ${item.contenido.substring(0, 150)}...\n`;
+          texto += '\n';
+        }
+        // Eventos (tiene titulo + fecha + lugar)
+        else if (item.titulo && item.fecha) {
+          texto += `📅 ${item.titulo}\n`;
+          if (item.descripcion) texto += `   ${item.descripcion}\n`;
+          if (item.lugar) texto += `   Lugar: ${item.lugar}\n`;
+          texto += '\n';
+        }
+        // Documentos (tiene titulo + tipo)
+        else if (item.titulo && item.tipo) {
+          texto += `📄 ${item.titulo}\n`;
+          if (item.descripcion) texto += `   ${item.descripcion}\n`;
+          texto += '\n';
+        }
+        // Valores (tiene titulo + descripcion)
+        else if (item.titulo && item.descripcion) {
+          texto += `💛 ${item.titulo}\n`;
+          texto += `   ${item.descripcion}\n\n`;
+        }
+        // Servicios (tiene nombre + horario)
+        else if (item.nombre && item.horario) {
+          texto += `🔔 ${item.nombre}\n`;
+          if (item.descripcion) texto += `   ${item.descripcion}\n`;
+          if (item.horario) texto += `   Horario: ${item.horario}\n`;
+          texto += '\n';
+        }
+        // Estadísticas (tiene label + value)
+        else if (item.label && item.value !== undefined) {
+          texto += `📊 ${item.label}: ${item.value}${item.sufijo || ''}\n`;
+        }
+        // Genérico: mostrar todos los campos
+        else {
+          Object.entries(item).forEach(([key, value]) => {
+            if (value && typeof value === 'string' && key !== 'id' && key !== 'fotoUrl') {
+              texto += `• ${key}: ${value}\n`;
+            }
+          });
+          texto += '\n';
+        }
+      });
+    }
+    
+    // Si hay opciones, mostrarlas
+    if (Array.isArray(data.opciones) && data.opciones.length > 0) {
+      texto += '\n💡 También puedes preguntar:\n';
+      data.opciones.forEach(opcion => {
+        texto += `   • ${opcion}\n`;
+      });
+    }
+    
+    return texto.trim();
+  };
+
   const addMessage = (text, isUser = false) => {
     const messageWrapper = document.createElement('div');
     messageWrapper.className = `darbot-message ${isUser ? 'darbot-message-user' : 'darbot-message-bot'}`;
@@ -525,7 +610,7 @@ function inicializarChatbot() {
       if (!response.ok) throw new Error('Error del servidor');
 
       const data = await response.json();
-      const respuesta = data?.respuesta || 'No tengo una respuesta clara para eso en este momento.';
+      const respuesta = formatearRespuesta(data);
       
       hideTyping();
       // Pequeño delay para simular "escribiendo"

@@ -77,7 +77,7 @@ public class IntentRouterService {
         // Sin resultado
         guardarPreguntaSinRespuesta(texto, null);
         return new ResultadoChatbot("DESCONOCIDA", 
-            "🔍 No encontré información sobre tu consulta. La he registrado para que los administradores puedan mejorar mi base de conocimiento.");
+            "No encontré información sobre tu consulta. La he registrado para que los administradores puedan mejorar mi base de conocimiento.");
     }
 
     private ResultadoChatbot procesarHandler(String intencion, String texto, Map<String, Object> entidades, String elementoNegado) {
@@ -107,7 +107,7 @@ public class IntentRouterService {
                 mensaje.append("• ").append(resultado.getMensaje()).append("\n\n");
             } else {
                 guardarPreguntaSinRespuesta(parte, null);
-                mensaje.append("• ❌ No pude entender: \"").append(parte).append("\"\n\n");
+                mensaje.append("• No pude entender: \"").append(parte).append("\"\n\n");
             }
         }
         
