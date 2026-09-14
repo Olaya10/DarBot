@@ -211,6 +211,7 @@ if (isAdminSPA) {
       case 'contenidos': renderContenidos(); break;
       case 'institucional': renderInstitucional(); break;
       case 'chatbot': renderChatbot(); break;
+      case 'estadisticas-chatbot': renderEstadisticasChatbot(); break;
       case 'cache': renderCache(); break;
       case 'galeria': renderGaleria(); break;
       case 'estadisticas': renderEstadisticas(); break;
@@ -2777,7 +2778,249 @@ if (isAdminSPA) {
     loadHero();
   }
 
-  async function renderChatbot() {
+  // ═══════════════════════════════════════════════════════
+// ESTADÍSTICAS DEL CHATBOT
+// ═══════════════════════════════════════════════════════
+async function renderEstadisticasChatbot() {
+  pageTitle.textContent = 'Estadísticas del Chatbot';
+  viewContainer.innerHTML = `
+    <div class="admin-section">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+          <h3 class="section-title mb-1">
+            <i class="fa-solid fa-chart-line me-2 text-danger"></i>Estadísticas del Chatbot
+          </h3>
+          <p class="text-muted small mb-0">Métricas de uso y comportamiento del asistente virtual.</p>
+        </div>
+        <button id="refreshStatsBtn" class="btn btn-admin-primary">
+          <i class="fa-solid fa-rotate me-1"></i> Actualizar
+        </button>
+      </div>
+      <div id="statsContent">
+        <div class="text-center py-5">
+          <div class="spinner-border text-danger" role="status"></div>
+          <p class="text-muted mt-2">Cargando estadísticas...</p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const content = document.getElementById('statsContent');
+
+  const cargarEstadisticas = async () => {
+    try {
+      const stats = await apiFetch('/admin/chatbot/estadisticas');
+      
+      // Calcular el máximo para las barras del gráfico de actividad
+      const maxActividad = Math.max(...stats.actividadUltimos7Dias.map(d => d.mensajes), 1);
+      const maxIntencion = Math.max(...stats.topIntenciones.map(i => i.total), 1);
+      
+      // Total de feedbacks para el porcentaje
+      const totalFeedback = stats.feedbackPositivo + stats.feedbackNegativo;
+      const porcentajeSatisfaccion = totalFeedback > 0 
+        ? Math.round(stats.feedbackPositivo * 100 / totalFeedback) 
+        : 0;
+
+      content.innerHTML = `
+        <!-- TARJETAS DE MÉTRICAS -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-6 col-lg-4 col-xl-2">
+            <div class="stat-card-mini">
+              <div class="stat-icon" style="background: rgba(200,16,46,0.1); color: #c8102e;">
+                <i class="fa-solid fa-comments"></i>
+              </div>
+              <div>
+                <div class="stat-number">${stats.totalConversaciones.toLocaleString()}</div>
+                <div class="stat-label-mini">Conversaciones</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6 col-lg-4 col-xl-2">
+            <div class="stat-card-mini">
+              <div class="stat-icon" style="background: rgba(37,99,235,0.1); color: #2563eb;">
+                <i class="fa-solid fa-envelope"></i>
+              </div>
+              <div>
+                <div class="stat-number">${stats.totalMensajes.toLocaleString()}</div>
+                <div class="stat-label-mini">Mensajes Totales</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6 col-lg-4 col-xl-2">
+            <div class="stat-card-mini">
+              <div class="stat-icon" style="background: rgba(34,197,94,0.1); color: #22c55e;">
+                <i class="fa-solid fa-circle-check"></i>
+              </div>
+              <div>
+                <div class="stat-number">${stats.porcentajeExito.toFixed(1)}%</div>
+                <div class="stat-label-mini">Precisión</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6 col-lg-4 col-xl-2">
+            <div class="stat-card-mini">
+              <div class="stat-icon" style="background: rgba(245,158,11,0.1); color: #f59e0b;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+              <div>
+                <div class="stat-number">${stats.preguntasSinRespuesta}</div>
+                <div class="stat-label-mini">Sin Respuesta</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6 col-lg-4 col-xl-2">
+            <div class="stat-card-mini">
+              <div class="stat-icon" style="background: rgba(139,92,246,0.1); color: #8b5cf6;">
+                <i class="fa-solid fa-thumbs-up"></i>
+              </div>
+              <div>
+                <div class="stat-number">${porcentajeSatisfaccion}%</div>
+                <div class="stat-label-mini">Satisfacción</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6 col-lg-4 col-xl-2">
+            <div class="stat-card-mini">
+              <div class="stat-icon" style="background: rgba(20,184,166,0.1); color: #14b8a6;">
+                <i class="fa-solid fa-chart-simple"></i>
+              </div>
+              <div>
+                <div class="stat-number">${stats.promedioMensajesPorConversacion}</div>
+                <div class="stat-label-mini">Msj/Conversación</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GRID: TOP INTENCIONES + ACTIVIDAD -->
+        <div class="row g-4 mb-4">
+          
+          <!-- TOP 10 INTENCIONES -->
+          <div class="col-lg-6">
+            <div class="card-admin">
+              <div class="card-admin-header">
+                <h2 class="card-admin-title">
+                  <i class="fa-solid fa-ranking-star me-2 text-danger"></i>Top 10 Intenciones
+                </h2>
+              </div>
+              <div class="card-admin-body">
+                ${stats.topIntenciones.map((int, i) => `
+                  <div class="top-intencion">
+                    <div class="d-flex justify-content-between mb-1">
+                      <span class="fw-semibold small">${i + 1}. ${int.intencion.replace('CONSULTAR_', '')}</span>
+                      <span class="text-muted small">${int.total} (${int.porcentaje}%)</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                      <div class="progress-bar" role="progressbar" 
+                           style="width: ${(int.total * 100 / maxIntencion).toFixed(1)}%; background: linear-gradient(90deg, #c8102e, #dd3255);"
+                           aria-valuenow="${int.total}" aria-valuemin="0" aria-valuemax="${maxIntencion}"></div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+
+          <!-- ACTIVIDAD ÚLTIMOS 7 DÍAS -->
+          <div class="col-lg-6">
+            <div class="card-admin">
+              <div class="card-admin-header">
+                <h2 class="card-admin-title">
+                  <i class="fa-solid fa-calendar-days me-2 text-danger"></i>Actividad de Mensajes
+                </h2>
+              </div>
+              <div class="card-admin-body">
+                <div class="actividad-chart">
+                  ${stats.actividadUltimos7Dias.map(d => {
+                    const porcentaje = (d.mensajes * 100 / maxActividad).toFixed(1);
+                    const fecha = d.dia.split('-').reverse().slice(0, 2).join('/');
+                    return `
+                      <div class="actividad-row">
+                        <div class="actividad-fecha">${fecha}</div>
+                        <div class="actividad-bar-wrap">
+                          <div class="actividad-bar" style="width: ${porcentaje}%;">
+                            <span class="actividad-valor">${d.mensajes}</span>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PREGUNTAS PENDIENTES -->
+        <div class="card-admin">
+          <div class="card-admin-header d-flex justify-content-between align-items-center">
+            <h2 class="card-admin-title mb-0">
+              <i class="fa-solid fa-circle-question me-2 text-danger"></i>Preguntas sin Respuesta (${stats.preguntasSinRespuesta})
+            </h2>
+            <button id="verPendientesBtn" class="btn btn-admin-outline btn-sm">
+              <i class="fa-solid fa-eye me-1"></i> Ver todas
+            </button>
+          </div>
+          <div class="card-admin-body p-0">
+            ${stats.preguntasPendientes.length === 0 ? `
+              <div class="text-center py-4 text-muted">
+                <i class="fa-solid fa-check-circle fa-2x mb-2 text-success"></i>
+                <p class="mb-0">¡No hay preguntas pendientes!</p>
+              </div>
+            ` : `
+              <div class="table-admin-wrap">
+                <table class="table-admin">
+                  <thead>
+                    <tr>
+                      <th style="width: 60px;">#</th>
+                      <th>Pregunta</th>
+                      <th style="width: 180px;">Fecha</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${stats.preguntasPendientes.map(p => `
+                      <tr>
+                        <td>#${p.id}</td>
+                        <td><em class="text-secondary">"${p.pregunta}"</em></td>
+                        <td><small class="text-muted">${p.fecha}</small></td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('verPendientesBtn')?.addEventListener('click', () => {
+        navigate('chatbot');
+        setTimeout(() => {
+          const tabPendientes = document.getElementById('tabPendientes');
+          if (tabPendientes) tabPendientes.click();
+        }, 500);
+      });
+
+    } catch (err) {
+      content.innerHTML = `
+        <div class="alert alert-danger">
+          <i class="fa-solid fa-exclamation-triangle me-2"></i>
+          Error al cargar estadísticas: ${err.message}
+        </div>
+      `;
+    }
+  };
+
+  document.getElementById('refreshStatsBtn').addEventListener('click', cargarEstadisticas);
+  await cargarEstadisticas();
+}
+
+async function renderChatbot() {
   pageTitle.textContent = 'Chatbot DarBot';
   viewContainer.innerHTML = `
     <div class="admin-section">

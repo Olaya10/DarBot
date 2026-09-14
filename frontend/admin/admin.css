@@ -560,6 +560,18 @@ body {
   transform: translateX(0);
 }
 
+/* Desktop: sidebar siempre visible */
+@media (min-width: 992px) {
+  .admin-sidebar {
+    transform: translateX(0) !important;
+  }
+  
+  .admin-sidebar.open {
+    transform: translateX(0) !important;
+  }
+}
+
+/* Móvil: sidebar oculta por defecto */
 @media (max-width: 991.98px) {
   .admin-sidebar {
     transform: translateX(-100%);
@@ -767,3 +779,106 @@ body {
 .peso-indicator .dot.active-3 { background: #eab308; }
 .peso-indicator .dot.active-4 { background: #f97316; }
 .peso-indicator .dot.active-5 { background: #dc2626; }
+
+/* ═══════════════════════════════════════════════════════
+   ESTADÍSTICAS DEL CHATBOT
+   ═══════════════════════════════════════════════════════ */
+
+.stat-card-mini {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card-mini:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.stat-number {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.1;
+}
+
+.stat-label-mini {
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 2px;
+}
+
+/* Top intenciones */
+.top-intencion {
+  margin-bottom: 12px;
+}
+
+.top-intencion:last-child {
+  margin-bottom: 0;
+}
+
+/* Actividad */
+.actividad-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.actividad-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.actividad-fecha {
+  width: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.actividad-bar-wrap {
+  flex: 1;
+  background: #f3f4f6;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 32px;
+  position: relative;
+}
+
+.actividad-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #c8102e, #dd3255);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  min-width: 40px;
+  transition: width 0.6s ease;
+}
+
+.actividad-valor {
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
