@@ -339,41 +339,50 @@ select:focus-visible {
 
 /* ---------- Toggler (hamburguesa) — SIEMPRE visible ---------- */
 .navbar-toggler {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 46px !important;
-  height: 42px !important;
-  padding: 0 !important;
-  border: 2px solid #c8102e !important;
-  border-radius: 8px !important;
-  background-color: #ffffff !important;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+  /* ---------- Toggler (hamburguesa) ---------- */
+.navbar-toggler {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 42px;
+  padding: 0;
+  border: 2px solid #c8102e;
+  border-radius: 8px;
+  background-color: #ffffff;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
+
 .navbar-toggler:hover,
 .navbar-toggler:focus {
-  background-color: #c8102e !important;
-  box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.2) !important;
+  background-color: #c8102e;
+  box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.2);
   outline: none;
 }
 
-/* Icono por defecto: rayas ROJAS sobre fondo BLANCO */
 .navbar-toggler-icon {
-  display: inline-block !important;
-  width: 24px !important;
-  height: 24px !important;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23c8102e' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
-  background-repeat: no-repeat !important;
-  background-position: center !important;
-  background-size: 100% !important;
-  filter: none !important;
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23c8102e' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+  filter: none;
 }
 
-/* Al hover/focus del botón rojo: rayas BLANCAS */
 .navbar-toggler:hover .navbar-toggler-icon,
 .navbar-toggler:focus .navbar-toggler-icon {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
-  filter: none !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23ffffff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  filter: none;
+}
+
+/* ⚠️ CRÍTICO: ocultar el toggler en desktop (≥992px) */
+@media (min-width: 992px) {
+  .navbar-toggler {
+    display: none !important;
+  }
+}
 }
 
 /* Variante navbar transparente (hero): borde blanco, fondo oscuro */
@@ -1605,4 +1614,59 @@ footer.footer-ie {
 @media (min-width: 1200px) {
   .darbot-chat-panel { width: 400px; max-height: 620px; }
   .darbot-chat-messages { max-height: 400px; }
+}
+
+/* ============================================================
+   FIX FINAL: Navbar altura + toggler solo en móvil
+   ============================================================ */
+
+/* Ocultar toggler en desktop (Bootstrap ya lo hace, pero por si acaso) */
+@media (min-width: 992px) {
+  .navbar-toggler,
+  .navbar-ie .navbar-toggler,
+  .navbar-ie.navbar-paginas .navbar-toggler,
+  .navbar-ie:not(.scrolled):not(.navbar-paginas) .navbar-toggler {
+    display: none !important;
+  }
+}
+
+/* Altura correcta del navbar */
+.navbar-ie {
+  padding: 12px 0 !important;
+}
+
+.navbar-ie.scrolled {
+  padding: 8px 0 !important;
+}
+
+.navbar-ie.navbar-paginas {
+  padding: 10px 0 !important;
+}
+
+.navbar-ie .container {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.navbar-ie .navbar-brand {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.navbar-ie .nav-link {
+  padding: 8px 12px !important;
+  margin: 0 !important;
+}
+
+/* Eliminar filter: invert que rompe el SVG */
+.navbar-toggler-icon {
+  filter: none !important;
+}
+
+/* Asegurar que el navbar-collapse no se aplaste en desktop */
+@media (min-width: 992px) {
+  .navbar-ie .navbar-collapse {
+    display: flex !important;
+    flex-basis: auto !important;
+  }
 }
