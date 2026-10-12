@@ -2,6 +2,7 @@ package com.darbot.config;
 
 import com.darbot.auth.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,7 +20,9 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
@@ -27,6 +30,9 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://localhost:3000,http://localhost:8000,http://127.0.0.1:8000,http://localhost:5500,http://127.0.0.1:5500}")
+    private String[] allowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -37,9 +43,14 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Permitir OPTIONS para TODOS los endpoints (necesario para CORS)
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // Endpoints públicos
+                // Endpoints públicos de autenticación
                 .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/logout").permitAll()
                 .requestMatchers("/api/auth/me").authenticated()
+                // Archivos estáticos y subidos públicos
+                .requestMatchers("/api/archivos/**").permitAll()
+                .requestMatchers("/imagenes/**").permitAll()
+                .requestMatchers("/documentos/**").permitAll()
+                // Endpoints públicos del sitio
                 .requestMatchers("/api/institucional/**").permitAll()
                 .requestMatchers("/api/contenidos/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
@@ -58,18 +69,14 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
-            "null",
-            "http://localhost",
-            "http://localhost:8000",
-            "http://127.0.0.1:8000",
-            "http://localhost:5173",
-            "http://localhost:5174",
-            "http://127.0.0.1:5173",
-            "http://localhost:3000",
-            "http://localhost:5500",
-            "http://127.0.0.1:5500"
-        ));
+        List<String> origins = new ArrayList<>();
+        if (allowedOrigins != null) {
+            origins.addAll(Arrays.asList(allowedOrigins));
+        }
+        if (!origins.contains("null")) {
+            origins.add("null");
+        }
+        configuration.setAllowedOrigins(origins);
         configuration.setAllowedMethods(Arrays.asList(
             "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"
         ));

@@ -1,40 +1,30 @@
+# Solo para desarrollo local. Producción corre en Render.
 services:
   postgres_db:
     image: postgres:15-alpine
-    container_name: darbot_postgres_container
     environment:
-      POSTGRES_DB: darbot_db
-      POSTGRES_USER: darbot_user
-      POSTGRES_PASSWORD: darbot123
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - pgdata_darbot:/var/lib/postgresql/data
-    networks:
-      - darbot_network
 
   backend:
     build: ./backend
-    container_name: darbot_backend_container
     environment:
       SERVER_PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_db:5432/darbot_db
-      SPRING_DATASOURCE_USERNAME: darbot_user
-      SPRING_DATASOURCE_PASSWORD: darbot123
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_db:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      APP_UPLOAD_DIR: /app/uploads
     ports:
       - "8080:8080"
     depends_on:
       - postgres_db
     volumes:
-      - ./frontend/imagenes/uploads:/app/uploads
-      - ./frontend/documentos:/app/documentos
-
-    networks:
-      - darbot_network
+      - ./uploads-dev:/app/uploads
 
 volumes:
   pgdata_darbot:
-
-networks:
-  darbot_network:
-    driver: bridge

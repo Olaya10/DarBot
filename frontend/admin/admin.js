@@ -10,10 +10,20 @@
 //   - Funciones globales (window.*) para onclick inline del partial
 // =====================================================================
 
-const API_BASE_HOST = (location.port && location.port !== '8080')
-  ? `${location.protocol}//${location.hostname}:8080`
-  : '';
+const API_BASE_HOST = window.DARBOT_BACKEND_URL
+  || ((location.port && location.port !== '8080')
+      ? `${location.protocol}//${location.hostname}:8080`
+      : '');
 const API_BASE = `${API_BASE_HOST}/api`;
+
+function formatMediaUrl(url) {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/api/archivos/') || url.startsWith('/imagenes/uploads/')) {
+    return `${API_BASE_HOST}${url}`;
+  }
+  return url;
+}
 
 function getToken() { return localStorage.getItem('darbot_token'); }
 function setToken(t) {
@@ -1248,7 +1258,7 @@ async function verificarEstadoSistema() {
     if (!preview || !placeholder) return;
     
     if (rutaFoto) {
-      let src = rutaFoto;
+      let src = formatMediaUrl(rutaFoto);
       if (!src.startsWith('/') && !src.startsWith('http')) {
         src = '/' + src;
       }
@@ -2049,7 +2059,7 @@ async function verificarEstadoSistema() {
                     <td><span class="badge bg-secondary">${d.tipo || 'General'}</span></td>
                     <td>
                       ${d.rutaArchivo ? `
-                        <a href="${d.rutaArchivo}" target="_blank" class="text-decoration-none">
+                        <a href="${formatMediaUrl(d.rutaArchivo)}" target="_blank" class="text-decoration-none">
                           <i class="fa-solid fa-file-pdf text-danger me-1"></i>
                           ${d.nombreArchivo || 'Ver PDF'}
                         </a>
@@ -2599,7 +2609,7 @@ async function verificarEstadoSistema() {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${item.id}</td>
-          <td><img src="${item.urlImagen}" alt="${item.titulo || ''}" class="gallery-thumb"></td>
+          <td><img src="${formatMediaUrl(item.urlImagen)}" alt="${item.titulo || ''}" class="gallery-thumb"></td>
           <td>${item.titulo || ''}</td>
           <td><span class="badge bg-secondary">${item.categoria || 'academico'}</span></td>
           <td>${item.orden != null ? item.orden : 0}</td>
@@ -2762,7 +2772,7 @@ async function verificarEstadoSistema() {
         </div>
         <div class="form-row mb-3">
           <label class="fw-semibold">Imagen actual</label>
-          <div><img src="${item.urlImagen || ''}" style="max-width:100%; max-height:200px; border-radius:8px;"/></div>
+          <div><img src="${formatMediaUrl(item.urlImagen) || ''}" style="max-width:100%; max-height:200px; border-radius:8px;"/></div>
         </div>
         <div class="form-row mb-3">
           <label class="fw-semibold">Reemplazar imagen (opcional)</label>

@@ -1,25 +1,33 @@
 package com.darbot.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.nio.file.Paths;
+
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+
+    @Value("${app.upload.dir:uploads}")
+    private String uploadDir;
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Serve uploaded gallery files
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:uploads/gallery/");
+        // Sirve todos los archivos subidos bajo /api/archivos/**
+        String base = Paths.get(uploadDir).toAbsolutePath().normalize().toUri().toString();
+        if (!base.endsWith("/")) {
+            base += "/";
+        }
 
-        // Serve admin UI partials and related static files
-        registry.addResourceHandler("/admin/**")
-                .addResourceLocations("file:frontend/admin/")
+        registry.addResourceHandler("/api/archivos/**")
+                .addResourceLocations(base)
                 .setCachePeriod(3600);
 
-        // Serve gallery images referenced in the UI
-        registry.addResourceHandler("/imagenes/**")
-                .addResourceLocations("file:frontend/imagenes/")
+        // Compatibilidad hacia atrás con referencias previas
+        registry.addResourceHandler("/imagenes/uploads/**")
+                .addResourceLocations(base)
                 .setCachePeriod(3600);
     }
 }

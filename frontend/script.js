@@ -1,11 +1,22 @@
 // ============================================
 // CONFIGURACIÓN DE API
 // ============================================
-const API_BASE_HOST = (typeof window !== 'undefined' && window.location && window.location.port && window.location.port !== '8080')
-  ? `${window.location.protocol}//${window.location.hostname}:8080`
-  : '';
+const API_BASE_HOST = (typeof window !== 'undefined' && window.DARBOT_BACKEND_URL)
+  ? window.DARBOT_BACKEND_URL
+  : ((typeof window !== 'undefined' && window.location && window.location.port && window.location.port !== '8080')
+      ? `${window.location.protocol}//${window.location.hostname}:8080`
+      : '');
 const API_BASE = `${API_BASE_HOST}/api/public`;
 const API_BASE_CONTENIDOS = `${API_BASE_HOST}/api/contenidos`;
+
+function resolverUrlArchivo(url) {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/api/archivos/') || url.startsWith('/imagenes/uploads/')) {
+    return `${API_BASE_HOST}${url}`;
+  }
+  return url;
+}
 
 const escapeHtml = (value = '') => String(value)
   .replace(/&/g, '&amp;')
@@ -686,7 +697,7 @@ async function cargarConfiguracion() {
     });
 
     // Actualizar logo institucional en todas sus variantes
-    const logoUrl = config.logo_url || 'imagenes/Logo IEDTP.jpeg';
+    const logoUrl = resolverUrlArchivo(config.logo_url || 'imagenes/Logo IEDTP.jpeg');
 
     // 1. Imágenes del navbar, footer, login (todas las que tengan la clase)
     document.querySelectorAll('img.institucion-logo').forEach(img => {
@@ -744,7 +755,7 @@ async function cargarGaleria() {
       target.innerHTML = items.map((item, index) => `
         <div class="col-6 col-md-4 galeria-col ${index >= 6 ? 'extra-img d-none' : ''}" data-category="${escapeHtml(item.categoria || 'academico')}" data-aos="fade-up">
           <div class="galeria-item rounded-4 overflow-hidden shadow-sm" data-index="${index}">
-            <img src="${escapeHtml(item.imagenUrl || 'imagenes/galeria1.jpg')}" alt="${escapeHtml(item.titulo || 'Galería institucional')}" loading="lazy">
+            <img src="${escapeHtml(resolverUrlArchivo(item.imagenUrl || 'imagenes/galeria1.jpg'))}" alt="${escapeHtml(item.titulo || 'Galería institucional')}" loading="lazy">
             <div class="galeria-overlay d-flex align-items-center justify-content-center">
               <span class="fw-semibold text-white"><i class="fa-solid fa-magnifying-glass-plus me-2"></i>${escapeHtml(item.titulo || 'Galería')}</span>
             </div>
@@ -826,7 +837,7 @@ async function cargarNoticias() {
       <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="${i * 150}">
         <article class="tarjeta-noticia">
           <div class="noticia-img">
-            <img src="${escapeHtml(n.imagenUrl || 'imagenes/estudiantes2.jpg')}" 
+            <img src="${escapeHtml(resolverUrlArchivo(n.imagenUrl || 'imagenes/estudiantes2.jpg'))}" 
                  alt="${escapeHtml(n.titulo)}" loading="lazy">
             <span class="noticia-fecha">${formatearFecha(n.fechaPublicacion)}</span>
           </div>
@@ -972,8 +983,7 @@ async function cargarDocumentosPublicos() {
       }
       
       target.innerHTML = filtrados.map((d, i) => {
-        const ruta = d.rutaArchivo || '';
-        const rutaFinal = ruta.startsWith('/') || ruta.startsWith('http') ? ruta : '/' + ruta;
+        const rutaFinal = resolverUrlArchivo(d.rutaArchivo || '');
         const tipo = (d.tipo || 'General').toLowerCase();
         
         return `
@@ -1222,7 +1232,7 @@ async function cargarEquipo() {
       <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="${i * 100}">
         <div class="tarjeta-equipo">
           <div class="foto-wrap">
-            <img src="${escapeHtml(m.fotoUrl || 'imagenes/Logo IEDTP.jpeg')}" 
+            <img src="${escapeHtml(resolverUrlArchivo(m.fotoUrl || 'imagenes/Logo IEDTP.jpeg'))}" 
                  alt="Fotografía de ${escapeHtml(m.nombre)}" 
                  loading="lazy">
           </div>

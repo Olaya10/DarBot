@@ -20,23 +20,17 @@ public class FileStorageService {
     private String uploadDir;
 
     /**
-     * Guarda un archivo en uploads/{subcarpeta}/
-     * @param file archivo a guardar
-     * @param subcarpeta ej: "documentos", "galeria", "equipo"
-     * @return ruta relativa para servir desde el frontend (ej: uploads/documentos/uuid.pdf)
+     * Guarda un archivo en {uploadDir}/{subcarpeta}/
+     * Devuelve una URL unificada servida por el backend: /api/archivos/{subcarpeta}/{filename}
      */
     public String guardar(MultipartFile file, String subcarpeta) throws IOException {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("El archivo está vacío");
         }
 
-        // Crear directorio si no existe
         Path dir = Paths.get(uploadDir, subcarpeta);
-        if (!Files.exists(dir)) {
-            Files.createDirectories(dir);
-        }
+        Files.createDirectories(dir);
 
-        // Generar nombre único
         String original = file.getOriginalFilename();
         String ext = "";
         if (original != null && original.contains(".")) {
@@ -44,30 +38,49 @@ public class FileStorageService {
         }
         String filename = UUID.randomUUID().toString() + ext;
 
-        // Guardar
         Path target = dir.resolve(filename);
         Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
 
         log.info("Archivo guardado: {}", target.toAbsolutePath());
 
-        // Retornar ruta relativa para el frontend
-        // Documentos van a /documentos/, imágenes a /imagenes/uploads/
-        if ("documentos".equals(subcarpeta)) {
-            return "/" + subcarpeta + "/" + filename;
-        }
-        return "/imagenes/uploads/" + subcarpeta + "/" + filename;
+        return "/api/archivos/" + subcarpeta + "/" + filename;
     }
 
     /**
-     * Elimina un archivo
+     * Elimina un archivo aceptando rutas antiguas y nuevas de forma segura.
      */
     public void eliminar(String rutaRelativa) {
+        if (rutaRelativa == null || rutaRelativa.isBlank()) {
+            return;
+        }
+
         try {
-            Path path = Paths.get(rutaRelativa);
-            Files.deleteIfExists(path);
-            log.info("Archivo eliminado: {}", path.toAbsolutePath());
+            // Limpiar posibles prefijos (absolutos HTTP, /api/archivos/, rutas previas)
+            String limpia = rutaRelativa
+                    .replaceFirst("^https?://[^/]+", "")
+                    .replaceFirst("^/api/archivos/", "")
+                    .replaceFirst("^/imagenes/uploads/", "")
+                    .replaceFirst("^/documentos/", "documentos/")
+                    .replaceFirst("^uploads/", "")
+                    .replaceFirst("^/", "");
+
+            Path base = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Path path = base.resolve(limpia).normalize();
+
+            // Verificación de seguridad contra Path Traversal
+            if (!path.startsWith(base)) {
+                log.warn("Ruta no autorizada para eliminar fuera de uploadDir: {}", rutaRelativa);
+                return;
+            }
+
+            boolean deleted = Files.deleteIfExists(path);
+            if (deleted) {
+                log.info("Archivo eliminado: {}", path.toAbsolutePath());
+            } else {
+                log.debug("Archivo no existía para eliminar: {}", path.toAbsolutePath());
+            }
         } catch (IOException e) {
-            log.warn("No se pudo eliminar: {}", rutaRelativa, e);
+            log.warn("No se pudo eliminar el archivo: {}", rutaRelativa, e);
         }
     }
 }

@@ -199,6 +199,13 @@
     </div>
   </div>
 
+  <!-- Configuración de Backend -->
+  <script>
+    if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+      window.DARBOT_BACKEND_URL = 'https://darbot-backend.onrender.com';
+    }
+  </script>
+  <script src="../config.js"></script>
   <script src="admin.js" type="module"></script>
 </body>
 </html>
